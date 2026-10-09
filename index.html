@@ -135,14 +135,16 @@
     <div class="header-badge px-4 py-2 flex items-center shadow-lg shadow-cyan-950/40">
       <div class="text-right text-xs">
         <div class="text-slate-200 font-medium">
-          <strong class="text-white font-semibold">Gagan N Prasad</strong> <span class="text-slate-400 text-[11px]">(Lead Architect)</span>
-          <span class="text-cyan-500 font-bold mx-1.5">•</span>
-          <strong class="text-white font-semibold">Machal Ritesh Govardhan</strong> <span class="text-slate-400 text-[11px]">(Product Strategist)</span>
+          <strong class="text-white font-semibold">Gagan N Prasad</strong> <span class="text-slate-400 text-[11px]">(Lead)</span>
+          <span class="text-cyan-500 font-bold mx-1">•</span>
+          <strong class="text-white font-semibold">Machal Ritesh Govardhan</strong> <span class="text-slate-400 text-[11px]">(Strategy)</span>
         </div>
         <div class="text-slate-300 text-[11px] mt-0.5">
-          <strong class="text-white font-semibold">Manav Redhu</strong> <span class="text-slate-400">(Technical Operator)</span>
-          <span class="text-slate-500 mx-2">|</span>
-          <span class="text-emerald-400 font-mono font-medium">BMS Institute of Technology</span>
+          <strong class="text-white font-semibold">Manav Redhu</strong> <span class="text-slate-400">(Tech)</span>
+          <span class="text-cyan-500 font-bold mx-1">•</span>
+          <strong class="text-white font-semibold">Chimbili Manju Ganesh</strong> <span class="text-slate-400">(UI/UX)</span>
+          <span class="text-slate-500 mx-1.5">|</span>
+          <span class="text-emerald-400 font-mono font-medium">BMSIT</span>
         </div>
       </div>
     </div>
@@ -161,57 +163,73 @@
       <!-- ===================================================================== -->
       <div class="lg:col-span-3 xl:col-span-2 flex flex-col gap-2.5">
         
-        <!-- CARD 1: ACTIVE CORRIDORS -->
-        <div class="command-panel rounded-xl p-3.5 flex items-center gap-3">
+        <!-- CARD 1: ACTIVE CORRIDORS (CLICKABLE) -->
+        <button onclick="openKpiModal('corridors')" class="command-panel rounded-xl p-3.5 flex items-center gap-3 text-left w-full hover:border-cyan-500/60 hover:bg-slate-900/90 transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group shadow-sm hover:shadow-cyan-950/30">
           <!-- Circular Ring Gauge -->
           <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
             <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
               <path class="stroke-slate-800" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
               <path class="stroke-emerald-400" stroke-width="3.5" stroke-dasharray="100, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
             </svg>
-            <i class="fa-solid fa-signal text-emerald-400 text-xs absolute"></i>
+            <i class="fa-solid fa-signal text-emerald-400 text-xs absolute group-hover:scale-110 transition"></i>
           </div>
-          <div>
-            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">ACTIVE CORRIDORS:</div>
-            <div class="text-xl font-black font-mono text-emerald-400 flex items-center gap-1.5">
+          <div class="flex-1">
+            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center justify-between">
+              <span>ACTIVE CORRIDORS:</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-cyan-400/60 group-hover:text-cyan-400 transition"></i>
+            </div>
+            <div class="text-xl font-black font-mono text-emerald-400 flex items-center gap-1.5 mt-0.5">
               <span>6 / 6</span>
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             </div>
+            <span class="text-[9px] text-cyan-400/70 font-mono block mt-0.5 group-hover:text-cyan-300">Click to view sensor health</span>
           </div>
-        </div>
+        </button>
 
-        <!-- CARD 2: CRITICAL INCIDENTS -->
-        <div class="command-panel rounded-xl p-3.5 flex items-center gap-3">
-          <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl flex-shrink-0">
+        <!-- CARD 2: CRITICAL INCIDENTS (CLICKABLE) -->
+        <button onclick="openKpiModal('incidents')" class="command-panel rounded-xl p-3.5 flex items-center gap-3 text-left w-full hover:border-rose-500/60 hover:bg-slate-900/90 transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group shadow-sm hover:shadow-rose-950/30">
+          <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl flex-shrink-0 group-hover:scale-105 transition" id="kpi-critical-icon-box">
             <i class="fa-solid fa-circle-check" id="kpi-critical-icon"></i>
           </div>
-          <div>
-            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">CRITICAL INCIDENTS:</div>
-            <div class="text-xl font-black font-mono text-white" id="kpi-critical-val">0</div>
+          <div class="flex-1">
+            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center justify-between">
+              <span>CRITICAL INCIDENTS:</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-rose-400/60 group-hover:text-rose-400 transition"></i>
+            </div>
+            <div class="text-xl font-black font-mono text-white mt-0.5" id="kpi-critical-val">0</div>
+            <span class="text-[9px] text-rose-400/70 font-mono block mt-0.5 group-hover:text-rose-300">Click to view emergency log</span>
           </div>
-        </div>
+        </button>
 
-        <!-- CARD 3: BBMP DESILTING -->
-        <div class="command-panel rounded-xl p-3.5 flex items-center gap-3">
-          <div class="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-lg flex-shrink-0">
+        <!-- CARD 3: BBMP DESILTING (CLICKABLE) -->
+        <button onclick="openKpiModal('desilting')" class="command-panel rounded-xl p-3.5 flex items-center gap-3 text-left w-full hover:border-cyan-500/60 hover:bg-slate-900/90 transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group shadow-sm hover:shadow-cyan-950/30">
+          <div class="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-lg flex-shrink-0 group-hover:scale-105 transition">
             <i class="fa-solid fa-truck-moving"></i>
           </div>
-          <div>
-            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">BBMP DESILTING:</div>
-            <div class="text-base font-bold font-mono text-cyan-300" id="kpi-bbmp-val">3 In Progress</div>
+          <div class="flex-1">
+            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center justify-between">
+              <span>BBMP DESILTING:</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-cyan-400/60 group-hover:text-cyan-400 transition"></i>
+            </div>
+            <div class="text-base font-bold font-mono text-cyan-300 mt-0.5" id="kpi-bbmp-val">3 In Progress</div>
+            <span class="text-[9px] text-cyan-400/70 font-mono block mt-0.5 group-hover:text-cyan-300">Click to view work orders</span>
           </div>
-        </div>
+        </button>
 
-        <!-- CARD 4: CITIZEN REPORTS -->
-        <div class="command-panel rounded-xl p-3.5 flex items-center gap-3">
-          <div class="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-lg flex-shrink-0">
+        <!-- CARD 4: CITIZEN REPORTS (CLICKABLE) -->
+        <button onclick="openKpiModal('citizen')" class="command-panel rounded-xl p-3.5 flex items-center gap-3 text-left w-full hover:border-amber-500/60 hover:bg-slate-900/90 transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group shadow-sm hover:shadow-amber-950/30">
+          <div class="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-lg flex-shrink-0 group-hover:scale-105 transition">
             <i class="fa-solid fa-bullhorn"></i>
           </div>
-          <div>
-            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">CITIZEN REPORTS:</div>
-            <div class="text-base font-bold font-mono text-amber-300" id="kpi-citizen-val">1 Verified</div>
+          <div class="flex-1">
+            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center justify-between">
+              <span>CITIZEN REPORTS:</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-amber-400/60 group-hover:text-amber-400 transition"></i>
+            </div>
+            <div class="text-base font-bold font-mono text-amber-300 mt-0.5" id="kpi-citizen-val">1 Verified</div>
+            <span class="text-[9px] text-amber-400/70 font-mono block mt-0.5 group-hover:text-amber-300">Click to view verified reports</span>
           </div>
-        </div>
+        </button>
 
         <!-- BOTTOM LEFT: MINI OVERVIEW RADAR MAP -->
         <div class="command-panel rounded-xl p-2.5 flex-1 flex flex-col justify-between overflow-hidden relative min-h-[170px]">
@@ -767,6 +785,131 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- MODAL: METRIC CARDS DEEP-DIVE INSPECTOR (4-IN-1 KPI MODAL) -->
+  <!-- ========================================================================= -->
+  <div id="kpi-detail-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+    <div class="bg-iccc-panel border border-slate-700 w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto border-cyan-500/30">
+      
+      <!-- Modal Header -->
+      <div class="p-4 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl font-bold shadow-md shadow-cyan-950/40" id="kpi-modal-icon">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-white text-base md:text-lg tracking-wide uppercase" id="kpi-modal-title">
+              Active Corridors & Radar Sensor Mesh
+            </h3>
+            <p class="text-xs text-slate-400 flex items-center gap-2 mt-0.5 font-mono" id="kpi-modal-subtitle">
+              60/77 GHz FMCW Millimeter-Wave Telemetry & HDPE Radome Isolation
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <!-- Category Quick Switcher Tabs -->
+          <div class="hidden sm:flex items-center bg-slate-950/90 rounded-lg p-1 border border-slate-800 text-[11px] font-mono">
+            <button onclick="switchKpiTab('corridors')" id="tab-btn-corridors" class="px-2.5 py-1 rounded transition text-cyan-300 bg-cyan-500/20 font-bold border border-cyan-500/40">Corridors</button>
+            <button onclick="switchKpiTab('incidents')" id="tab-btn-incidents" class="px-2.5 py-1 rounded transition text-slate-400 hover:text-white">Incidents</button>
+            <button onclick="switchKpiTab('desilting')" id="tab-btn-desilting" class="px-2.5 py-1 rounded transition text-slate-400 hover:text-white">BBMP Desilting</button>
+            <button onclick="switchKpiTab('citizen')" id="tab-btn-citizen" class="px-2.5 py-1 rounded transition text-slate-400 hover:text-white">Citizen Feed</button>
+          </div>
+
+          <button onclick="closeKpiModal()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800/60 transition">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Dynamic Tab Panes) -->
+      <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+        
+        <!-- PANE 1: CORRIDORS (6 CORRIDORS GRID) -->
+        <div id="kpi-pane-corridors" class="space-y-4">
+          <div class="flex items-center justify-between text-xs font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
+            <span>Repurposed ITMS Poles • Catch-Basin Soffit 77 GHz FMCW Radars</span>
+            <span class="text-emerald-400 font-bold">6/6 Corridors Transmitting (100% Mesh Health)</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="kpi-corridors-grid">
+            <!-- Dynamically populated 6 corridor cards -->
+          </div>
+        </div>
+
+        <!-- PANE 2: INCIDENTS (EMERGENCY ALERTS LIST) -->
+        <div id="kpi-pane-incidents" class="hidden space-y-4">
+          <div class="flex items-center justify-between text-xs font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
+            <span>ITMS Optical Edge-AI Kinematics & Hydro-Kinetic Alert Stream</span>
+            <span class="text-rose-400 font-bold" id="kpi-incidents-counter">Live Incident Feed</span>
+          </div>
+
+          <div class="space-y-2.5" id="kpi-incidents-list">
+            <!-- Dynamically populated incident alerts -->
+          </div>
+        </div>
+
+        <!-- PANE 3: DESILTING (BBMP WORK ORDERS TABLE & ACTIONS) -->
+        <div id="kpi-pane-desilting" class="hidden space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
+            <span>BBMP Stormwater Wing • Automated SLA Hydro-Jetting Dispatches</span>
+            <button onclick="injectDemo('silt_clog')" class="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition text-[11px] font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-plus"></i>
+              <span>Issue New Desilting Order</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-slate-900 border-b border-slate-800 text-[11px] text-slate-400">
+                <tr>
+                  <th class="p-2.5">Order ID</th>
+                  <th class="p-2.5">Location & Ward</th>
+                  <th class="p-2.5">Cause (Diagnosis)</th>
+                  <th class="p-2.5">Assigned Crew</th>
+                  <th class="p-2.5">SLA Countdown</th>
+                  <th class="p-2.5">Status</th>
+                  <th class="p-2.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-850" id="kpi-desilting-table-body">
+                <!-- Dynamically populated work orders -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PANE 4: CITIZEN REPORTS (VERIFIED COMMUTER REPORTS FEED) -->
+        <div id="kpi-pane-citizen" class="hidden space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
+            <span>Namma Bengaluru Commuter Safety Network • AI Photo Verified</span>
+            <button onclick="closeKpiModal(); openCitizenModal();" class="px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition text-[11px] font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-camera"></i>
+              <span>Submit New Commuter Report</span>
+            </button>
+          </div>
+
+          <div class="space-y-2.5" id="kpi-citizen-feed-list">
+            <!-- Dynamically populated citizen reports -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3.5 bg-slate-900/95 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+        <div class="text-slate-400 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>ICCC Live Synchronization Active</span>
+        </div>
+        <button onclick="closeKpiModal()" class="px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition">
+          Close Inspector
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
   <!-- MODAL: CITIZEN SAFETY WEB PORTAL (MOBILE-RESPONSIVE INTERFACE) -->
   <!-- ========================================================================= -->
   <div id="citizen-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
@@ -1101,6 +1244,15 @@
 
       // Render Dispatch Tickets Table
       renderTicketsTable(data.work_orders);
+
+      // Live refresh KPI modal if open
+      const kpiModal = document.getElementById('kpi-detail-modal');
+      if (kpiModal && !kpiModal.classList.contains('hidden')) {
+        if (currentKpiTab === 'corridors') renderKpiCorridors();
+        else if (currentKpiTab === 'incidents') renderKpiIncidents();
+        else if (currentKpiTab === 'desilting') renderKpiDesilting();
+        else if (currentKpiTab === 'citizen') renderKpiCitizen();
+      }
     }
 
     // Select and Highlight Corridor
@@ -1375,6 +1527,271 @@
         woTitle.innerText = 'Routine Preventive Sump Maintenance (Nominal)';
         woDesc.innerText = 'Telemetry transmitting cleanly every 3 seconds through corrosion-immune HDPE radome.';
       }
+    }
+
+    // =========================================================================
+    // KPI METRIC CARDS INSPECTION CONTROLLER (4-IN-1 MODAL SYSTEM)
+    // =========================================================================
+    let currentKpiTab = 'corridors';
+
+    function openKpiModal(category) {
+      currentKpiTab = category || 'corridors';
+      switchKpiTab(currentKpiTab);
+      document.getElementById('kpi-detail-modal').classList.remove('hidden');
+    }
+
+    function closeKpiModal() {
+      document.getElementById('kpi-detail-modal').classList.add('hidden');
+    }
+
+    function switchKpiTab(tabName) {
+      currentKpiTab = tabName;
+      const modalIcon = document.getElementById('kpi-modal-icon');
+      const modalTitle = document.getElementById('kpi-modal-title');
+      const modalSubtitle = document.getElementById('kpi-modal-subtitle');
+
+      // Update Tab Buttons
+      ['corridors', 'incidents', 'desilting', 'citizen'].forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const pane = document.getElementById(`kpi-pane-${t}`);
+        if (btn) {
+          if (t === tabName) {
+            btn.className = 'px-2.5 py-1 rounded transition text-cyan-300 bg-cyan-500/20 font-bold border border-cyan-500/40';
+          } else {
+            btn.className = 'px-2.5 py-1 rounded transition text-slate-400 hover:text-white';
+          }
+        }
+        if (pane) {
+          if (t === tabName) pane.classList.remove('hidden');
+          else pane.classList.add('hidden');
+        }
+      });
+
+      if (tabName === 'corridors') {
+        modalIcon.className = 'w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl font-bold shadow-md shadow-emerald-950/40';
+        modalIcon.innerHTML = '<i class="fa-solid fa-signal"></i>';
+        modalTitle.innerText = 'ACTIVE CORRIDORS & RADAR SENSOR MESH (6/6 ONLINE)';
+        modalSubtitle.innerText = '60/77 GHz FMCW Millimeter-Wave Telemetry & Tilted HDPE Radome Isolation';
+        renderKpiCorridors();
+      } else if (tabName === 'incidents') {
+        modalIcon.className = 'w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 text-xl font-bold shadow-md shadow-rose-950/40';
+        modalIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        modalTitle.innerText = 'CRITICAL HAZARD & EDGE-AI EMERGENCY LOG';
+        modalSubtitle.innerText = 'ITMS Optical Kinematics, Collision Overlays & Hydro-Kinetic Surge Alarms';
+        renderKpiIncidents();
+      } else if (tabName === 'desilting') {
+        modalIcon.className = 'w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl font-bold shadow-md shadow-cyan-950/40';
+        modalIcon.innerHTML = '<i class="fa-solid fa-truck-moving"></i>';
+        modalTitle.innerText = 'BBMP STORMWATER DESILTING DISPATCH CONSOLE';
+        modalSubtitle.innerText = 'Automated SLA Tracking, Hydro-Vacuum Crew Routing & Flume Clearance';
+        renderKpiDesilting();
+      } else if (tabName === 'citizen') {
+        modalIcon.className = 'w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl font-bold shadow-md shadow-amber-950/40';
+        modalIcon.innerHTML = '<i class="fa-solid fa-bullhorn"></i>';
+        modalTitle.innerText = 'VERIFIED CITIZEN SAFETY REPORTS FEED';
+        modalSubtitle.innerText = '1-Tap Mobile Geo-Tagging with On-Device Flood Depth Verification';
+        renderKpiCitizen();
+      }
+    }
+
+    function renderKpiCorridors() {
+      if (!stateCache || !stateCache.zones) return;
+      const grid = document.getElementById('kpi-corridors-grid');
+      const zones = Object.values(stateCache.zones);
+
+      grid.innerHTML = zones.map(z => {
+        let riskColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+        let riskLabel = 'NORMAL';
+        if (z.risk_score > 0.70 || z.accident_detected) {
+          riskColor = 'text-rose-400 bg-rose-500/15 border-rose-500/40';
+          riskLabel = 'CRITICAL';
+        } else if (z.risk_score > 0.40) {
+          riskColor = 'text-amber-400 bg-amber-500/15 border-amber-500/40';
+          riskLabel = 'CAUTION';
+        }
+
+        return `
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-cyan-500/40 transition">
+            <div class="space-y-2">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h4 class="font-bold text-white text-sm">${z.name.split(' - ')[0]}</h4>
+                  <p class="text-[10px] text-slate-400 font-mono">${z.ward} • ${z.itms_pole_id}</p>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${riskColor}">${riskLabel} (${z.risk_score.toFixed(2)})</span>
+              </div>
+
+              <!-- Radar & Radome Specs -->
+              <div class="bg-slate-900/80 p-2 rounded border border-slate-850 text-[11px] font-mono space-y-1">
+                <div class="flex justify-between text-slate-300">
+                  <span>Basin Depth:</span>
+                  <span class="font-bold text-cyan-300">${z.water_level_cm.toFixed(1)}cm / ${z.max_capacity_cm.toFixed(0)}cm (${z.water_level_pct}%)</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div class="h-full ${z.water_level_pct > 75 ? 'bg-rose-500' : z.water_level_pct > 45 ? 'bg-amber-500' : 'bg-cyan-500'}" style="width: ${Math.min(100, z.water_level_pct)}%"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-400 pt-1">
+                  <span>ΔH Inflow: <strong class="text-white">${z.delta_h.toFixed(2)}</strong></span>
+                  <span>Rain: <strong class="text-white">${z.rainfall_rate_mmhr.toFixed(1)} mm/h</strong></span>
+                </div>
+              </div>
+
+              <div class="text-[10px] font-mono text-emerald-400 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>HDPE 3.2mm Radome Sealed (0.0 ppm H₂S)</span>
+              </div>
+            </div>
+
+            <button onclick="focusCorridorFromModal('${z.id}')" class="w-full mt-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500 hover:text-slate-950 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-crosshairs"></i>
+              <span>Focus on Live Map</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderKpiIncidents() {
+      if (!stateCache) return;
+      const list = document.getElementById('kpi-incidents-list');
+      const alerts = stateCache.emergency_alerts || [];
+      const zones = Object.values(stateCache.zones || {});
+      const activeAnomalies = zones.filter(z => z.risk_score > 0.65 || z.accident_detected);
+
+      document.getElementById('kpi-incidents-counter').innerText = `${alerts.length + activeAnomalies.length} Active System Alarms`;
+
+      let itemsHtml = '';
+
+      // Active zone anomaly cards
+      activeAnomalies.forEach(z => {
+        let typeBadge = z.accident_detected ? 'EDGE-AI COLLISION' : z.hazard_classification === 'SILT_DEBRIS_CLOG' ? 'SILT DRAIN CHOKE' : 'CLOUDBURST OVERFLOW';
+        let badgeColor = z.accident_detected ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+
+        itemsHtml += `
+          <div class="bg-slate-950 p-3 rounded-xl border border-rose-500/30 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm font-bold mt-0.5">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-white">${z.name}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold border ${badgeColor}">${typeBadge}</span>
+                  <span class="text-[10px] text-slate-400">Risk: ${z.risk_score.toFixed(2)}</span>
+                </div>
+                <div class="text-[11px] text-slate-300 mt-1">${z.vms_text}</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">Sensors: Water Depth ${z.water_level_cm.toFixed(1)}cm | ΔH: ${z.delta_h.toFixed(2)} | Rain: ${z.rainfall_rate_mmhr.toFixed(1)} mm/h</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="focusCorridorFromModal('${z.id}'); openHazardModal();" class="px-3 py-1.5 rounded bg-rose-600/30 hover:bg-rose-500 hover:text-white text-rose-200 border border-rose-500/40 text-xs font-bold transition">
+                Inspect Incident
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      // System dispatch alert history
+      alerts.forEach(a => {
+        itemsHtml += `
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-sm font-bold mt-0.5">
+                <i class="fa-solid fa-bullhorn"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-200">${a.zone_name || 'Corridor Alert'}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">${a.type}</span>
+                  <span class="text-[10px] text-slate-500">${a.timestamp}</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">${a.message}</div>
+              </div>
+            </div>
+            <span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800/40 px-2 py-1 rounded">
+              BTP / BBMP Synced
+            </span>
+          </div>
+        `;
+      });
+
+      if (itemsHtml === '') {
+        itemsHtml = '<div class="text-xs text-slate-500 italic p-4 text-center">Zero critical anomalies currently detected. All corridor baselines stable.</div>';
+      }
+
+      list.innerHTML = itemsHtml;
+    }
+
+    function renderKpiDesilting() {
+      if (!stateCache) return;
+      const tbody = document.getElementById('kpi-desilting-table-body');
+      const orders = stateCache.work_orders || [];
+
+      if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-slate-500 italic p-4 text-center">No pending desilting work orders.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orders.map(o => `
+        <tr class="hover:bg-slate-900/60 transition">
+          <td class="p-2.5 font-bold text-cyan-400">${o.id}</td>
+          <td class="p-2.5 text-slate-200">${o.zone_name.split(' - ')[0]}<br><span class="text-[10px] text-slate-400">${o.ward}</span></td>
+          <td class="p-2.5 text-slate-300 text-[11px] max-w-xs">${o.cause}</td>
+          <td class="p-2.5 text-slate-200">${o.unit}</td>
+          <td class="p-2.5"><span class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded text-[10px]">${o.sla_minutes}m SLA</span></td>
+          <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.status === 'RESOLVED' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">${o.status}</span></td>
+          <td class="p-2.5 text-right">
+            ${o.status === 'RESOLVED' 
+              ? '<span class="text-slate-500 text-[11px]">✓ Closed</span>' 
+              : `<button onclick="resolveWorkOrder('${o.id}')" class="px-2.5 py-1 rounded bg-cyan-600/30 hover:bg-cyan-500 hover:text-slate-950 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold transition">Mark Done</button>`
+            }
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderKpiCitizen() {
+      if (!stateCache) return;
+      const list = document.getElementById('kpi-citizen-feed-list');
+      const reports = stateCache.citizen_reports || [];
+
+      if (reports.length === 0) {
+        list.innerHTML = '<div class="text-xs text-slate-500 italic p-4 text-center">No commuter reports on file.</div>';
+        return;
+      }
+
+      list.innerHTML = reports.map(r => `
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm font-bold mt-0.5">
+              <i class="fa-solid fa-mobile-screen"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-white">${r.reporter_name}</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">${r.hazard_type}</span>
+                <span class="text-slate-400 text-[10px]">${r.zone_name} • ${r.timestamp}</span>
+              </div>
+              <div class="text-[11px] text-slate-300 mt-1">${r.description || 'Hazard reported on carriageway.'}</div>
+              <div class="text-[10px] text-emerald-400 mt-0.5 font-bold flex items-center gap-1">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>${r.ai_verification}</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <span class="px-2 py-1 rounded text-[10px] font-bold bg-cyan-950/60 border border-cyan-800/40 text-cyan-300">
+              ${r.status}
+            </span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function focusCorridorFromModal(zid) {
+      selectCorridor(zid);
+      closeKpiModal();
     }
 
     // Citizen Modal Functions
