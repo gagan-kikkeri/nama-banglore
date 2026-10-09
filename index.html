@@ -982,27 +982,33 @@
           </div>
 
           <!-- The Video Screen & Overlaid Canvas AI HUD -->
-          <div class="relative w-full aspect-video bg-slate-950 flex items-center justify-center overflow-hidden" id="video-container">
-            <!-- Native HTML5 Video Element (used for uploaded or synthetic clips) -->
-            <video id="studio-video" class="w-full h-full object-contain hidden" playsinline muted loop></video>
-            
-            <!-- Dynamic Synthetic Scene Simulation Canvas (used for 3 preset scenarios) -->
-            <canvas id="studio-simulation-canvas" class="w-full h-full object-cover"></canvas>
-            
-            <!-- Real-Time Overlaid AI Detection HUD Canvas (superimposed bounding boxes, optical vectors & labels) -->
-            <canvas id="studio-ai-hud-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10"></canvas>
+          <div class="relative w-full aspect-video bg-black overflow-hidden" id="video-container">
+            <!-- Strictly relative position container wrapping video & bounding box overlays -->
+            <div id="video-stage-wrapper" class="relative w-full h-full overflow-hidden" style="position: relative; overflow: hidden; width: 100%; height: 100%;">
+              <!-- Native HTML5 Video Element (used for uploaded or synthetic clips) -->
+              <video id="studio-video" class="absolute inset-0 w-full h-full object-cover hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" playsinline muted loop></video>
+              
+              <!-- Dynamic Synthetic Scene Simulation Canvas (used for 3 preset scenarios) -->
+              <canvas id="studio-simulation-canvas" class="absolute inset-0 w-full h-full object-cover" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+              
+              <!-- Real-Time Overlaid AI Detection HUD Canvas (superimposed vectors, scanlines & reticles) -->
+              <canvas id="studio-ai-hud-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
 
-            <!-- Video Loading / Analyzing Spinner Overlay -->
-            <div id="video-ai-spinner" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-3 z-30">
-              <div class="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
-              <div class="text-xs font-mono text-cyan-300 font-bold tracking-wider animate-pulse" id="video-spinner-text">
-                ANALYZING FRAME WITH GOOGLE GEMINI 3.8 MULTIMODAL VISION...
+              <!-- Dynamic SVG / Div Bounding Box Overlay Layer directly bound to parent container aspect ratio -->
+              <div id="studio-bbox-overlay" class="absolute inset-0 w-full h-full pointer-events-none z-20" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;"></div>
+
+              <!-- Video Loading / Analyzing Spinner Overlay -->
+              <div id="video-ai-spinner" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-3 z-30" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                <div class="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+                <div class="text-xs font-mono text-cyan-300 font-bold tracking-wider animate-pulse" id="video-spinner-text">
+                  ANALYZING FRAME WITH GOOGLE GEMINI 3.8 MULTIMODAL VISION...
+                </div>
               </div>
-            </div>
 
-            <!-- On-Screen Telemetry Watermark -->
-            <div class="absolute bottom-2 left-3 z-20 pointer-events-none font-mono text-[10px] text-cyan-400/80 bg-black/50 px-2 py-1 rounded border border-cyan-500/20 backdrop-blur-sm">
-              <span class="text-white font-bold">HK-RHS FMCW EDGE-AI CORE</span> • LAT: <span id="hud-lat">12.9177°N</span> LNG: <span id="hud-lng">77.6238°E</span> • ΔH: <span id="hud-deltah">2.15</span>
+              <!-- On-Screen Telemetry Watermark -->
+              <div class="absolute bottom-2 left-3 z-20 pointer-events-none font-mono text-[10px] text-cyan-400/80 bg-black/60 px-2 py-1 rounded border border-cyan-500/20 backdrop-blur-sm">
+                <span class="text-white font-bold">HK-RHS FMCW EDGE-AI CORE</span> • LAT: <span id="hud-lat">12.9177°N</span> LNG: <span id="hud-lng">77.6238°E</span> • ΔH: <span id="hud-deltah">2.15</span>
+              </div>
             </div>
           </div>
 
@@ -3396,28 +3402,67 @@
     }
 
     // Dynamic, responsive AI HUD with aspect-ratio anchoring and smart non-overlapping tags
+    // Dynamic, responsive AI HUD canvas rendering (radar scan sweep, laser crosshairs, optical reticle)
     function renderOverlayAiHud(ctx, w, h, analysis, t) {
       ctx.clearRect(0, 0, w, h);
       if (!analysis) return;
 
-      const container = document.getElementById('video-container');
-      const vRect = (videoCurrentScenario === 'custom' && studioVideoEl && !studioVideoEl.classList.contains('hidden'))
-        ? getVideoDisplayRect(studioVideoEl, container)
-        : { left: 0, top: 0, width: w, height: h };
+      // Laser Radar Scanning Sweep Line
+      const scanY = (t * 70) % h;
+      const scanGrad = ctx.createLinearGradient(0, Math.max(0, scanY - 24), 0, scanY);
+      scanGrad.addColorStop(0, "rgba(6, 182, 212, 0)");
+      scanGrad.addColorStop(1, "rgba(6, 182, 212, 0.22)");
+      ctx.fillStyle = scanGrad;
+      ctx.fillRect(0, Math.max(0, scanY - 24), w, 24);
 
-      const objects = analysis.objects_detected || [];
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.55)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, scanY);
+      ctx.lineTo(w, scanY);
+      ctx.stroke();
+
+      // Optical Hub Reticle at Center
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.3)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx - 34, cy);
+      ctx.lineTo(cx - 26, cy);
+      ctx.moveTo(cx + 26, cy);
+      ctx.lineTo(cx + 34, cy);
+      ctx.moveTo(cx, cy - 34);
+      ctx.lineTo(cx, cy - 26);
+      ctx.moveTo(cx, cy + 26);
+      ctx.lineTo(cx, cy + 34);
+      ctx.stroke();
+    }
+
+    // HTML / SVG Bounding Box Overlay directly bound to parent container aspect ratio
+    function renderHtmlBboxOverlay(analysis) {
+      const overlay = document.getElementById('studio-bbox-overlay');
+      if (!overlay) return;
+      if (!analysis || !analysis.objects_detected || analysis.objects_detected.length === 0) {
+        overlay.innerHTML = '';
+        return;
+      }
+
+      const objects = analysis.objects_detected;
       const isGlobalHazard = (analysis.severity_score || 0) > 0.75;
 
-      objects.forEach((obj, idx) => {
+      overlay.innerHTML = objects.map((obj, idx) => {
         const box = obj.box_norm || [35, 20, 65, 50];
-
-        // Dynamically anchor to video aspect ratio bounds
-        const top = Math.round(vRect.top + (box[0] / 100) * vRect.height);
-        const left = Math.round(vRect.left + (box[1] / 100) * vRect.width);
-        const bottom = Math.round(vRect.top + (box[2] / 100) * vRect.height);
-        const right = Math.round(vRect.left + (box[3] / 100) * vRect.width);
-        const bw = Math.max(18, right - left);
-        const bh = Math.max(18, bottom - top);
+        const top = Math.max(0, Math.min(100, box[0]));
+        const left = Math.max(0, Math.min(100, box[1]));
+        const bottom = Math.max(0, Math.min(100, box[2]));
+        const right = Math.max(0, Math.min(100, box[3]));
+        const width = Math.max(2, right - left);
+        const height = Math.max(2, bottom - top);
 
         const isHazard = (obj.hazard_status && (
           obj.hazard_status.toLowerCase().includes('inundation') ||
@@ -3425,108 +3470,37 @@
           obj.hazard_status.toLowerCase().includes('stall') ||
           obj.hazard_status.toLowerCase().includes('choke') ||
           obj.hazard_status.toLowerCase().includes('depth') ||
-          obj.hazard_status.toLowerCase().includes('debris')
+          obj.hazard_status.toLowerCase().includes('debris') ||
+          obj.hazard_status.toLowerCase().includes('curb')
         )) || isGlobalHazard;
 
-        const strokeColor = isHazard ? "rgba(244, 63, 94, 0.95)" : "rgba(6, 182, 212, 0.95)";
-        const fillColor = isHazard ? "rgba(244, 63, 94, 0.10)" : "rgba(6, 182, 212, 0.08)";
-        const cornerColor = isHazard ? "#fb7185" : "#38bdf8";
+        const borderCol = isHazard ? "border-rose-500/90 bg-rose-500/10" : "border-cyan-400/90 bg-cyan-400/10";
+        const bracketCol = isHazard ? "border-rose-400" : "border-cyan-300";
+        const tagBg = isHazard ? "bg-rose-950/95 text-rose-100 border-rose-500/80 shadow-rose-950/60" : "bg-cyan-950/95 text-cyan-100 border-cyan-500/80 shadow-cyan-950/60";
 
-        // Semi-transparent target fill
-        ctx.fillStyle = fillColor;
-        ctx.fillRect(left, top, bw, bh);
+        // If box is near top of container, position tag inside the box
+        const tagPos = top < 12 ? "top-1 left-1" : "-top-6 left-0";
 
-        // Thin boundary line
-        ctx.strokeStyle = isHazard ? "rgba(244, 63, 94, 0.45)" : "rgba(6, 182, 212, 0.45)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(left, top, bw, bh);
+        return `
+          <div class="absolute transition-all duration-200 pointer-events-none border ${borderCol}"
+               style="position: absolute; top: ${top}%; left: ${left}%; width: ${width}%; height: ${height}%; box-sizing: border-box;">
+            <!-- 4 Corner Reticle Tracking Brackets -->
+            <div class="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 border-t-2 border-l-2 ${bracketCol}"></div>
+            <div class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 border-t-2 border-r-2 ${bracketCol}"></div>
+            <div class="absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 border-b-2 border-l-2 ${bracketCol}"></div>
+            <div class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-b-2 border-r-2 ${bracketCol}"></div>
 
-        // Responsive corner reticle tracking brackets
-        const cLen = Math.max(8, Math.min(22, Math.round(Math.min(bw, bh) * 0.28)));
-        ctx.strokeStyle = cornerColor;
-        ctx.lineWidth = Math.max(2, Math.min(3.5, vRect.width * 0.0035));
-        ctx.lineCap = "round";
+            <!-- Optical Center Aiming Reticle -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] font-mono leading-none opacity-80 ${isHazard ? 'text-rose-400' : 'text-cyan-300'}">+</div>
 
-        // Top-Left Bracket
-        ctx.beginPath();
-        ctx.moveTo(left, top + cLen);
-        ctx.lineTo(left, top);
-        ctx.lineTo(left + cLen, top);
-        ctx.stroke();
-
-        // Top-Right Bracket
-        ctx.beginPath();
-        ctx.moveTo(right - cLen, top);
-        ctx.lineTo(right, top);
-        ctx.lineTo(right, top + cLen);
-        ctx.stroke();
-
-        // Bottom-Left Bracket
-        ctx.beginPath();
-        ctx.moveTo(left, bottom - cLen);
-        ctx.lineTo(left, bottom);
-        ctx.lineTo(left + cLen, bottom);
-        ctx.stroke();
-
-        // Bottom-Right Bracket
-        ctx.beginPath();
-        ctx.moveTo(right - cLen, bottom);
-        ctx.lineTo(right, bottom);
-        ctx.lineTo(right, bottom - cLen);
-        ctx.stroke();
-
-        // Center Aiming Reticle (Crosshair)
-        const cx = Math.round(left + bw / 2);
-        const cy = Math.round(top + bh / 2);
-        ctx.strokeStyle = isHazard ? "rgba(244, 63, 94, 0.75)" : "rgba(6, 182, 212, 0.75)";
-        ctx.lineWidth = 1;
-        const cross = Math.max(3, Math.min(6, cLen * 0.4));
-        ctx.beginPath();
-        ctx.moveTo(cx - cross, cy);
-        ctx.lineTo(cx + cross, cy);
-        ctx.moveTo(cx, cy - cross);
-        ctx.lineTo(cx, cy + cross);
-        ctx.stroke();
-
-        // Responsive, Non-Overlapping Label Tag
-        const labelText = `[ ${obj.label.toUpperCase()} • ${obj.confidence_pct}% ]`;
-        const fontSize = Math.max(9, Math.min(11, Math.round(vRect.width * 0.014)));
-        ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
-        const txtWidth = ctx.measureText(labelText).width;
-        const tagH = fontSize + 8;
-        const tagW = txtWidth + 12;
-
-        // Smart Tag Positioning:
-        // If top - tagH < vRect.top, position INSIDE the box (top + 2)
-        // Otherwise place just above the box (top - tagH - 2)
-        let tagY = (top - tagH - 2 >= vRect.top) ? (top - tagH - 2) : (top + 2);
-
-        // Ensure tagX doesn't overflow right of vRect
-        let tagX = left;
-        if (tagX + tagW > vRect.left + vRect.width) {
-          tagX = Math.max(vRect.left, vRect.left + vRect.width - tagW);
-        }
-
-        // Draw Tag Background Pill
-        ctx.fillStyle = isHazard ? "rgba(159, 18, 57, 0.94)" : "rgba(8, 47, 73, 0.94)";
-        ctx.beginPath();
-        if (ctx.roundRect) {
-          ctx.roundRect(tagX, tagY, tagW, tagH, 3);
-          ctx.fill();
-        } else {
-          ctx.fillRect(tagX, tagY, tagW, tagH);
-        }
-
-        ctx.strokeStyle = cornerColor;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Draw Tag Text
-        ctx.fillStyle = "#ffffff";
-        ctx.textBaseline = "middle";
-        ctx.fillText(labelText, tagX + 6, tagY + tagH / 2);
-      });
-      ctx.textBaseline = "alphabetic"; // reset
+            <!-- Responsive Non-Overlapping Label Pill -->
+            <div class="absolute ${tagPos} whitespace-nowrap ${tagBg} border rounded px-1.5 py-0.5 text-[10px] font-mono font-bold shadow-lg flex items-center gap-1 z-30 pointer-events-none">
+              <span class="w-1.5 h-1.5 rounded-full ${isHazard ? 'bg-rose-400 animate-pulse' : 'bg-cyan-400'}"></span>
+              <span>[${obj.label.toUpperCase()} • ${obj.confidence_pct}%]</span>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     async function triggerGeminiFrameAnalysis(isBackground = false) {
@@ -3656,6 +3630,9 @@
       if (vmsEn) vmsEn.innerText = data.vms_highway_advisory_en || "NORMAL SPEED • SAFE COMMUTE";
       if (vmsKn) vmsKn.innerText = data.vms_highway_advisory_kn || "ಸುರಕ್ಷಿತ ಸಂಚಾರ • ಜಾಗರೂಕರಾಗಿರಿ";
       if (vmsSpeed) vmsSpeed.innerText = `Speed Limit: ${data.recommended_speed_limit || 40} KM/H`;
+
+      // Synchronously render HTML / DOM Bounding Box Overlay directly anchored to container aspect ratio
+      renderHtmlBboxOverlay(data);
     }
 
     async function executeVideoAiDispatch() {
