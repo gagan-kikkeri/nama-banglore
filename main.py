@@ -1,18 +1,19 @@
 """
 Namma Bengaluru - HK-RHS (Hydro-Kinetic Road Hazard System)
 REVA University HACKathon 3.0 (AI for Smart Cities & Sustainability)
-Team: Apex Achievers (BMSIT)
+Team: Team CyberSentinel / Apex Achievers (BMSIT)
 Team Members:
   - Gagan N Prasad (Lead Architect)
   - Machal Ritesh Govardhan (Product Strategist)
   - Manav Redhu (Technical Operator)
+  - Chimbili Manju Ganesh (UI/UX Designer)
 
 FastAPI Backend Server & Real-time Simulation Engine:
   - 60/77 GHz FMCW Radar Telemetry inside catch-basin soffit behind tilted HDPE radome
   - Differential Inflow Index (ΔH) computation to isolate cloudbursts from physical blockages
   - ITMS Edge-AI Computer Vision Accident & Deceleration Spikes Detection
   - Automated BBMP Desilting Work Orders & Police/112 ICCC Dispatch
-  - Citizen Safety Portal API with AI photo validation
+  - Citizen Safety Portal API with AI photo validation & Cross-Host Sync
 """
 
 import os
@@ -25,13 +26,13 @@ from datetime import datetime, timezone, timedelta
 
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 app = FastAPI(
     title="Namma Bengaluru - HK-RHS",
-    description="Hydro-Kinetic Road Hazard System | REVA University HACKathon 3.0 | Team Apex Achievers (BMSIT)",
+    description="Hydro-Kinetic Road Hazard System | REVA University HACKathon 3.0 | Team CyberSentinel / Apex Achievers (BMSIT)",
     version="1.0.0"
 )
 
@@ -61,6 +62,15 @@ class CitizenReport(BaseModel):
     longitude: float
     description: str
     image_data: Optional[str] = None  # Base64 or mock image url
+    ai_depth_cm: Optional[float] = None
+    ai_confidence_pct: Optional[float] = None
+    ai_authenticity_pct: Optional[float] = None
+    severity_level: Optional[str] = "CRITICAL"
+
+class CitizenStatusUpdate(BaseModel):
+    report_id: str
+    status: str  # "RECEIVED_BY_ICCC", "DISPATCHED_TO_BBMP", "IN_PROGRESS", "RESOLVED"
+    notes: Optional[str] = None
 
 class WorkOrderUpdate(BaseModel):
     order_id: str
@@ -154,6 +164,20 @@ ZONES_CONFIG = {
         "base_rain_mmhr": 8.0,
         "drainage_coeff_alpha": 0.37,
         "vms_location": "Tumkur Road NH4 Elevated Toll Approach"
+    },
+    "whitefield": {
+        "id": "whitefield",
+        "name": "Whitefield - ITPL Main Road / Hope Farm",
+        "lat": 12.9856,
+        "lng": 77.7374,
+        "ward": "Ward 84 (Whitefield / ITPL Corridor)",
+        "itms_pole_id": "BTP-ITMS-WTF-05",
+        "catch_basin_id": "CB-FMCW-WTF-112",
+        "max_capacity_cm": 135.0,
+        "base_water_cm": 20.0,
+        "base_rain_mmhr": 11.0,
+        "drainage_coeff_alpha": 0.36,
+        "vms_location": "ITPL Main Road Gantry / Hope Farm Jn"
     }
 }
 
@@ -371,11 +395,12 @@ def get_full_state():
         "system_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "project": "Namma Bengaluru - HK-RHS",
         "team": {
-            "name": "Apex Achievers (BMSIT)",
+            "name": "Team CyberSentinel / Apex Achievers (BMSIT)",
             "members": [
                 {"name": "Gagan N Prasad", "role": "Lead Architect"},
                 {"name": "Machal Ritesh Govardhan", "role": "Product Strategist"},
-                {"name": "Manav Redhu", "role": "Technical Operator"}
+                {"name": "Manav Redhu", "role": "Technical Operator"},
+                {"name": "Chimbili Manju Ganesh", "role": "UI/UX Designer"}
             ]
         },
         "zones": live_zone_state,
@@ -515,32 +540,69 @@ def inject_incident(injection: IncidentInjection):
 def submit_citizen_report(report: CitizenReport):
     """
     Accepts commuter hazard submissions, performs mock AI optical validation,
-    and forwards confirmed incidents to the municipal queue.
+    creates automated BBMP/BTP work order, and synchronizes across hosts.
     """
     timestamp_str = datetime.now().strftime("%H:%M:%S")
     zid = report.zone_id if report.zone_id in live_zone_state else "silk_board"
     zone = live_zone_state[zid]
     
-    # Mock AI Optical Verification of commuter photo
-    water_estimate = round(random.uniform(22.0, 38.0), 1)
-    confidence = round(random.uniform(92.0, 98.5), 1)
-    verification_msg = f"AI VISION VERIFIED (Estimated Inundation {water_estimate} cm, Confidence {confidence}%)"
+    # Optical AI Verification (use client estimate if supplied, or compute realistic reading)
+    water_estimate = report.ai_depth_cm if report.ai_depth_cm is not None else round(random.uniform(24.0, 38.0), 1)
+    confidence = report.ai_confidence_pct if report.ai_confidence_pct is not None else round(random.uniform(94.0, 99.2), 1)
+    authenticity = report.ai_authenticity_pct if report.ai_authenticity_pct is not None else round(random.uniform(98.0, 99.8), 1)
     
+    verification_msg = f"AI VISION VERIFIED (Depth ~{water_estimate}cm, Conf: {confidence}%, Anti-Spoof: {authenticity}%)"
     rep_id = f"CIT-REP-{random.randint(500, 999)}"
+    
+    # Auto-generate linked municipal dispatch ticket in active queue
+    wo_id = f"BBMP-WO-{random.randint(9100, 9999)}"
+    if "Collision" in report.hazard_type:
+        wo_type = "EMERGENCY_TRAFFIC_CLEARANCE"
+        wo_unit = f"BTP Patrol & 108 Emergency Crew #{random.randint(4, 18)}"
+        wo_cause = f"Citizen Report #{rep_id} ({report.reporter_name}): Carriageway collision obstructing corridor."
+        initial_status = "ESCALATED_TO_ICCC"
+    else:
+        wo_type = "CITIZEN_ESCALATED_HYDRO_DESILTING"
+        wo_unit = f"BBMP Silt-Suction Rapid Unit #{random.randint(11, 24)}"
+        wo_cause = f"Citizen Report #{rep_id} ({report.reporter_name}): {report.hazard_type} (AI depth ~{water_estimate}cm)."
+        initial_status = "DISPATCHED_TO_BBMP"
+
+    new_wo = {
+        "id": wo_id,
+        "zone_id": zid,
+        "zone_name": zone["name"],
+        "ward": zone["ward"],
+        "type": wo_type,
+        "cause": wo_cause,
+        "priority": "HIGH",
+        "status": "DISPATCHED",
+        "unit": wo_unit,
+        "sla_minutes": 30,
+        "created_at": timestamp_str,
+        "linked_citizen_report": rep_id
+    }
+    work_orders.insert(0, new_wo)
+
     record = {
         "id": rep_id,
         "reporter_name": report.reporter_name,
         "reporter_phone": report.reporter_phone,
+        "zone_id": zid,
         "zone_name": zone["name"],
+        "ward": zone["ward"],
         "hazard_type": report.hazard_type,
         "description": report.description,
         "lat": report.latitude,
         "lng": report.longitude,
         "timestamp": timestamp_str,
         "ai_verification": verification_msg,
-        "status": "ESCALATED_TO_ICCC"
+        "ai_depth_cm": water_estimate,
+        "ai_confidence_pct": confidence,
+        "ai_authenticity_pct": authenticity,
+        "severity": report.severity_level or "CRITICAL",
+        "status": initial_status,
+        "linked_wo_id": wo_id
     }
-    
     citizen_reports_list.insert(0, record)
     
     # Create an ICCC emergency alert
@@ -555,30 +617,74 @@ def submit_citizen_report(report: CitizenReport):
     }
     emergency_alerts.insert(0, new_alert)
     
-    system_log.append(f"[{timestamp_str}] [CITIZEN SAFETY] New report #{rep_id} from {report.reporter_name} at {zone['name']}. {verification_msg}")
+    system_log.append(f"[{timestamp_str}] [CITIZEN SAFETY] New report #{rep_id} from {report.reporter_name} at {zone['name']}. Work Order #{wo_id} issued.")
     
     return {
         "status": "RECEIVED",
         "report_id": rep_id,
+        "work_order_id": wo_id,
         "ai_analysis": {
             "verified": True,
             "estimated_hazard_depth_cm": water_estimate,
             "ai_confidence_pct": confidence,
-            "action_taken": "Synced with BBMP Command Center"
+            "authenticity_pct": authenticity,
+            "action_taken": f"Synced with BBMP Command Center (Work Order {wo_id})"
         }
     }
 
+@app.get("/api/citizen/reports")
+def get_all_citizen_reports():
+    """Returns list of active citizen reports with municipal status."""
+    return citizen_reports_list
+
+@app.post("/api/citizen/status")
+def update_citizen_report_status(update: CitizenStatusUpdate):
+    """Updates municipal status of a citizen report and syncs linked work orders."""
+    for r in citizen_reports_list:
+        if r["id"] == update.report_id:
+            r["status"] = update.status
+            timestamp_str = datetime.now().strftime("%H:%M:%S")
+            system_log.append(f"[{timestamp_str}] [CITIZEN SYNC] Report {r['id']} marked as {update.status}.")
+            
+            # Sync corresponding work order if resolved
+            if update.status == "RESOLVED":
+                for wo in work_orders:
+                    if wo.get("linked_citizen_report") == r["id"] or wo.get("id") == r.get("linked_wo_id"):
+                        wo["status"] = "RESOLVED"
+            return {"status": "UPDATED", "report": r}
+    raise HTTPException(status_code=404, detail="Citizen report not found")
+
 @app.post("/api/workorders/update")
 def update_work_order(update: WorkOrderUpdate):
-    for wo in work_orders:
+    global work_orders
+    for i, wo in enumerate(work_orders):
         if wo["id"] == update.order_id:
-            wo["status"] = update.status
             timestamp_str = datetime.now().strftime("%H:%M:%S")
+            if update.status == "DELETED":
+                work_orders.pop(i)
+                system_log.append(f"[{timestamp_str}] [BBMP DISPATCH] Work Order {update.order_id} cleared.")
+                return {"status": "DELETED", "order_id": update.order_id}
+            
+            wo["status"] = update.status
             system_log.append(f"[{timestamp_str}] [BBMP DISPATCH] Work Order {wo['id']} marked as {update.status}.")
+            # Also update linked citizen report if present
+            if wo.get("linked_citizen_report"):
+                for r in citizen_reports_list:
+                    if r["id"] == wo["linked_citizen_report"]:
+                        r["status"] = update.status
             return {"status": "UPDATED", "work_order": wo}
     raise HTTPException(status_code=404, detail="Work order not found")
 
-# Serve the Single-Page Command Center
+@app.post("/api/workorders/clear-resolved")
+def clear_resolved_work_orders():
+    global work_orders
+    before_count = len(work_orders)
+    work_orders = [wo for wo in work_orders if wo.get("status") != "RESOLVED"]
+    timestamp_str = datetime.now().strftime("%H:%M:%S")
+    system_log.append(f"[{timestamp_str}] [BBMP DISPATCH] Cleared {before_count - len(work_orders)} resolved tickets.")
+    return {"status": "SUCCESS", "cleared": before_count - len(work_orders), "remaining": len(work_orders)}
+
+# Serve the Single-Page Command Center (Prototype 1)
 @app.get("/", response_class=HTMLResponse)
 def serve_dashboard():
     index_path = os.path.join(os.path.dirname(__file__), "index.html")
@@ -587,13 +693,45 @@ def serve_dashboard():
             return f.read()
     return "<h1>HK-RHS Backend Online. Please ensure index.html is present in the root directory.</h1>"
 
+# Also serve Citizen Portal on main host as an alternate route (Prototype 2 Route)
+@app.get("/citizen", response_class=HTMLResponse)
+@app.get("/portal", response_class=HTMLResponse)
+def serve_citizen_portal():
+    citizen_path = os.path.join(os.path.dirname(__file__), "citizen.html")
+    if os.path.exists(citizen_path):
+        with open(citizen_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>Citizen Portal HTML not found.</h1>"
+
+@app.get("/manifest.json")
+def serve_manifest():
+    path = os.path.join(os.path.dirname(__file__), "manifest.json")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="application/manifest+json")
+    return {"name": "HK-RHS Suraksha"}
+
+@app.get("/sw.js")
+def serve_sw():
+    path = os.path.join(os.path.dirname(__file__), "sw.js")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="application/javascript")
+    return ""
+
+@app.get("/{filename}.png")
+def serve_png_images(filename: str):
+    path = os.path.join(os.path.dirname(__file__), f"{filename}.png")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="image/png")
+    return HTMLResponse(status_code=404, content="Image not found")
+
 if __name__ == "__main__":
     import uvicorn
     print("\n==========================================================================")
     print("  NAMMA BENGALURU - HK-RHS (Hydro-Kinetic Road Hazard System)")
     print("  REVA University HACKathon 3.0 | AI for Smart Cities & Sustainability")
-    print("  Team Apex Achievers (BMSIT)")
+    print("  Team: Team CyberSentinel / Apex Achievers (BMSIT)")
     print("==========================================================================")
-    print("  Starting local server on: http://127.0.0.1:8000")
+    print("  Starting Prototype 1 (ICCC Dashboard) on: http://127.0.0.1:8000")
+    print("  Prototype 2 (Citizen Portal) route on:   http://127.0.0.1:8000/citizen")
     print("==========================================================================\n")
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

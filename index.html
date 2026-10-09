@@ -143,9 +143,19 @@
         </span>
         <span class="text-slate-500">•</span>
         <span class="text-slate-200">
-          REVA UNIVERSITY HACKathon 3.0 • <strong class="text-white">Team Apex Achievers (BMSIT)</strong>
+          REVA UNIVERSITY HACKathon 3.0 • <strong class="text-white">Team CyberSentinel / Apex Achievers (BMSIT)</strong>
         </span>
       </div>
+    </div>
+
+    <!-- Center/Right Action: Launch Prototype 2 (Citizen Safety PWA on Port 8001) -->
+    <div class="hidden md:flex items-center gap-2">
+      <a href="http://127.0.0.1:8001" target="_blank" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-950/80 to-blue-950/80 border border-cyan-500/50 text-cyan-300 hover:text-white hover:border-cyan-400 transition text-xs font-mono font-bold flex items-center gap-2 shadow-md shadow-cyan-950/40 group">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+        <i class="fa-solid fa-mobile-screen text-cyan-400 group-hover:scale-110 transition"></i>
+        <span>Prototype 2: Citizen PWA (Port 8001)</span>
+        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
+      </a>
     </div>
 
     <!-- Right Header Team Roster Badge (Hexagonal Capsule Box) -->
@@ -171,6 +181,30 @@
   <!-- INTEGRATED ICCC SCREEN WALL (3-COLUMN VIDEO WALL LAYOUT) -->
   <!-- ========================================================================= -->
   <div class="p-3.5 flex-1 flex flex-col gap-3 max-w-[1920px] mx-auto w-full">
+
+    <!-- Real-time Cross-Host Sync Toast Banner (Pops when citizen submits on port 8001) -->
+    <div id="crosshost-sync-toast" class="hidden command-panel bg-gradient-to-r from-cyan-950/90 via-slate-900/90 to-amber-950/90 border border-cyan-500/60 rounded-xl p-3 flex items-center justify-between shadow-xl">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+        </div>
+        <div>
+          <div class="text-xs font-mono font-bold text-white flex items-center gap-2">
+            <span class="text-cyan-400">⚡ CROSS-HOST TELEMETRY SYNC:</span>
+            <span id="toast-title">New Citizen Report Received from Port 8001!</span>
+          </div>
+          <p id="toast-desc" class="text-[11px] text-slate-300 mt-0.5 font-sans"></p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="openKpiModal('citizen')" class="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold font-mono transition">
+          Inspect in Modal
+        </button>
+        <button onclick="dismissSyncToast()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
     
     <!-- TOP WORKBENCH GRID -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1">
@@ -302,6 +336,7 @@
             <button onclick="selectCorridor('silk_board')" class="px-2 py-0.5 rounded text-[11px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold" id="pill-silk_board">Silk Board</button>
             <button onclick="selectCorridor('orr_bellandur')" class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300 hover:text-white" id="pill-orr_bellandur">ORR</button>
             <button onclick="selectCorridor('hebbal')" class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300 hover:text-white" id="pill-hebbal">Hebbal</button>
+            <button onclick="selectCorridor('whitefield')" class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300 hover:text-white" id="pill-whitefield">Whitefield</button>
             <button onclick="selectCorridor('majestic')" class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300 hover:text-white" id="pill-majestic">Majestic</button>
           </div>
 
@@ -869,10 +904,16 @@
         <div id="kpi-pane-desilting" class="hidden space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
             <span>BBMP Stormwater Wing • Automated SLA Hydro-Jetting Dispatches</span>
-            <button onclick="injectDemo('silt_clog')" class="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition text-[11px] font-bold flex items-center gap-1.5">
-              <i class="fa-solid fa-plus"></i>
-              <span>Issue New Desilting Order</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="clearResolvedWorkOrders()" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition text-[11px] font-bold flex items-center gap-1.5" title="Clear all completed work orders">
+                <i class="fa-solid fa-broom text-[10px]"></i>
+                <span>Clear Resolved</span>
+              </button>
+              <button onclick="injectDemo('silt_clog')" class="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition text-[11px] font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-plus"></i>
+                <span>Issue New Desilting Order</span>
+              </button>
+            </div>
           </div>
 
           <div class="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950">
@@ -1255,6 +1296,7 @@
 
       const citReports = data.citizen_reports ? data.citizen_reports.length : 0;
       document.getElementById('kpi-citizen-val').innerText = `${citReports} Verified`;
+      checkNewCitizenReports(data.citizen_reports);
 
       // Render Selected Corridor Details (Right Panel)
       renderCorridorDetail(zones[activeCorridorId]);
@@ -1281,7 +1323,7 @@
         mainMap.panTo([zone.lat, zone.lng]);
         
         // Update Pills
-        ['silk_board', 'orr_bellandur', 'hebbal', 'majestic'].forEach(zid => {
+        ['silk_board', 'orr_bellandur', 'hebbal', 'whitefield', 'majestic', 'kr_puram', 'goraguntepalya'].forEach(zid => {
           const pill = document.getElementById(`pill-${zid}`);
           if (pill) {
             if (zid === zoneId) {
@@ -1751,17 +1793,20 @@
       }
 
       tbody.innerHTML = orders.map(o => `
-        <tr class="hover:bg-slate-900/60 transition">
-          <td class="p-2.5 font-bold text-cyan-400">${o.id}</td>
+        <tr class="hover:bg-slate-900/60 transition ${o.status === 'RESOLVED' ? 'opacity-60 bg-slate-950/40' : ''}">
+          <td class="p-2.5 font-bold ${o.status === 'RESOLVED' ? 'text-slate-400 line-through' : 'text-cyan-400'}">${o.id}</td>
           <td class="p-2.5 text-slate-200">${o.zone_name.split(' - ')[0]}<br><span class="text-[10px] text-slate-400">${o.ward}</span></td>
           <td class="p-2.5 text-slate-300 text-[11px] max-w-xs">${o.cause}</td>
           <td class="p-2.5 text-slate-200">${o.unit}</td>
           <td class="p-2.5"><span class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded text-[10px]">${o.sla_minutes}m SLA</span></td>
-          <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.status === 'RESOLVED' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">${o.status}</span></td>
+          <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.status === 'RESOLVED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : o.status === 'EN_ROUTE' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">${o.status}</span></td>
           <td class="p-2.5 text-right">
             ${o.status === 'RESOLVED' 
-              ? '<span class="text-slate-500 text-[11px]">✓ Closed</span>' 
-              : `<button onclick="resolveWorkOrder('${o.id}')" class="px-2.5 py-1 rounded bg-cyan-600/30 hover:bg-cyan-500 hover:text-slate-950 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold transition">Mark Done</button>`
+              ? `<div class="flex items-center justify-end gap-2">
+                   <span class="text-emerald-400 font-bold text-[10px] flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Resolved</span>
+                   <button onclick="resolveWorkOrder('${o.id}', 'DELETED')" title="Delete from list" class="text-slate-400 hover:text-rose-400 p-1 text-xs transition cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                 </div>`
+              : `<button onclick="resolveWorkOrder('${o.id}', 'RESOLVED')" class="px-2.5 py-1 rounded bg-emerald-600/30 hover:bg-emerald-500 hover:text-slate-950 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold transition flex items-center gap-1 ml-auto cursor-pointer shadow-sm"><i class="fa-solid fa-check"></i> Mark Done</button>`
             }
           </td>
         </tr>
@@ -1797,13 +1842,112 @@
               </div>
             </div>
           </div>
-          <div>
-            <span class="px-2 py-1 rounded text-[10px] font-bold bg-cyan-950/60 border border-cyan-800/40 text-cyan-300">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-1 rounded text-[10px] font-bold ${r.status === 'RESOLVED' ? 'bg-emerald-950/60 border border-emerald-800/40 text-emerald-300' : 'bg-cyan-950/60 border border-cyan-800/40 text-cyan-300'}">
               ${r.status}
             </span>
+            ${r.status !== 'RESOLVED' ? `
+              <button onclick="resolveCitizenReport('${r.id}')" class="px-2 py-1 rounded bg-emerald-600/30 hover:bg-emerald-500 hover:text-slate-950 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold transition">
+                ✓ Mark Resolved
+              </button>
+            ` : ''}
           </div>
         </div>
       `).join('');
+    }
+
+    async function resolveWorkOrder(id, newStatus = "RESOLVED") {
+      try {
+        // Immediate optimistic UI update
+        if (stateCache && stateCache.work_orders) {
+          if (newStatus === "DELETED") {
+            stateCache.work_orders = stateCache.work_orders.filter(wo => wo.id !== id);
+          } else {
+            stateCache.work_orders.forEach(wo => {
+              if (wo.id === id) wo.status = newStatus;
+            });
+          }
+        }
+        renderKpiDesilting();
+
+        const res = await fetch('/api/workorders/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order_id: id,
+            status: newStatus
+          })
+        });
+
+        if (res.ok) {
+          await updateSystemState();
+          renderKpiDesilting();
+        } else {
+          console.error("Failed to update work order:", await res.text());
+        }
+      } catch (err) {
+        console.error("Error updating work order:", err);
+      }
+    }
+
+    async function clearResolvedWorkOrders() {
+      try {
+        // Optimistic UI update
+        if (stateCache && stateCache.work_orders) {
+          stateCache.work_orders = stateCache.work_orders.filter(wo => wo.status !== "RESOLVED");
+        }
+        renderKpiDesilting();
+
+        const res = await fetch('/api/workorders/clear-resolved', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (res.ok) {
+          await updateSystemState();
+          renderKpiDesilting();
+        }
+      } catch (err) {
+        console.error("Error clearing resolved work orders:", err);
+      }
+    }
+
+    async function resolveCitizenReport(reportId) {
+      try {
+        await fetch('/api/citizen/status', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ report_id: reportId, status: 'RESOLVED' })
+        });
+        updateSystemState();
+      } catch(e) {
+        console.error("Resolve error:", e);
+      }
+    }
+
+    function dismissSyncToast() {
+      const toast = document.getElementById('crosshost-sync-toast');
+      if (toast) toast.classList.add('hidden');
+    }
+
+    let lastKnownCitizenReportsCount = -1;
+    function checkNewCitizenReports(reports) {
+      if (!reports) return;
+      if (lastKnownCitizenReportsCount !== -1 && reports.length > lastKnownCitizenReportsCount) {
+        const latest = reports[0];
+        const toast = document.getElementById('crosshost-sync-toast');
+        const title = document.getElementById('toast-title');
+        const desc = document.getElementById('toast-desc');
+        if (toast && latest) {
+          title.innerText = `Report #${latest.id} (${latest.hazard_type}) from ${latest.reporter_name}!`;
+          desc.innerText = `${latest.zone_name} • ${latest.description || 'Hazard reported'} • Automatically routed to BBMP queue.`;
+          toast.classList.remove('hidden');
+          setTimeout(() => {
+            if (toast) toast.classList.add('hidden');
+          }, 9000);
+        }
+      }
+      lastKnownCitizenReportsCount = reports.length;
     }
 
     function focusCorridorFromModal(zid) {
