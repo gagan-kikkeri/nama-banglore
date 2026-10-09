@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Namma Bengaluru - HK-RHS | Smart City Command Center</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            },
+            radar: '#06b6d4',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            cyber: '#0f172a'
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'Consolas', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet CSS & JS for Real-time Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Chart.js for Live Telemetry -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 0.2; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .radar-sweep {
+      background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, rgba(15,23,42,0) 70%);
+      position: relative;
+      overflow: hidden;
+    }
+    .radar-sweep::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 100%; height: 100%;
+      background: conic-gradient(from 0deg, rgba(6,182,212,0.4) 0deg, transparent 60deg, transparent 360deg);
+      transform-origin: 0 0;
+      animation: rotate-sweep 4s linear infinite;
+    }
+    @keyframes rotate-sweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .led-matrix {
+      background-color: #050505;
+      color: #ffaa00;
+      font-family: 'Courier New', Courier, monospace;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px #ff9900;
+      border: 3px solid #1a1a1a;
+    }
+    .led-matrix.red {
+      color: #ff3333;
+      text-shadow: 0 0 8px #ff1111;
+    }
+    .led-matrix.green {
+      color: #00ff66;
+      text-shadow: 0 0 8px #00cc44;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b1120; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- ========================================================================= -->
+  <!-- TOP ICCC SYSTEM STATUS HEADER -->
+  <!-- ========================================================================= -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Project Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyan-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-water text-slate-950 text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-bold text-lg tracking-tight text-white flex items-center gap-1.5">
+              <span>NAMMA BENGALURU</span>
+              <span class="text-cyan-400 font-mono text-base font-extrabold">• HK-RHS</span>
+            </h1>
+            <span class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+              Hydro-Kinetic Road Hazard System
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 flex items-center gap-2">
+            <span class="text-emerald-400 font-medium">REVA HACKathon 3.0</span>
+            <span>•</span>
+            <span class="text-slate-300">Team: <strong class="text-white">Apex Achievers (BMSIT)</strong></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Badges -->
+      <div class="hidden lg:flex items-center space-x-3 text-xs font-mono">
+        <div class="px-3 py-1.5 rounded-md bg-slate-800/80 border border-slate-700/60 flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-300">77 GHz FMCW Radar:</span>
+          <span class="text-emerald-400 font-semibold">ONLINE (HDPE Radome Sealed)</span>
+        </div>
+        <div class="px-3 py-1.5 rounded-md bg-slate-800/80 border border-slate-700/60 flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+          <span class="text-slate-300">ITMS Edge-AI CV:</span>
+          <span class="text-cyan-400 font-semibold" id="top-fps">29.8 FPS (14ms)</span>
+        </div>
+        <div class="px-3 py-1.5 rounded-md bg-slate-800/80 border border-slate-700/60 flex items-center space-x-2">
+          <i class="fa-solid fa-clock text-slate-400"></i>
+          <span class="text-slate-300 font-semibold" id="system-clock">--:--:-- IST</span>
+        </div>
+      </div>
+
+      <!-- View / Action Switchers -->
+      <div class="flex items-center space-x-2">
+        <button onclick="openCitizenModal()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition flex items-center gap-2">
+          <i class="fa-solid fa-mobile-screen"></i>
+          <span>Citizen Portal</span>
+        </button>
+        <button onclick="scrollToScenario()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/30 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Judge Demo Triggers</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- TEAM & ARCHITECTURE BANNER -->
+  <!-- ========================================================================= -->
+  <div class="bg-gradient-to-r from-slate-900 via-slate-800/80 to-slate-900 border-b border-slate-800 px-4 py-2 text-xs">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-slate-300">
+      <div class="flex items-center gap-2 font-mono">
+        <span class="text-cyan-400 font-bold"><i class="fa-solid fa-microchip mr-1"></i>Apex Achievers:</span>
+        <span class="text-slate-200">Gagan N Prasad (Lead Architect)</span> • 
+        <span class="text-slate-200">Machal Ritesh Govardhan (Product Strategist)</span> • 
+        <span class="text-slate-200">Manav Redhu (Technical Operator)</span>
+      </div>
+      <div class="text-[11px] text-slate-400">
+        Zero Excavation • Repurposed ITMS Poles • Corrosive H₂S Gas Isolation
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE DASHBOARD -->
+  <!-- ========================================================================= -->
+  <main class="max-w-7xl mx-auto p-4 flex-1 w-full space-y-4">
+
+    <!-- TOP KPI STAT CARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <div class="text-xs text-slate-400 font-medium">Corridors Monitored</div>
+          <div class="text-xl font-bold font-mono text-white flex items-center gap-2">
+            <span>6 Zones</span>
+            <span class="text-[10px] text-emerald-400 font-sans font-medium">100% Active</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <div class="text-xs text-slate-400 font-medium">Critical Risk Corridors</div>
+          <div class="text-xl font-bold font-mono text-amber-400" id="kpi-critical-count">0 Nodes</div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-truck-pickup"></i>
+        </div>
+        <div>
+          <div class="text-xs text-slate-400 font-medium">BBMP Desilting Work Orders</div>
+          <div class="text-xl font-bold font-mono text-emerald-400" id="kpi-work-orders">1 Active</div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+        <div>
+          <div class="text-xs text-slate-400 font-medium">Citizen Safety Alerts</div>
+          <div class="text-xl font-bold font-mono text-purple-400" id="kpi-citizen-alerts">1 Verified</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN TWO-COLUMN WORKBENCH -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      
+      <!-- LEFT COLUMN: LEAFLET MAP & CORRIDOR SELECTOR (7 COLS) -->
+      <div class="lg:col-span-7 flex flex-col space-y-4">
+        
+        <!-- INTERACTIVE MAP CONTAINER -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden flex flex-col shadow-xl">
+          <div class="px-4 py-3 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-map-location-dot text-cyan-400"></i>
+              <span class="font-semibold text-sm text-slate-100">Bengaluru Arterial Hydro-Kinetic Map</span>
+              <span class="text-xs text-slate-400 font-mono">(Live GPS Telemetry)</span>
+            </div>
+            <div class="flex items-center space-x-2 text-xs">
+              <span class="inline-flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Normal</span>
+              <span class="inline-flex items-center gap-1 text-amber-400"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Caution</span>
+              <span class="inline-flex items-center gap-1 text-rose-400"><span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> Critical</span>
+            </div>
+          </div>
+          
+          <!-- Leaflet Map Container -->
+          <div id="map" class="w-full h-[400px] z-10"></div>
+          
+          <!-- Zone Selection Pill Buttons -->
+          <div class="p-3 bg-slate-900/95 border-t border-slate-800 flex flex-wrap gap-2 text-xs">
+            <span class="text-slate-400 self-center font-medium mr-1">Select Corridor:</span>
+            <div id="zone-pill-container" class="flex flex-wrap gap-2">
+              <!-- Dynamically populated pills -->
+            </div>
+          </div>
+        </div>
+
+        <!-- EDGE-AI COMPUTER VISION LIVE STREAM (ITMS POLE SIMULATOR) -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+          <div class="px-4 py-3 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-video text-cyan-400"></i>
+              <span class="font-semibold text-sm text-slate-100">ITMS Speed Camera Edge-AI CV Stream</span>
+              <span id="cv-pole-badge" class="bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-mono px-2 py-0.5 rounded">
+                BTP-ITMS-SB-04
+              </span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs font-mono">
+              <span class="text-slate-400">Model: <strong class="text-slate-200">YOLOv8-Edge / RT-DETR</strong></span>
+              <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 30 FPS
+              </span>
+            </div>
+          </div>
+
+          <!-- Video Canvas / Visualizer -->
+          <div class="p-4 bg-slate-950 relative">
+            <div class="w-full h-56 rounded-lg bg-slate-900 border border-slate-800 overflow-hidden relative flex flex-col justify-between p-3 font-mono">
+              
+              <!-- Video Header HUD -->
+              <div class="flex justify-between items-center text-[11px] z-20 text-slate-400">
+                <div class="bg-slate-950/80 px-2 py-1 rounded border border-slate-800 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                  <span class="text-white font-bold">LIVE RTSP OPTICAL FEED</span>
+                  <span class="text-slate-400" id="cv-camera-time">12:30:45</span>
+                </div>
+                <div class="bg-slate-950/80 px-2 py-1 rounded border border-slate-800 text-cyan-400">
+                  DECEL SENSITIVITY: 4.5 m/s²
+                </div>
+              </div>
+
+              <!-- Animated Simulated Canvas Grid / Bounding Boxes -->
+              <div id="cv-overlay-screen" class="absolute inset-0 flex items-center justify-center pointer-events-none p-4">
+                <!-- Dynamic bounding boxes injected here -->
+                <div id="normal-traffic-boxes" class="w-full h-full relative">
+                  <div class="absolute left-[15%] top-[45%] border-2 border-emerald-400/80 bg-emerald-500/10 rounded px-1.5 py-0.5 text-[10px] text-emerald-300 font-mono">
+                    CAR_01 [48 km/h]
+                  </div>
+                  <div class="absolute left-[45%] top-[35%] border-2 border-emerald-400/80 bg-emerald-500/10 rounded px-1.5 py-0.5 text-[10px] text-emerald-300 font-mono">
+                    BUS_BMTC [36 km/h]
+                  </div>
+                  <div class="absolute left-[70%] top-[55%] border-2 border-emerald-400/80 bg-emerald-500/10 rounded px-1.5 py-0.5 text-[10px] text-emerald-300 font-mono">
+                    2W_AUTO [42 km/h]
+                  </div>
+                </div>
+
+                <!-- Collision Warning Box (Hidden by default) -->
+                <div id="accident-warning-overlay" class="hidden absolute inset-4 border-2 border-rose-500 bg-rose-950/40 backdrop-blur-[1px] rounded-lg p-4 flex flex-col items-center justify-center text-center animate-pulse">
+                  <i class="fa-solid fa-triangle-exclamation text-rose-500 text-4xl mb-2"></i>
+                  <div class="text-rose-400 font-extrabold text-lg uppercase tracking-wider">COLLISION & DECELERATION SPIKE DETECTED</div>
+                  <div class="text-xs text-rose-200 mt-1 font-mono">Confidence: 96.4% | Stationary Vehicles: 2 | Carriageway Impaired</div>
+                  <div class="mt-3 px-3 py-1 bg-rose-600 text-white rounded text-xs font-bold uppercase tracking-wider">
+                    AUTOMATED 112 & BTP PATROL DISPATCHED
+                  </div>
+                </div>
+              </div>
+
+              <!-- Video Footer HUD -->
+              <div class="flex justify-between items-center text-[10px] z-20 text-slate-400">
+                <span id="cv-hud-speed">CORRIDOR MEAN SPEED: 42.0 KM/H</span>
+                <span class="text-emerald-400 font-semibold" id="cv-hud-status">STATUS: FLOW NORMAL</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DYNAMIC VMS HIGHWAY SIGN BOARD SIMULATOR -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2 text-xs font-semibold text-slate-300">
+              <i class="fa-solid fa-rectangle-ad text-amber-400"></i>
+              <span>Dynamic Highway VMS Display</span>
+              <span class="text-slate-400 font-mono text-[11px]" id="vms-gantry-label">(Silk Board Gantry)</span>
+            </div>
+            <span class="text-[10px] font-mono bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
+              Auto-Synced to Risk Score
+            </span>
+          </div>
+
+          <!-- LED Matrix Board -->
+          <div class="led-matrix rounded-lg p-3 text-center text-sm md:text-base font-bold shadow-inner" id="vms-display-board">
+            CORRIDOR CLEAR • MAINTAIN SAFE LANE DISTANCE • SPEED 50 KM/H
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: TELEMETRY, HYDRO-KINETIC CALCULATIONS & DISPATCH (5 COLS) -->
+      <div class="lg:col-span-5 flex flex-col space-y-4">
+        
+        <!-- FOCUSED ZONE DETAILS & SENSOR STACK -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl space-y-4">
+          
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-[11px] text-cyan-400 font-mono font-semibold uppercase tracking-wider" id="active-ward">
+                Ward 174 (Bommanahalli / HSR)
+              </div>
+              <h2 class="text-base font-bold text-white" id="active-zone-name">
+                Silk Board Junction - Hosur Rd
+              </h2>
+            </div>
+            
+            <div class="text-right">
+              <div class="text-[10px] text-slate-400 font-medium">Corridor Risk Score</div>
+              <div class="text-2xl font-black font-mono" id="active-risk-score">
+                <span class="text-emerald-400">0.18</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SENSOR STACK: 60/77 GHz FMCW RADAR & HDPE RADOME SPEC -->
+          <div class="bg-slate-950/80 rounded-lg p-3 border border-slate-800/80 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-300 font-medium flex items-center gap-1.5">
+                <i class="fa-solid fa-tower-broadcast text-cyan-400"></i>
+                <span>60/77 GHz FMCW Radar</span>
+              </span>
+              <span class="text-emerald-400 font-mono text-[11px]">Soffit Mounted</span>
+            </div>
+            
+            <!-- Water Level Visual Progress -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs font-mono">
+                <span class="text-slate-400">Basin Water Depth:</span>
+                <span class="text-cyan-300 font-bold" id="radar-water-depth">24.0 cm / 120 cm (20.0%)</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5">
+                <div id="radar-progress-bar" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 20%"></div>
+              </div>
+            </div>
+
+            <!-- HDPE Radome Window Details -->
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-[11px] font-mono">
+              <div class="bg-slate-900/60 p-2 rounded border border-slate-800">
+                <div class="text-slate-400">Radome Window:</div>
+                <div class="text-emerald-300 font-semibold">3.2mm Tilted HDPE</div>
+                <div class="text-[9px] text-slate-500">Zero H₂S Sewer Gas Ingress</div>
+              </div>
+              <div class="bg-slate-900/60 p-2 rounded border border-slate-800">
+                <div class="text-slate-400">Doppler Rainfall:</div>
+                <div class="text-cyan-300 font-semibold" id="rainfall-telemetry">14.0 mm/hr</div>
+                <div class="text-[9px] text-slate-500">Virtual Radar Grid</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HYDRO-KINETIC MATHEMATICAL ENGINE (DIFFERENTIAL INFLOW INDEX) -->
+          <div class="bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg p-3 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-square-root-variable text-cyan-400"></i>
+                <span>Differential Inflow Index (ΔH)</span>
+              </div>
+              <span id="classification-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                NORMAL DRAINAGE
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between bg-slate-950/70 p-2.5 rounded border border-slate-800">
+              <div>
+                <div class="text-[10px] text-slate-400 font-mono">ΔH Calculation:</div>
+                <div class="text-xs font-mono text-cyan-300">ΔH = (∂h/∂t) - α·R(t)</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-black font-mono text-white" id="delta-h-val">0.12</div>
+                <div class="text-[9px] text-slate-400 font-mono">Blockage Threshold: 0.80</div>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-400 leading-relaxed" id="classification-explanation">
+              Rate of basin rise matches precipitation run-off coefficient. Catch-basin flume clear of debris.
+            </p>
+          </div>
+
+          <!-- LIVE CHART: TELEMETRY TRENDS -->
+          <div class="bg-slate-950 rounded-lg p-3 border border-slate-800">
+            <div class="text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+              <span>Telemetry History (Last 15 Cycles)</span>
+              <span class="text-[10px] font-mono text-cyan-400">FMCW 77 GHz</span>
+            </div>
+            <div class="h-36">
+              <canvas id="telemetryChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- BBMP DESILTING WORK ORDERS & ICCC DISPATCH -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-clipboard-list text-emerald-400"></i>
+              <span class="font-semibold text-sm text-slate-100">BBMP Automated Work Orders</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+              Desilting SLAs
+            </span>
+          </div>
+
+          <!-- Orders List -->
+          <div class="space-y-2 max-h-56 overflow-y-auto pr-1" id="work-orders-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- ICCC LIVE SYSTEM AUDIT LOG -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-terminal text-cyan-400"></i>
+              <span>ICCC System Dispatch Audit Trail</span>
+            </span>
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          </div>
+          <div class="bg-slate-950 rounded p-2.5 font-mono text-[11px] text-slate-400 space-y-1 max-h-28 overflow-y-auto" id="audit-log-container">
+            <!-- Dynamic logs -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- JUDGE LIVE DEMONSTRATION CONTROLLER (INTERACTIVE SCENARIOS) -->
+    <!-- ========================================================================= -->
+    <div id="demo-scenarios-panel" class="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border-2 border-cyan-500/40 rounded-2xl p-5 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded bg-cyan-500 text-slate-950 font-bold text-xs font-mono uppercase tracking-wider">
+              Hackathon Evaluation Mode
+            </span>
+            <h3 class="text-base font-bold text-white">REVA HACKathon 3.0 Live Demonstration Triggers</h3>
+          </div>
+          <p class="text-xs text-slate-300 mt-0.5">
+            Demonstrate real-time AI & Hydro-Kinetic algorithmic isolation across Bengaluru high-density arteries.
+          </p>
+        </div>
+        <div class="text-xs font-mono text-slate-400">
+          Target Zone: <span class="text-cyan-400 font-bold" id="scenario-target-zone">Silk Board Junction</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Trigger 1 -->
+        <button onclick="injectScenario('silt_clog')" class="group p-3.5 rounded-xl bg-slate-800/80 hover:bg-amber-950/40 border border-amber-500/30 hover:border-amber-400 text-left transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-bold text-amber-300 text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>1. Silt/Debris Clog</span>
+              </span>
+              <span class="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">ΔH Spike</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-snug">
+              Moderate rain with massive basin rise. Isolates silt choke $\implies$ Auto-dispatches BBMP Desilting Work Order!
+            </p>
+          </div>
+          <div class="mt-3 text-[10px] font-mono text-amber-400 font-semibold group-hover:underline flex items-center gap-1">
+            <span>Execute Scenario</span> <i class="fa-solid fa-arrow-right text-[9px]"></i>
+          </div>
+        </button>
+
+        <!-- Trigger 2 -->
+        <button onclick="injectScenario('cloudburst')" class="group p-3.5 rounded-xl bg-slate-800/80 hover:bg-blue-950/40 border border-blue-500/30 hover:border-blue-400 text-left transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-bold text-blue-300 text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-cloud-showers-heavy"></i>
+                <span>2. Monsoon Cloudburst</span>
+              </span>
+              <span class="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">92 mm/hr</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-snug">
+              Extreme precipitation. Balanced $\Delta H$ $\implies$ Triggers High-Capacity Dewatering Pumps & VMS Diversions!
+            </p>
+          </div>
+          <div class="mt-3 text-[10px] font-mono text-blue-400 font-semibold group-hover:underline flex items-center gap-1">
+            <span>Execute Scenario</span> <i class="fa-solid fa-arrow-right text-[9px]"></i>
+          </div>
+        </button>
+
+        <!-- Trigger 3 -->
+        <button onclick="injectScenario('accident')" class="group p-3.5 rounded-xl bg-slate-800/80 hover:bg-rose-950/40 border border-rose-500/30 hover:border-rose-400 text-left transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-bold text-rose-300 text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-car-burst"></i>
+                <span>3. High-Speed Crash</span>
+              </span>
+              <span class="text-[10px] font-mono text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">Edge-AI CV</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-snug">
+              ITMS pole detects -6.8 m/s² deceleration spike + lane blockage $\implies$ Immediate Police/112 ICCC alarm!
+            </p>
+          </div>
+          <div class="mt-3 text-[10px] font-mono text-rose-400 font-semibold group-hover:underline flex items-center gap-1">
+            <span>Execute Scenario</span> <i class="fa-solid fa-arrow-right text-[9px]"></i>
+          </div>
+        </button>
+
+        <!-- Trigger 4 -->
+        <button onclick="injectScenario('reset')" class="group p-3.5 rounded-xl bg-slate-800/80 hover:bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 text-left transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-bold text-emerald-300 text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span>4. Normalize System</span>
+              </span>
+              <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Baseline</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-snug">
+              Clears injected bottlenecks and resets radar telemetry & camera feeds to standard operating baseline.
+            </p>
+          </div>
+          <div class="mt-3 text-[10px] font-mono text-emerald-400 font-semibold group-hover:underline flex items-center gap-1">
+            <span>Reset Baseline</span> <i class="fa-solid fa-arrow-right text-[9px]"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CITIZEN SAFETY WEB PORTAL (MOBILE-RESPONSIVE INTERFACE) -->
+  <!-- ========================================================================= -->
+  <div id="citizen-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="p-4 bg-gradient-to-r from-cyan-900/50 to-slate-900 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center text-slate-950 font-bold">
+            <i class="fa-solid fa-mobile-screen"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-sm">Namma Bengaluru Citizen Portal</h3>
+            <p class="text-[11px] text-slate-400">1-Tap Road Hazard & Flood Reporter</p>
+          </div>
+        </div>
+        <button onclick="closeCitizenModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body Form -->
+      <div class="p-4 overflow-y-auto space-y-3.5 text-xs">
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Your Name & Contact</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="cit-name" type="text" value="Priya Sharma" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white">
+            <input id="cit-phone" type="text" value="+91 98450 77123" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Hazard Location (Corridor)</label>
+          <select id="cit-zone" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white">
+            <option value="silk_board">Silk Board Junction - Hosur Rd</option>
+            <option value="orr_bellandur">Outer Ring Road - Bellandur</option>
+            <option value="hebbal">Hebbal Flyover - Airport Expressway</option>
+            <option value="majestic">Majestic - Anand Rao Circle Underpass</option>
+            <option value="kr_puram">K.R. Puram Hanging Bridge</option>
+            <option value="goraguntepalya">Goraguntepalya / Yeshwanthpur</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Hazard Category</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center space-x-2 bg-slate-950 p-2 rounded border border-slate-800 cursor-pointer">
+              <input type="radio" name="hazard_type" value="Waterlogging" checked class="text-cyan-500">
+              <span class="text-slate-200">Waterlogging</span>
+            </label>
+            <label class="flex items-center space-x-2 bg-slate-950 p-2 rounded border border-slate-800 cursor-pointer">
+              <input type="radio" name="hazard_type" value="Severe Collision" class="text-rose-500">
+              <span class="text-slate-200">Accident</span>
+            </label>
+            <label class="flex items-center space-x-2 bg-slate-950 p-2 rounded border border-slate-800 cursor-pointer">
+              <input type="radio" name="hazard_type" value="Drain Silt Overflow" class="text-amber-500">
+              <span class="text-slate-200">Drain Overflow</span>
+            </label>
+            <label class="flex items-center space-x-2 bg-slate-950 p-2 rounded border border-slate-800 cursor-pointer">
+              <input type="radio" name="hazard_type" value="Pothole Hazard" class="text-purple-500">
+              <span class="text-slate-200">Pothole</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Simulated Photo Upload with AI Computer Vision Verification -->
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Photo Upload (AI Watermark & Depth Verification)</label>
+          <div class="border-2 border-dashed border-slate-700 bg-slate-950 rounded-lg p-3 text-center cursor-pointer hover:border-cyan-500 transition" onclick="triggerSimulatedPhoto()">
+            <div id="photo-preview-placeholder">
+              <i class="fa-solid fa-camera text-slate-400 text-2xl mb-1"></i>
+              <p class="text-[11px] text-slate-400">Tap to capture or upload street flood photo</p>
+              <span class="inline-block mt-1 text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40">
+                AI Vision Depth Verification Active
+              </span>
+            </div>
+            <div id="photo-preview-active" class="hidden text-left bg-slate-900 p-2 rounded border border-emerald-500/40">
+              <div class="flex items-center justify-between text-emerald-400 font-mono text-[10px]">
+                <span><i class="fa-solid fa-circle-check"></i> Image Processed</span>
+                <span>Depth: ~32cm</span>
+              </div>
+              <div class="text-[11px] text-slate-300 mt-1">Simulated Bengaluru Street Inundation Frame Loaded.</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Incident Notes</label>
+          <textarea id="cit-desc" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white" placeholder="Describe the water depth, traffic impediment or vehicle hazard..."></textarea>
+        </div>
+
+        <!-- Submission Status Banner -->
+        <div id="cit-status-banner" class="hidden p-2 rounded text-[11px] font-mono"></div>
+
+        <button onclick="submitCitizenReport()" id="cit-submit-btn" class="w-full py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Submit Verified Report to BBMP ICCC</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-3 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2">
+      <div>
+        Namma Bengaluru - HK-RHS • REVA University HACKathon 3.0
+      </div>
+      <div class="font-mono text-slate-400">
+        Team Apex Achievers (BMSIT) • AI for Smart Cities & Sustainability
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT FRONTEND APPLICATION LOGIC -->
+  <!-- ========================================================================= -->
+  <script>
+    // State storage
+    let currentState = null;
+    let selectedZoneId = "silk_board";
+    let map = null;
+    let mapMarkers = {};
+    let telemetryChart = null;
+    let pollInterval = null;
+
+    // Clock updater
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('system-clock').innerText = now.toLocaleTimeString() + ' IST';
+      document.getElementById('cv-camera-time').innerText = now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Initialize Map with Leaflet
+    function initMap() {
+      // Centered around Bengaluru
+      map = L.map('map', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView([12.9716, 77.6100], 11);
+
+      // Dark theme CartoDB tiles
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 18,
+        subdomains: 'abcd'
+      }).addTo(map);
+    }
+
+    // Initialize Chart.js
+    function initChart() {
+      const ctx = document.getElementById('telemetryChart').getContext('2d');
+      telemetryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['-140s', '-120s', '-100s', '-80s', '-60s', '-40s', '-20s', 'Now'],
+          datasets: [
+            {
+              label: 'Water Depth (cm)',
+              data: [20, 21, 22, 23, 22, 24, 25, 24],
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              tension: 0.3,
+              fill: true,
+              yAxisID: 'y'
+            },
+            {
+              label: 'ΔH Inflow Index',
+              data: [0.1, 0.12, 0.11, 0.15, 0.13, 0.18, 0.16, 0.14],
+              borderColor: '#f59e0b',
+              borderDash: [4, 4],
+              tension: 0.2,
+              fill: false,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#94a3b8',
+                font: { size: 10 }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#64748b', font: { size: 9 } },
+              grid: { color: 'rgba(51, 65, 85, 0.2)' }
+            },
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              ticks: { color: '#06b6d4', font: { size: 9 } },
+              grid: { color: 'rgba(51, 65, 85, 0.2)' }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              ticks: { color: '#f59e0b', font: { size: 9 } },
+              grid: { drawOnChartArea: false }
+            }
+          }
+        }
+      });
+    }
+
+    // Fetch full system state from FastAPI backend
+    async function fetchSystemState() {
+      try {
+        const res = await fetch('/api/state');
+        if (!res.ok) return;
+        const data = await res.json();
+        currentState = data;
+        renderState(data);
+      } catch (err) {
+        console.error("Failed to fetch state:", err);
+      }
+    }
+
+    // Render full UI based on state
+    function renderState(data) {
+      if (!data || !data.zones) return;
+
+      const zones = data.zones;
+      let criticalCount = 0;
+
+      // Update Zone Pills & Map Markers
+      const pillContainer = document.getElementById('zone-pill-container');
+      const isFirstLoad = pillContainer.children.length === 0;
+
+      if (isFirstLoad) pillContainer.innerHTML = '';
+
+      Object.values(zones).forEach(zone => {
+        if (zone.risk_score > 0.65) criticalCount++;
+
+        // Update / Add Map Marker
+        let markerColor = '#10b981'; // Green
+        if (zone.risk_score > 0.75) markerColor = '#ef4444'; // Red
+        else if (zone.risk_score > 0.45) markerColor = '#f59e0b'; // Amber
+
+        if (!mapMarkers[zone.id]) {
+          const icon = L.divIcon({
+            className: 'custom-map-pin',
+            html: `
+              <div style="position:relative; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;">
+                <div style="position:absolute; width: 100%; height: 100%; border-radius: 9999px; background: ${markerColor}; opacity: 0.3; animation: pulse-ring 2s infinite;"></div>
+                <div style="width: 14px; height: 14px; border-radius: 9999px; background: ${markerColor}; border: 2px solid #ffffff; box-shadow: 0 0 8px ${markerColor};"></div>
+              </div>
+            `,
+            iconSize: [26, 26]
+          });
+
+          const marker = L.marker([zone.lat, zone.lng], { icon: icon }).addTo(map);
+          marker.bindTooltip(`<b>${zone.name}</b><br>Risk: ${zone.risk_score}`, { direction: 'top' });
+          marker.on('click', () => selectZone(zone.id));
+          mapMarkers[zone.id] = marker;
+        } else {
+          // Update marker tooltip
+          mapMarkers[zone.id].setTooltipContent(`<b>${zone.name}</b><br>Risk: ${zone.risk_score}`);
+        }
+
+        // Add Pill if first load
+        if (isFirstLoad) {
+          const pill = document.createElement('button');
+          pill.id = `pill-${zone.id}`;
+          pill.className = `px-2.5 py-1 rounded-md text-xs font-mono transition border ${
+            zone.id === selectedZoneId 
+              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold' 
+              : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-750'
+          }`;
+          pill.innerText = zone.name.split(' - ')[0];
+          pill.onclick = () => selectZone(zone.id);
+          pillContainer.appendChild(pill);
+        } else {
+          const pill = document.getElementById(`pill-${zone.id}`);
+          if (pill) {
+            if (zone.id === selectedZoneId) {
+              pill.className = 'px-2.5 py-1 rounded-md text-xs font-mono transition border bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold';
+            } else {
+              pill.className = 'px-2.5 py-1 rounded-md text-xs font-mono transition border bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-750';
+            }
+          }
+        }
+      });
+
+      // Update Top KPIs
+      document.getElementById('kpi-critical-count').innerText = `${criticalCount} Nodes`;
+      document.getElementById('kpi-critical-count').className = `text-xl font-bold font-mono ${criticalCount > 0 ? 'text-rose-400' : 'text-emerald-400'}`;
+      document.getElementById('kpi-work-orders').innerText = `${data.work_orders ? data.work_orders.length : 0} Active`;
+      document.getElementById('kpi-citizen-alerts').innerText = `${data.citizen_reports ? data.citizen_reports.length : 0} Verified`;
+
+      // Render Selected Zone Details
+      renderSelectedZone(zones[selectedZoneId]);
+
+      // Render Work Orders
+      renderWorkOrders(data.work_orders);
+
+      // Render Audit Log
+      renderAuditLogs(data.system_log);
+    }
+
+    // Select a Zone
+    function selectZone(zoneId) {
+      selectedZoneId = zoneId;
+      if (currentState && currentState.zones[zoneId]) {
+        const zone = currentState.zones[zoneId];
+        renderSelectedZone(zone);
+        map.panTo([zone.lat, zone.lng]);
+        
+        // Update pills
+        Object.keys(currentState.zones).forEach(zid => {
+          const pill = document.getElementById(`pill-${zid}`);
+          if (pill) {
+            if (zid === selectedZoneId) {
+              pill.className = 'px-2.5 py-1 rounded-md text-xs font-mono transition border bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold';
+            } else {
+              pill.className = 'px-2.5 py-1 rounded-md text-xs font-mono transition border bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-750';
+            }
+          }
+        });
+
+        document.getElementById('scenario-target-zone').innerText = zone.name;
+      }
+    }
+
+    // Render active zone details
+    function renderSelectedZone(zone) {
+      if (!zone) return;
+
+      document.getElementById('active-ward').innerText = zone.ward;
+      document.getElementById('active-zone-name').innerText = zone.name;
+      document.getElementById('cv-pole-badge').innerText = zone.itms_pole_id;
+      document.getElementById('vms-gantry-label').innerText = `(${zone.name.split(' - ')[0]} Gantry)`;
+
+      // Risk score color
+      const scoreElem = document.getElementById('active-risk-score');
+      let scoreColor = 'text-emerald-400';
+      if (zone.risk_score > 0.75) scoreColor = 'text-rose-400';
+      else if (zone.risk_score > 0.45) scoreColor = 'text-amber-400';
+      scoreElem.innerHTML = `<span class="${scoreColor}">${zone.risk_score}</span>`;
+
+      // Radar Progress & Telemetry
+      document.getElementById('radar-water-depth').innerText = `${zone.water_level_cm} cm / ${zone.max_capacity_cm} cm (${zone.water_level_pct}%)`;
+      const pBar = document.getElementById('radar-progress-bar');
+      pBar.style.width = `${Math.min(100, zone.water_level_pct)}%`;
+      if (zone.water_level_pct > 75) {
+        pBar.className = 'bg-gradient-to-r from-rose-500 to-red-600 h-full rounded-full transition-all duration-500';
+      } else if (zone.water_level_pct > 50) {
+        pBar.className = 'bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500';
+      } else {
+        pBar.className = 'bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-500';
+      }
+
+      document.getElementById('rainfall-telemetry').innerText = `${zone.rainfall_rate_mmhr} mm/hr`;
+      document.getElementById('delta-h-val').innerText = zone.delta_h.toFixed(2);
+
+      // Classification Badge
+      const badge = document.getElementById('classification-badge');
+      const explain = document.getElementById('classification-explanation');
+      if (zone.hazard_classification === 'SILT_DEBRIS_CLOG') {
+        badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        badge.innerText = 'SILT / DEBRIS CLOG';
+        explain.innerText = 'High ΔH spike with moderate precipitation: Hydraulic choke isolated inside catch-basin neck. Silt suction required.';
+      } else if (zone.hazard_classification === 'CLOUDBURST_OVERLOAD') {
+        badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40';
+        badge.innerText = 'MACRO CLOUDBURST OVERLOAD';
+        explain.innerText = 'Extreme precipitation surge. Run-off capacity exceeded across entire catchment. Dewatering pumps active.';
+      } else {
+        badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        badge.innerText = 'NORMAL DRAINAGE';
+        explain.innerText = 'Rate of basin rise matches precipitation run-off coefficient. Catch-basin flume clear of debris.';
+      }
+
+      // Edge-AI Video Feed HUD
+      document.getElementById('cv-hud-speed').innerText = `CORRIDOR MEAN SPEED: ${zone.traffic_speed_kmh} KM/H`;
+      const hudStatus = document.getElementById('cv-hud-status');
+      const accidentOverlay = document.getElementById('accident-warning-overlay');
+      const normalBoxes = document.getElementById('normal-traffic-boxes');
+
+      if (zone.accident_detected) {
+        hudStatus.className = 'text-rose-400 font-bold';
+        hudStatus.innerText = 'STATUS: COLLISION / BOTTLENECK';
+        accidentOverlay.classList.remove('hidden');
+        normalBoxes.classList.add('opacity-30');
+      } else {
+        hudStatus.className = 'text-emerald-400 font-semibold';
+        hudStatus.innerText = 'STATUS: FLOW NORMAL';
+        accidentOverlay.classList.add('hidden');
+        normalBoxes.classList.remove('opacity-30');
+      }
+
+      // Dynamic VMS Display Board
+      const vmsBoard = document.getElementById('vms-display-board');
+      vmsBoard.innerText = zone.vms_text;
+      if (zone.vms_color === 'RED') {
+        vmsBoard.className = 'led-matrix red rounded-lg p-3 text-center text-sm md:text-base font-bold shadow-inner';
+      } else if (zone.vms_color === 'AMBER') {
+        vmsBoard.className = 'led-matrix rounded-lg p-3 text-center text-sm md:text-base font-bold shadow-inner';
+      } else {
+        vmsBoard.className = 'led-matrix green rounded-lg p-3 text-center text-sm md:text-base font-bold shadow-inner';
+      }
+
+      // Update Chart with historical data
+      if (telemetryChart && zone.history_water_cm) {
+        telemetryChart.data.labels = zone.history_water_cm.map((_, i) => `-${(zone.history_water_cm.length - 1 - i) * 10}s`);
+        telemetryChart.data.datasets[0].data = zone.history_water_cm;
+        telemetryChart.data.datasets[1].data = zone.history_delta_h;
+        telemetryChart.update();
+      }
+    }
+
+    // Render Work Orders List
+    function renderWorkOrders(orders) {
+      const container = document.getElementById('work-orders-list');
+      if (!orders || orders.length === 0) {
+        container.innerHTML = '<div class="text-xs text-slate-500 italic p-2">No active desilting work orders.</div>';
+        return;
+      }
+
+      container.innerHTML = orders.map(order => `
+        <div class="bg-slate-950 p-2.5 rounded border border-slate-800 flex items-start justify-between text-xs">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono font-bold text-cyan-400">${order.id}</span>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                order.priority === 'CRITICAL' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'
+              }">${order.priority}</span>
+              <span class="text-slate-400 font-mono text-[10px]">${order.ward}</span>
+            </div>
+            <div class="text-slate-300 font-medium">${order.unit}</div>
+            <div class="text-[10px] text-slate-400">${order.cause}</div>
+          </div>
+          <div class="text-right flex flex-col items-end space-y-1">
+            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-1.5 py-0.5 rounded">
+              SLA: ${order.sla_minutes}m
+            </span>
+            <button onclick="resolveWorkOrder('${order.id}')" class="text-[10px] text-slate-400 hover:text-white underline">
+              ${order.status === 'RESOLVED' ? '✓ Closed' : 'Mark Done'}
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render Audit Logs
+    function renderAuditLogs(logs) {
+      if (!logs) return;
+      const container = document.getElementById('audit-log-container');
+      container.innerHTML = logs.map(l => `<div>${l}</div>`).join('');
+    }
+
+    // Scenario Injection Trigger (Judge Demo)
+    async function injectScenario(type) {
+      try {
+        const res = await fetch('/api/simulate/inject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            zone_id: selectedZoneId,
+            incident_type: type
+          })
+        });
+        const result = await res.json();
+        console.log("Scenario Result:", result);
+        await fetchSystemState();
+      } catch (err) {
+        alert("Scenario injection failed: " + err);
+      }
+    }
+
+    // Resolve Work Order
+    async function resolveWorkOrder(id) {
+      try {
+        await fetch('/api/workorders/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order_id: id,
+            status: "RESOLVED"
+          })
+        });
+        await fetchSystemState();
+      } catch (err) {
+        console.error("Failed to update work order:", err);
+      }
+    }
+
+    // Citizen Modal Controls
+    function openCitizenModal() {
+      document.getElementById('cit-zone').value = selectedZoneId;
+      document.getElementById('citizen-modal').classList.remove('hidden');
+    }
+
+    function closeCitizenModal() {
+      document.getElementById('citizen-modal').classList.add('hidden');
+    }
+
+    function triggerSimulatedPhoto() {
+      document.getElementById('photo-preview-placeholder').classList.add('hidden');
+      document.getElementById('photo-preview-active').classList.remove('hidden');
+    }
+
+    async function submitCitizenReport() {
+      const name = document.getElementById('cit-name').value;
+      const phone = document.getElementById('cit-phone').value;
+      const zoneId = document.getElementById('cit-zone').value;
+      const desc = document.getElementById('cit-desc').value || "Waterlogged carriageway causing severe gridlock near bus stop.";
+      const hazardType = document.querySelector('input[name="hazard_type"]:checked').value;
+
+      const btn = document.getElementById('cit-submit-btn');
+      btn.innerText = "Analyzing Photo with AI Vision...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/citizen/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reporter_name: name,
+            reporter_phone: phone,
+            zone_id: zoneId,
+            hazard_type: hazardType,
+            latitude: 12.9177,
+            longitude: 77.6238,
+            description: desc
+          })
+        });
+
+        const data = await res.json();
+        const banner = document.getElementById('cit-status-banner');
+        banner.className = 'p-2 rounded text-[11px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 block';
+        banner.innerHTML = `<strong>${data.report_id} VERIFIED!</strong> ${data.ai_analysis.action_taken} (Estimated Depth: ${data.ai_analysis.estimated_hazard_depth_cm}cm, Conf: ${data.ai_analysis.ai_confidence_pct}%)`;
+
+        setTimeout(() => {
+          closeCitizenModal();
+          banner.classList.add('hidden');
+          btn.innerText = "Submit Verified Report to BBMP ICCC";
+          btn.disabled = false;
+          fetchSystemState();
+        }, 2200);
+
+      } catch (err) {
+        alert("Submission error: " + err);
+        btn.innerText = "Submit Verified Report to BBMP ICCC";
+        btn.disabled = false;
+      }
+    }
+
+    function scrollToScenario() {
+      document.getElementById('demo-scenarios-panel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Startup on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      initChart();
+      fetchSystemState();
+      pollInterval = setInterval(fetchSystemState, 2500);
+    });
+  </script>
+</body>
+</html>
