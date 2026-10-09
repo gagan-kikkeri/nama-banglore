@@ -1227,6 +1227,29 @@ def ai_status_endpoint():
         ]
     }
 
+@app.post("/api/ai/set-key")
+def ai_set_key_endpoint(payload: Dict[str, Any]):
+    """
+    Dynamically updates the Gemini API key in backend memory or resets to default.
+    """
+    if payload.get("reset_default") or payload.get("api_key") == "default":
+        cur_key = config.reset_gemini_api_key()
+        return {
+            "status": "SUCCESS",
+            "message": "Reset to default Gemini API key successfully",
+            "key_fingerprint": cur_key[:6] + "..." + cur_key[-4:] if len(cur_key) > 10 else "DEFAULT"
+        }
+
+    new_key = str(payload.get("api_key", "")).strip()
+    if not new_key:
+        raise HTTPException(status_code=400, detail="API key cannot be empty")
+    config.set_gemini_api_key(new_key)
+    return {
+        "status": "SUCCESS",
+        "message": "Gemini API key updated successfully",
+        "key_fingerprint": new_key[:6] + "..." + new_key[-4:] if len(new_key) > 10 else "CUSTOM"
+    }
+
 # Serve Field Responder Portal (Prototype 3 Route on port 8000 as well)
 @app.get("/responder", response_class=HTMLResponse)
 @app.get("/field", response_class=HTMLResponse)

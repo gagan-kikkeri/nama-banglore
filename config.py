@@ -33,3 +33,15 @@ GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 # Application Settings
 APP_HOST = "127.0.0.1"
 APP_PORT = 8000
+
+def set_gemini_api_key(new_key: str) -> str:
+    global GEMINI_API_KEY
+    if new_key and new_key.strip():
+        GEMINI_API_KEY = new_key.strip()
+    return GEMINI_API_KEY
+
+def reset_gemini_api_key() -> str:
+    global GEMINI_API_KEY
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or base64.b64decode(_KEY_B64).decode("utf-8")
+    return GEMINI_API_KEY
+
