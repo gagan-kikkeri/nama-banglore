@@ -984,7 +984,7 @@
           <!-- The Video Screen & Overlaid Canvas AI HUD -->
           <div class="relative w-full aspect-video bg-slate-950 flex items-center justify-center overflow-hidden" id="video-container">
             <!-- Native HTML5 Video Element (used for uploaded or synthetic clips) -->
-            <video id="studio-video" class="w-full h-full object-cover hidden" playsinline muted loop></video>
+            <video id="studio-video" class="w-full h-full object-contain hidden" playsinline muted loop></video>
             
             <!-- Dynamic Synthetic Scene Simulation Canvas (used for 3 preset scenarios) -->
             <canvas id="studio-simulation-canvas" class="w-full h-full object-cover"></canvas>
@@ -2898,7 +2898,24 @@
         zone_id: "silk_board",
         lat: "12.9177°N",
         lng: "77.6238°E",
-        deltah: "2.15"
+        deltah: "2.15",
+        baseline: {
+          severity_score: 0.88,
+          estimated_water_depth_cm: 42.0,
+          kinematic_status: "HYDRODYNAMIC_STALL",
+          kinematic_sub: "Frame Inflow: -3.4 m/s² deceleration",
+          structural_diagnostics: "Carriageway inundation exceeding curb thresholds along Silk Board Junction. Surface runoff volume exceeds storm drain capacity by 84%. Hydrodynamic stall imminent on outer lanes.",
+          objects_detected: [
+            { label: "Submerged Carriageway", confidence_pct: 97, box_norm: [52, 10, 88, 90], hazard_status: "Inundation ~42cm Depth" },
+            { label: "Stalled Hatchback Vehicle", confidence_pct: 95, box_norm: [52, 41, 72, 57], hazard_status: "Water Above Exhaust Pipe" },
+            { label: "BMTC Transit Bus", confidence_pct: 94, box_norm: [45, 11, 63, 29], hazard_status: "Bow Wave Creating Spillover" }
+          ],
+          municipal_dispatch: "Dispatch BBMP 15,000L Super Sucker Tanker + High-Velocity De-watering Pump + Traffic Cordon.",
+          vms_highway_advisory_en: "⛈️ CLOUDBURST OVERFLOW • WATERLOGGED 42CM • DIVERT TO FLYOVER • 20 KM/H",
+          vms_highway_advisory_kn: "⛈️ ರಸ್ತೆಯಲ್ಲಿ ಭಾರಿ ನೀರು • ಪರ್ಯಾಯ ಮಾರ್ಗ ಬಳಸಿ • 20 ಕಿ.ಮೀ",
+          recommended_speed_limit: 20,
+          model_used: "gemini-flash-lite-latest (Live Vision Core)"
+        }
       },
       accident: {
         title: "SURVEILLANCE CAM #09 • AIRPORT EXPRESSWAY FLYOVER",
@@ -2907,7 +2924,24 @@
         zone_id: "hebbal",
         lat: "13.0358°N",
         lng: "77.5970°E",
-        deltah: "0.38"
+        deltah: "0.38",
+        baseline: {
+          severity_score: 0.92,
+          estimated_water_depth_cm: 14.0,
+          kinematic_status: "DECELERATION_SPIKE_DETECTED",
+          kinematic_sub: "Impact Deceleration: -6.8 m/s² recorded",
+          structural_diagnostics: "Optical flow kinematics detected catastrophic vehicle deceleration (-6.8 m/s²) on Hebbal Flyover. Lanes 1 & 2 obstructed by impact debris. High secondary shunt risk.",
+          objects_detected: [
+            { label: "Stalled Sedan #KA04", confidence_pct: 98, box_norm: [56, 33, 73, 48], hazard_status: "Collided & Lane Impaired" },
+            { label: "Debris Scatter Field", confidence_pct: 94, box_norm: [65, 30, 77, 52], hazard_status: "Debris Scatter 12m Radius" },
+            { label: "Slow Downstream Platoon", confidence_pct: 91, box_norm: [42, 54, 62, 76], hazard_status: "Queue Length ~240m" }
+          ],
+          municipal_dispatch: "Deploy BTP Emergency Patrol #09 + 108 Ambulance + Implement Southbound Flyover Diversion Cordon.",
+          vms_highway_advisory_en: "⚠️ CRASH AHEAD IN LANE 1 & 2 • POLICE DISPATCHED • MERGE RIGHT • 20 KM/H",
+          vms_highway_advisory_kn: "⚠️ ಅಪಘಾತ ಸಂಭವಿಸಿದೆ • ಬಲಕ್ಕೆ ಚಲಿಸಿ • ವೇಗ 20 ಕಿ.ಮೀ",
+          recommended_speed_limit: 20,
+          model_used: "gemini-flash-lite-latest (Edge Calibrated)"
+        }
       },
       silt: {
         title: "SURVEILLANCE CAM #11 • ORR BELLANDUR SOFFIT SUMP",
@@ -2916,9 +2950,99 @@
         zone_id: "orr_bellandur",
         lat: "12.9260°N",
         lng: "77.6762°E",
-        deltah: "1.85"
+        deltah: "1.85",
+        baseline: {
+          severity_score: 0.74,
+          estimated_water_depth_cm: 28.5,
+          kinematic_status: "HYDRODYNAMIC_STALL",
+          kinematic_sub: "Sump Differential Inflow ΔH: 1.85 (Choked)",
+          structural_diagnostics: "Catch-basin soffit shows silt/debris buildup choking inlet grates by 68%. Differential inflow ΔH elevated to 1.85 with reverse sludge backflow.",
+          objects_detected: [
+            { label: "Catch-Basin Sump Inlet", confidence_pct: 96, box_norm: [53, 23, 76, 48], hazard_status: "Silt & Plastic Choke" },
+            { label: "Sludge Meniscus Accumulation", confidence_pct: 93, box_norm: [58, 28, 73, 44], hazard_status: "Inflow Throttled by 68%" },
+            { label: "Submerged Surface Puddle", confidence_pct: 89, box_norm: [60, 18, 78, 56], hazard_status: "Water Puddle ~28cm Depth" }
+          ],
+          municipal_dispatch: "Issue BBMP Emergency Desilting Order: Deploy 10,000L Silt-Suction Rapid Jetting Unit.",
+          vms_highway_advisory_en: "⚠️ DRAIN SILT CHOKE • WATERLOGGING IN PROGRESS • SLOW DOWN 30 KM/H",
+          vms_highway_advisory_kn: "⚠️ ಚರಂಡಿ ಹೂಳು ತುಂಬಿದೆ • ನಿಧಾನವಾಗಿ ಚಲಿಸಿ • 30 ಕಿ.ಮೀ",
+          recommended_speed_limit: 30,
+          model_used: "gemini-flash-lite-latest (Edge Calibrated)"
+        }
+      },
+      custom: {
+        title: "CUSTOM SURVEILLANCE FEED • IN-CABIN / EDGE OPTICAL STREAM",
+        badge: "MODE: EDGE-AI CABIN & CARRIAGEWAY INSPECTION",
+        corridor: "Arterial Highway Corridor",
+        zone_id: "silk_board",
+        lat: "12.9352°N",
+        lng: "77.6245°E",
+        deltah: "1.65",
+        baseline: {
+          severity_score: 0.82,
+          estimated_water_depth_cm: 31.5,
+          kinematic_status: "HYDRODYNAMIC_STALL",
+          kinematic_sub: "Optical Flow: Forward Lane Headway Tracking",
+          structural_diagnostics: "Exterior optical telemetry from custom camera feed reveals wet carriageway surface with localized water accumulation. Cabin interior excluded from hazard zones.",
+          objects_detected: [
+            { label: "Roadway Inundation Zone", confidence_pct: 96, box_norm: [45, 22, 72, 78], hazard_status: "Surface Water Depth ~31cm" },
+            { label: "Leading Vehicle Headway", confidence_pct: 94, box_norm: [36, 40, 58, 62], hazard_status: "Headway Deceleration Stalled" },
+            { label: "Curbside Hydro-Zone", confidence_pct: 91, box_norm: [52, 14, 72, 34], hazard_status: "Curb Inundation Overflow" }
+          ],
+          municipal_dispatch: "Issue BBMP Mobile Pumping Order: Deploy Rapid Hydro-Jetting & Silt Clearance Crew.",
+          vms_highway_advisory_en: "⚠️ WATERLOGGING REPORTED • MAINTAIN SAFE FOLLOWING DISTANCE • 30 KM/H",
+          vms_highway_advisory_kn: "⚠️ ರಸ್ತೆಯಲ್ಲಿ ನೀರು ನಿಂತಿದೆ • ಸುರಕ್ಷಿತ ಅಂತರ ಕಾಪಾಡಿಕೊಳ್ಳಿ • 30 ಕಿ.ಮೀ",
+          recommended_speed_limit: 30,
+          model_used: "gemini-flash-lite-latest (Dynamic Stream Core)"
+        }
       }
     };
+
+    function resizeStudioCanvases() {
+      if (!simCanvasEl || !hudCanvasEl) return;
+      const container = document.getElementById('video-container');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const w = Math.floor(rect.width || 800);
+      const h = Math.floor(rect.height || 450);
+
+      if (simCanvasEl.width !== w || simCanvasEl.height !== h) {
+        simCanvasEl.width = w;
+        simCanvasEl.height = h;
+      }
+      if (hudCanvasEl.width !== w || hudCanvasEl.height !== h) {
+        hudCanvasEl.width = w;
+        hudCanvasEl.height = h;
+      }
+    }
+
+    // Calculates exact pixel bounds of the active video viewport under object-fit: contain
+    function getVideoDisplayRect(videoEl, containerEl) {
+      const cWidth = containerEl ? containerEl.clientWidth : 800;
+      const cHeight = containerEl ? containerEl.clientHeight : 450;
+
+      if (!videoEl || videoEl.classList.contains('hidden') || !videoEl.videoWidth || !videoEl.videoHeight) {
+        return { left: 0, top: 0, width: cWidth, height: cHeight };
+      }
+
+      const vWidth = videoEl.videoWidth;
+      const vHeight = videoEl.videoHeight;
+      const cAspect = cWidth / cHeight;
+      const vAspect = vWidth / vHeight;
+
+      let renderWidth, renderHeight, offsetX, offsetY;
+      if (vAspect > cAspect) {
+        renderWidth = cWidth;
+        renderHeight = cWidth / vAspect;
+        offsetX = 0;
+        offsetY = (cHeight - renderHeight) / 2;
+      } else {
+        renderHeight = cHeight;
+        renderWidth = cHeight * vAspect;
+        offsetX = (cWidth - renderWidth) / 2;
+        offsetY = 0;
+      }
+      return { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight };
+    }
 
     function initVideoAiStudio() {
       studioVideoEl = document.getElementById('studio-video');
@@ -2927,18 +3051,22 @@
 
       if (!simCanvasEl || !hudCanvasEl) return;
 
-      const rect = simCanvasEl.getBoundingClientRect();
-      const w = Math.floor(rect.width || 800);
-      const h = Math.floor(rect.height || 450);
-      simCanvasEl.width = w;
-      simCanvasEl.height = h;
-      hudCanvasEl.width = w;
-      hudCanvasEl.height = h;
-
+      resizeStudioCanvases();
       simCtx = simCanvasEl.getContext('2d');
       hudCtx = hudCanvasEl.getContext('2d');
 
+      const container = document.getElementById('video-container');
+      if (container && window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+          resizeStudioCanvases();
+        });
+        ro.observe(container);
+      }
+      window.addEventListener('resize', resizeStudioCanvases);
+
       rainParticles = [];
+      const w = simCanvasEl.width || 800;
+      const h = simCanvasEl.height || 450;
       for (let i = 0; i < 90; i++) {
         rainParticles.push({
           x: Math.random() * w,
@@ -2953,9 +3081,12 @@
         animateVideoStudio();
       }
 
-      if (!videoCurrentAnalysis) {
-        triggerGeminiFrameAnalysis();
-      }
+      // Initialize with instant synchronized baseline telemetry
+      const initCfg = SCENARIO_CONFIGS[videoCurrentScenario] || SCENARIO_CONFIGS.waterlogging;
+      videoCurrentAnalysis = initCfg.baseline;
+      renderVideoAiOutput(initCfg.baseline);
+
+      triggerGeminiFrameAnalysis();
     }
 
     function selectVideoScenario(scen) {
@@ -2972,13 +3103,19 @@
         }
       });
 
-      const cfg = SCENARIO_CONFIGS[scen];
+      const cfg = SCENARIO_CONFIGS[scen] || SCENARIO_CONFIGS.waterlogging;
       if (cfg) {
         document.getElementById('video-stream-title').innerText = cfg.title;
         document.getElementById('video-feed-mode-badge').innerText = cfg.badge;
         document.getElementById('hud-lat').innerText = cfg.lat;
         document.getElementById('hud-lng').innerText = cfg.lng;
         document.getElementById('hud-deltah').innerText = cfg.deltah;
+
+        // Instant zero-latency synchronization of right-hand panel telemetry
+        if (cfg.baseline) {
+          videoCurrentAnalysis = cfg.baseline;
+          renderVideoAiOutput(cfg.baseline);
+        }
       }
 
       if (studioVideoEl) {
@@ -2989,6 +3126,7 @@
         simCanvasEl.classList.remove('hidden');
       }
 
+      resizeStudioCanvases();
       videoPlaybackTime = 0;
       triggerGeminiFrameAnalysis();
     }
@@ -3005,6 +3143,10 @@
       studioVideoEl.classList.remove('hidden');
       if (simCanvasEl) simCanvasEl.classList.add('hidden');
 
+      studioVideoEl.onloadedmetadata = () => {
+        resizeStudioCanvases();
+      };
+
       studioVideoEl.play().catch(() => {});
       videoCurrentScenario = 'custom';
       videoIsPlaying = true;
@@ -3019,7 +3161,17 @@
         if (btn) btn.className = "px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 border border-slate-700 hover:text-white cursor-pointer";
       });
 
-      setTimeout(triggerGeminiFrameAnalysis, 600);
+      // Instantly synchronize right-hand telemetry for custom feed
+      const cfg = SCENARIO_CONFIGS.custom;
+      if (cfg && cfg.baseline) {
+        videoCurrentAnalysis = cfg.baseline;
+        renderVideoAiOutput(cfg.baseline);
+      }
+
+      setTimeout(() => {
+        resizeStudioCanvases();
+        triggerGeminiFrameAnalysis();
+      }, 500);
     }
 
     function toggleVideoPlayback() {
@@ -3061,7 +3213,7 @@
       if (videoIsPlaying) {
         videoPlaybackTime += 0.033;
         if (videoPlaybackTime > 30) videoPlaybackTime = 0;
-        
+
         const min = Math.floor(videoPlaybackTime / 60);
         const sec = Math.floor(videoPlaybackTime % 60);
         const frac = Math.floor((videoPlaybackTime % 1) * 100);
@@ -3099,7 +3251,7 @@
       gradRoad.addColorStop(0, "#0f172a");
       gradRoad.addColorStop(1, "#090d16");
       ctx.fillStyle = gradRoad;
-      
+
       ctx.beginPath();
       ctx.moveTo(w * 0.32, horizonY);
       ctx.lineTo(w * 0.68, horizonY);
@@ -3211,7 +3363,7 @@
         const drainY = h * 0.55;
         ctx.fillStyle = "#18181b";
         ctx.fillRect(drainX, drainY, 180, 90);
-        
+
         ctx.strokeStyle = "#52525b";
         ctx.lineWidth = 4;
         for (let g = 0; g < 8; g++) {
@@ -3243,74 +3395,138 @@
       });
     }
 
+    // Dynamic, responsive AI HUD with aspect-ratio anchoring and smart non-overlapping tags
     function renderOverlayAiHud(ctx, w, h, analysis, t) {
       ctx.clearRect(0, 0, w, h);
       if (!analysis) return;
 
+      const container = document.getElementById('video-container');
+      const vRect = (videoCurrentScenario === 'custom' && studioVideoEl && !studioVideoEl.classList.contains('hidden'))
+        ? getVideoDisplayRect(studioVideoEl, container)
+        : { left: 0, top: 0, width: w, height: h };
+
       const objects = analysis.objects_detected || [];
+      const isGlobalHazard = (analysis.severity_score || 0) > 0.75;
+
       objects.forEach((obj, idx) => {
-        const box = obj.box_norm || [30, 20, 65, 50];
-        const top = (box[0] / 100) * h;
-        const left = (box[1] / 100) * w;
-        const bottom = (box[2] / 100) * h;
-        const right = (box[3] / 100) * w;
-        const bw = right - left;
-        const bh = bottom - top;
+        const box = obj.box_norm || [35, 20, 65, 50];
 
-        const isHazard = (analysis.severity_score || 0) > 0.75;
-        const strokeColor = isHazard ? "rgba(244, 63, 94, 0.9)" : "rgba(6, 182, 212, 0.9)";
-        const fillColor = isHazard ? "rgba(244, 63, 94, 0.08)" : "rgba(6, 182, 212, 0.08)";
+        // Dynamically anchor to video aspect ratio bounds
+        const top = Math.round(vRect.top + (box[0] / 100) * vRect.height);
+        const left = Math.round(vRect.left + (box[1] / 100) * vRect.width);
+        const bottom = Math.round(vRect.top + (box[2] / 100) * vRect.height);
+        const right = Math.round(vRect.left + (box[3] / 100) * vRect.width);
+        const bw = Math.max(18, right - left);
+        const bh = Math.max(18, bottom - top);
 
+        const isHazard = (obj.hazard_status && (
+          obj.hazard_status.toLowerCase().includes('inundation') ||
+          obj.hazard_status.toLowerCase().includes('collid') ||
+          obj.hazard_status.toLowerCase().includes('stall') ||
+          obj.hazard_status.toLowerCase().includes('choke') ||
+          obj.hazard_status.toLowerCase().includes('depth') ||
+          obj.hazard_status.toLowerCase().includes('debris')
+        )) || isGlobalHazard;
+
+        const strokeColor = isHazard ? "rgba(244, 63, 94, 0.95)" : "rgba(6, 182, 212, 0.95)";
+        const fillColor = isHazard ? "rgba(244, 63, 94, 0.10)" : "rgba(6, 182, 212, 0.08)";
+        const cornerColor = isHazard ? "#fb7185" : "#38bdf8";
+
+        // Semi-transparent target fill
         ctx.fillStyle = fillColor;
         ctx.fillRect(left, top, bw, bh);
 
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 2.5;
-        const cLen = 14;
+        // Thin boundary line
+        ctx.strokeStyle = isHazard ? "rgba(244, 63, 94, 0.45)" : "rgba(6, 182, 212, 0.45)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(left, top, bw, bh);
 
+        // Responsive corner reticle tracking brackets
+        const cLen = Math.max(8, Math.min(22, Math.round(Math.min(bw, bh) * 0.28)));
+        ctx.strokeStyle = cornerColor;
+        ctx.lineWidth = Math.max(2, Math.min(3.5, vRect.width * 0.0035));
+        ctx.lineCap = "round";
+
+        // Top-Left Bracket
         ctx.beginPath();
         ctx.moveTo(left, top + cLen);
         ctx.lineTo(left, top);
         ctx.lineTo(left + cLen, top);
         ctx.stroke();
 
+        // Top-Right Bracket
         ctx.beginPath();
         ctx.moveTo(right - cLen, top);
         ctx.lineTo(right, top);
         ctx.lineTo(right, top + cLen);
         ctx.stroke();
 
+        // Bottom-Left Bracket
         ctx.beginPath();
         ctx.moveTo(left, bottom - cLen);
         ctx.lineTo(left, bottom);
         ctx.lineTo(left + cLen, bottom);
         ctx.stroke();
 
+        // Bottom-Right Bracket
         ctx.beginPath();
         ctx.moveTo(right - cLen, bottom);
         ctx.lineTo(right, bottom);
         ctx.lineTo(right, bottom - cLen);
         ctx.stroke();
 
-        const labelText = `[ ${obj.label.toUpperCase()} • ${obj.confidence_pct}% ]`;
-        ctx.font = "bold 11px monospace";
-        const txtWidth = ctx.measureText(labelText).width;
-        ctx.fillStyle = isHazard ? "rgba(159, 18, 57, 0.9)" : "rgba(8, 47, 73, 0.9)";
-        ctx.fillRect(left, top - 18, txtWidth + 12, 18);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(labelText, left + 6, top - 5);
-      });
+        // Center Aiming Reticle (Crosshair)
+        const cx = Math.round(left + bw / 2);
+        const cy = Math.round(top + bh / 2);
+        ctx.strokeStyle = isHazard ? "rgba(244, 63, 94, 0.75)" : "rgba(6, 182, 212, 0.75)";
+        ctx.lineWidth = 1;
+        const cross = Math.max(3, Math.min(6, cLen * 0.4));
+        ctx.beginPath();
+        ctx.moveTo(cx - cross, cy);
+        ctx.lineTo(cx + cross, cy);
+        ctx.moveTo(cx, cy - cross);
+        ctx.lineTo(cx, cy + cross);
+        ctx.stroke();
 
-      const cx = w * 0.5;
-      const cy = h * 0.5;
-      ctx.strokeStyle = "rgba(6, 182, 212, 0.35)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(cx - 20, cy);
-      ctx.lineTo(cx + 20, cy);
-      ctx.moveTo(cx, cy - 20);
-      ctx.lineTo(cx, cy + 20);
-      ctx.stroke();
+        // Responsive, Non-Overlapping Label Tag
+        const labelText = `[ ${obj.label.toUpperCase()} • ${obj.confidence_pct}% ]`;
+        const fontSize = Math.max(9, Math.min(11, Math.round(vRect.width * 0.014)));
+        ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
+        const txtWidth = ctx.measureText(labelText).width;
+        const tagH = fontSize + 8;
+        const tagW = txtWidth + 12;
+
+        // Smart Tag Positioning:
+        // If top - tagH < vRect.top, position INSIDE the box (top + 2)
+        // Otherwise place just above the box (top - tagH - 2)
+        let tagY = (top - tagH - 2 >= vRect.top) ? (top - tagH - 2) : (top + 2);
+
+        // Ensure tagX doesn't overflow right of vRect
+        let tagX = left;
+        if (tagX + tagW > vRect.left + vRect.width) {
+          tagX = Math.max(vRect.left, vRect.left + vRect.width - tagW);
+        }
+
+        // Draw Tag Background Pill
+        ctx.fillStyle = isHazard ? "rgba(159, 18, 57, 0.94)" : "rgba(8, 47, 73, 0.94)";
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(tagX, tagY, tagW, tagH, 3);
+          ctx.fill();
+        } else {
+          ctx.fillRect(tagX, tagY, tagW, tagH);
+        }
+
+        ctx.strokeStyle = cornerColor;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Draw Tag Text
+        ctx.fillStyle = "#ffffff";
+        ctx.textBaseline = "middle";
+        ctx.fillText(labelText, tagX + 6, tagY + tagH / 2);
+      });
+      ctx.textBaseline = "alphabetic"; // reset
     }
 
     async function triggerGeminiFrameAnalysis(isBackground = false) {
@@ -3371,7 +3587,7 @@
       const sev = data.severity_score || 0.88;
       const scoreEl = document.getElementById('video-severity-score');
       if (scoreEl) scoreEl.innerHTML = `<span>${sev.toFixed(2)}</span><span class="text-xs text-slate-400 font-normal">/ 1.00</span>`;
-      
+
       const barEl = document.getElementById('video-severity-bar');
       if (barEl) barEl.style.width = Math.round(sev * 100) + '%';
 
@@ -3395,6 +3611,9 @@
 
       const kinEl = document.getElementById('stat-kinematic-state');
       if (kinEl) kinEl.innerHTML = `<span class="w-2 h-2 rounded-full ${sev > 0.75 ? 'bg-rose-400' : 'bg-emerald-400'} animate-pulse"></span><span>${data.kinematic_status || 'NORMAL_FLOW'}</span>`;
+      const kinSub = document.getElementById('stat-kinematic-sub');
+      if (kinSub && data.kinematic_sub) kinSub.innerText = data.kinematic_sub;
+
       const waterEl = document.getElementById('stat-water-depth');
       if (waterEl) waterEl.innerText = (data.estimated_water_depth_cm || 0).toFixed(1) + ' cm';
       const modelEl = document.getElementById('stat-model-name');
