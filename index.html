@@ -206,37 +206,37 @@
     </div>
   </header>
 
+  <!-- Real-time Closed-Loop Sync Toast Banner (Global Floating Toast) -->
+  <div id="crosshost-sync-toast" class="hidden fixed top-16 right-5 z-[99998] max-w-xl command-panel bg-gradient-to-r from-cyan-950/95 via-slate-900/95 to-amber-950/95 border-2 border-cyan-400/80 rounded-xl p-3 flex items-center justify-between shadow-2xl backdrop-blur-md">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center text-lg flex-shrink-0">
+        <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+      </div>
+      <div>
+        <div class="text-xs font-mono font-bold text-white flex items-center gap-2">
+          <span class="text-cyan-400">⚡ UNIFIED CLOSED-LOOP SYNC:</span>
+          <span id="toast-title">New Citizen Hazard Report Received & AI Depth Verified!</span>
+        </div>
+        <p id="toast-desc" class="text-[11px] text-slate-300 mt-0.5 font-sans"></p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2 flex-shrink-0 ml-3">
+      <button onclick="openKpiModal('citizen')" class="px-2.5 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold font-mono transition cursor-pointer">
+        Inspect
+      </button>
+      <button onclick="switchMasterView('citizen'); dismissSyncToast();" class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono transition cursor-pointer">
+        Citizen Tab
+      </button>
+      <button onclick="dismissSyncToast()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- ========================================================================= -->
   <!-- VIEW 1: INTEGRATED ICCC SCREEN WALL (3-COLUMN VIDEO WALL LAYOUT) -->
   <!-- ========================================================================= -->
   <div id="view-iccc" class="master-view flex flex-col flex-1 p-3.5 gap-3 max-w-[1920px] mx-auto w-full">
-
-    <!-- Real-time Closed-Loop Sync Toast Banner -->
-    <div id="crosshost-sync-toast" class="hidden command-panel bg-gradient-to-r from-cyan-950/90 via-slate-900/90 to-amber-950/90 border border-cyan-500/60 rounded-xl p-3 flex items-center justify-between shadow-xl">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center text-lg">
-          <i class="fa-solid fa-satellite-dish animate-pulse"></i>
-        </div>
-        <div>
-          <div class="text-xs font-mono font-bold text-white flex items-center gap-2">
-            <span class="text-cyan-400">⚡ UNIFIED CLOSED-LOOP SYNC:</span>
-            <span id="toast-title">New Citizen Hazard Report Received & AI Depth Verified!</span>
-          </div>
-          <p id="toast-desc" class="text-[11px] text-slate-300 mt-0.5 font-sans"></p>
-        </div>
-      </div>
-      <div class="flex items-center space-x-2">
-        <button onclick="openKpiModal('citizen')" class="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold font-mono transition">
-          Inspect in Modal
-        </button>
-        <button onclick="switchMasterView('citizen'); dismissSyncToast();" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono transition">
-          Open Citizen Tab
-        </button>
-        <button onclick="dismissSyncToast()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
     
     <!-- TOP WORKBENCH GRID -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1">
@@ -1084,11 +1084,11 @@
       </div>
 
       <!-- RIGHT: Gemini Multimodal Diagnostic Intelligence Panel (5 COLS) -->
-      <div class="lg:col-span-5 flex flex-col gap-3">
+      <div class="lg:col-span-5 flex flex-col gap-2.5 overflow-y-auto max-h-[calc(100vh-175px)] pr-1.5" style="scrollbar-width: thin; scrollbar-color: #06b6d4 #060b13;">
         
         <!-- Severity Risk Gauge Card -->
-        <div class="command-panel rounded-xl p-3.5 flex flex-col gap-3 border border-slate-800">
-          <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-xs font-mono">
+        <div class="command-panel rounded-xl p-3 flex flex-col gap-2 border border-slate-800">
+          <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-xs font-mono">
             <span class="font-bold text-white flex items-center gap-1.5">
               <i class="fa-solid fa-shield-virus text-cyan-400"></i>
               <span>HK-RHS HAZARD SEVERITY RISK SCORE</span>
@@ -1100,16 +1100,16 @@
 
           <div class="flex items-center justify-between gap-4">
             <div>
-              <div class="text-3xl font-black font-mono text-rose-400 flex items-baseline gap-1" id="video-severity-score">
+              <div class="text-2xl font-black font-mono text-rose-400 flex items-baseline gap-1" id="video-severity-score">
                 <span>0.88</span>
                 <span class="text-xs text-slate-400 font-normal">/ 1.00</span>
               </div>
-              <p class="text-[11px] text-slate-400 mt-0.5 font-mono" id="video-severity-desc">Immediate municipal intervention required</p>
+              <p class="text-[10px] text-slate-400 mt-0.5 font-mono" id="video-severity-desc">Immediate municipal intervention required</p>
             </div>
             
             <!-- Severity Bar -->
-            <div class="flex-1 max-w-[200px]">
-              <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5">
+            <div class="flex-1 max-w-[180px]">
+              <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5">
                 <div id="video-severity-bar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 transition-all duration-700" style="width: 88%;"></div>
               </div>
               <div class="flex justify-between text-[9px] font-mono text-slate-500 mt-1">
@@ -1122,7 +1122,7 @@
         </div>
 
         <!-- Structural Diagnostics from Gemini -->
-        <div class="command-panel rounded-xl p-3.5 flex flex-col gap-2 border border-slate-800">
+        <div class="command-panel rounded-xl p-3 flex flex-col gap-1.5 border border-slate-800">
           <div class="flex items-center justify-between text-xs font-mono">
             <span class="font-bold text-cyan-400 flex items-center gap-1.5">
               <i class="fa-solid fa-brain"></i>
@@ -1131,13 +1131,13 @@
             <span class="text-[10px] text-slate-400 font-mono" id="video-diag-timestamp">Live</span>
           </div>
 
-          <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80 text-xs font-sans text-slate-200 leading-relaxed" id="video-structural-diagnostics">
+          <div class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80 text-[11px] font-sans text-slate-200 leading-snug" id="video-structural-diagnostics">
             Carriageway inundation exceeding curb thresholds along Silk Board Junction. Surface runoff volume exceeds storm drain capacity by 84%. Hydrodynamic stall imminent on outer lanes.
           </div>
         </div>
 
         <!-- Detected Objects & Bounding Boxes Log -->
-        <div class="command-panel rounded-xl p-3.5 flex flex-col gap-2.5 border border-slate-800">
+        <div class="command-panel rounded-xl p-3 flex flex-col gap-2 border border-slate-800">
           <div class="flex items-center justify-between text-xs font-mono">
             <span class="font-bold text-white flex items-center gap-1.5">
               <i class="fa-solid fa-crosshairs text-emerald-400"></i>
@@ -1146,33 +1146,39 @@
             <span class="text-[10px] text-slate-400 font-mono" id="video-object-count">3 Targets Detected</span>
           </div>
 
-          <div class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1" id="video-detected-objects-list">
+          <div class="space-y-1.5 max-h-[110px] overflow-y-auto pr-1" id="video-detected-objects-list">
             <!-- Dynamically populated objects -->
           </div>
         </div>
 
         <!-- Automated Municipal Dispatch Recommendation Card -->
-        <div class="command-panel rounded-xl p-3.5 flex flex-col gap-2.5 border border-amber-500/40 bg-gradient-to-br from-slate-900/90 to-amber-950/20">
+        <div class="command-panel rounded-xl p-3 flex flex-col gap-2 border-2 border-amber-500/50 bg-gradient-to-br from-slate-900/95 via-amber-950/25 to-slate-900/95 shadow-lg shadow-amber-950/40">
           <div class="flex items-center justify-between text-xs font-mono">
             <span class="font-bold text-amber-400 flex items-center gap-1.5">
               <i class="fa-solid fa-truck-fast"></i>
               <span>AUTOMATED MUNICIPAL DISPATCH RECOMMENDATION</span>
             </span>
-            <span class="text-[10px] text-amber-300/80 font-mono">AI Action Order</span>
+            <span class="text-[10px] text-amber-300 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">AI Action Order</span>
           </div>
 
-          <p class="text-xs text-slate-200 font-mono bg-slate-950/70 p-2.5 rounded-lg border border-slate-800" id="video-dispatch-recommendation">
-            Dispatch BBMP 15,000L Super Sucker Tanker + High-Velocity De-watering Pump + Traffic Cordon.
-          </p>
+          <div class="flex items-start gap-2 bg-slate-950/85 p-2.5 rounded-lg border border-amber-500/30">
+            <i class="fa-solid fa-clipboard-check text-amber-400 text-sm mt-0.5 flex-shrink-0"></i>
+            <p class="text-xs text-slate-100 font-mono leading-relaxed" id="video-dispatch-recommendation">
+              Dispatch BBMP 15,000L Super Sucker Tanker + High-Velocity De-watering Pump + Traffic Cordon.
+            </p>
+          </div>
 
-          <button onclick="executeVideoAiDispatch()" id="btn-video-dispatch" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-mono font-black text-xs uppercase tracking-wider transition-all duration-200 shadow-lg shadow-amber-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-98">
-            <i class="fa-solid fa-bolt"></i>
+          <!-- In-card Dynamic Confirmation Toast -->
+          <div id="video-dispatch-confirmation" class="hidden"></div>
+
+          <button onclick="executeVideoAiDispatch()" id="btn-video-dispatch" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider transition-all duration-150 shadow-lg shadow-amber-950/60 flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+            <i class="fa-solid fa-bolt text-sm"></i>
             <span>Execute Municipal Dispatch (BBMP & BTP)</span>
           </button>
         </div>
 
         <!-- Live Bilingual Highway VMS Preview -->
-        <div class="command-panel rounded-xl p-3 flex flex-col gap-2 border border-slate-800">
+        <div class="command-panel rounded-xl p-2.5 flex flex-col gap-2 border border-slate-800">
           <div class="flex items-center justify-between text-xs font-mono">
             <span class="font-bold text-slate-300 flex items-center gap-1.5">
               <i class="fa-solid fa-display text-cyan-400"></i>
@@ -1181,7 +1187,7 @@
             <span class="text-[10px] text-cyan-400 font-mono" id="video-vms-speed">Speed Limit: 20 KM/H</span>
           </div>
 
-          <div class="p-2.5 rounded-lg bg-black border-2 border-amber-500/60 flex flex-col gap-1 text-center font-mono">
+          <div class="p-2 rounded-lg bg-black border-2 border-amber-500/60 flex flex-col gap-1 text-center font-mono">
             <div class="text-amber-400 font-black text-xs tracking-wider" id="video-vms-en">
               ⛈️ CLOUDBURST OVERFLOW • WATERLOGGED 42CM • DIVERT TO FLYOVER • 20 KM/H
             </div>
@@ -3124,6 +3130,9 @@
         }
       }
 
+      const confEl = document.getElementById('video-dispatch-confirmation');
+      if (confEl) confEl.classList.add('hidden');
+
       if (studioVideoEl) {
         studioVideoEl.pause();
         studioVideoEl.classList.add('hidden');
@@ -3173,6 +3182,9 @@
         videoCurrentAnalysis = cfg.baseline;
         renderVideoAiOutput(cfg.baseline);
       }
+
+      const confEl = document.getElementById('video-dispatch-confirmation');
+      if (confEl) confEl.classList.add('hidden');
 
       setTimeout(() => {
         resizeStudioCanvases();
@@ -3650,20 +3662,29 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            corridor_name: cfg.corridor,
+            corridor_name: cfg.corridor || "Silk Board Junction - Hosur Rd",
             severity_score: analysis.severity_score || 0.88,
             order_type: videoCurrentScenario === 'accident' ? 'Emergency Incident Response & Cordon' : 'Rapid Hydro-Jetting & Silt Clearance',
             action_notes: analysis.municipal_dispatch || 'Automated Video AI Triggered Municipal Dispatch',
-            zone_id: cfg.zone_id,
-            vms_highway_advisory_en: analysis.vms_highway_advisory_en,
+            zone_id: cfg.zone_id || "silk_board",
+            vms_highway_advisory_en: analysis.vms_highway_advisory_en || "WATERLOGGING DETECTED • SLOW DOWN",
             recommended_speed_limit: analysis.recommended_speed_limit || 20
           })
         });
 
         const data = await res.json();
         if (data.status === 'SUCCESS') {
-          btn.className = "w-full py-2.5 rounded-xl bg-emerald-600 text-white font-mono font-black text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer";
-          btn.innerHTML = `<i class="fa-solid fa-check"></i><span>Dispatched! Ticket #${data.work_order.id} En Route</span>`;
+          btn.className = "w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-black text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer";
+          btn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>Dispatched! Ticket #${data.work_order.id} En Route</span>`;
+
+          const confEl = document.getElementById('video-dispatch-confirmation');
+          if (confEl) {
+            confEl.classList.remove('hidden');
+            confEl.innerHTML = `<div class="p-2.5 rounded-lg bg-emerald-950/90 border border-emerald-500/70 text-emerald-300 font-mono text-[11px] flex items-center justify-between gap-2 shadow-md">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-satellite-dish text-emerald-400 animate-pulse"></i><span><strong>TICKET #${data.work_order.id}:</strong> Mobilized to ${data.work_order.ward}. SLA: ${data.work_order.sla_minutes}m.</span></span>
+              <span class="text-[10px] bg-emerald-900/80 px-2 py-0.5 rounded text-emerald-200 border border-emerald-700 font-bold">MOBILIZED</span>
+            </div>`;
+          }
 
           const toast = document.getElementById('crosshost-sync-toast');
           const toastDesc = document.getElementById('toast-desc');
@@ -3676,15 +3697,15 @@
           reloadSplitFrames();
 
           setTimeout(() => {
-            btn.className = "w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-mono font-black text-xs uppercase tracking-wider transition-all duration-200 shadow-lg shadow-amber-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-98";
-            btn.innerHTML = `<i class="fa-solid fa-bolt"></i><span>Execute Municipal Dispatch (BBMP & BTP)</span>`;
+            btn.className = "w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider transition-all duration-150 shadow-lg shadow-amber-950/60 flex items-center justify-center gap-2 cursor-pointer active:scale-98";
+            btn.innerHTML = `<i class="fa-solid fa-bolt text-sm"></i><span>Execute Municipal Dispatch (BBMP & BTP)</span>`;
             btn.disabled = false;
-          }, 3500);
+          }, 4500);
         }
       } catch (err) {
         alert("Dispatch mobilization error: " + err);
         btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-bolt"></i><span>Execute Municipal Dispatch (BBMP & BTP)</span>`;
+        btn.innerHTML = `<i class="fa-solid fa-bolt text-sm"></i><span>Execute Municipal Dispatch (BBMP & BTP)</span>`;
       }
     }
 
