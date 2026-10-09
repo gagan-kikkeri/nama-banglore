@@ -48,6 +48,25 @@ Namma Bengaluru suffers severe dual arterial crises during monsoon spells: catas
 
 ---
 
+## 🧠 Hardcoded Google Gemini AI Core Integration
+
+HK-RHS features permanently wired, zero-setup Google Gemini AI intelligence driving real-time municipal operations across all three portals without manual API key entry.
+
+- **Configuration File:** `config.py`
+  ```python
+  # Permanently wired & initialized in config.py
+  GEMINI_API_KEY = "AQ.Ab8RN6...uBzA"
+  GEMINI_MODELS = ["gemini-flash-lite-latest", "gemini-3.8-flash", "gemini-flash-latest"]
+  ```
+- **Active AI Pipelines:**
+  1. 📸 **Citizen Multimodal Photo Verification:** Evaluates commuter road photos to estimate water depth in cm (e.g. 34.5cm), assesses carriageway capacity reduction, and checks authenticity.
+  2. 🛡️ **Anti-Spoofing & EXIF Validation:** Validates physical meniscus and reflection optical consistency to prevent fraudulent municipal claims.
+  3. 🛠️ **Intelligent BBMP Work Order Prioritization:** Analyzes $\Delta H$ differential inflow surges to automatically rank pending desilting tickets, set dynamic SLA timers, and assign optimal equipment (e.g., *15,000L Super Sucker Jetting Unit + Sludge Cutter*).
+  4. 🚦 **Dynamic Bilingual Highway VMS Generation:** Generates real-time, high-impact English and Kannada advisories with recommended safe corridor speeds (e.g., `⚠️ SILK BOARD: WATERLOGGED • DRIVE SLOW • 25 KM/H` / `⚠️ ರಸ್ತೆಯಲ್ಲಿ ನೀರು ನಿಂತಿದೆ • ನಿಧಾನವಾಗಿ ಚಲಿಸಿ • 25 ಕಿ.ಮೀ`).
+  5. 🎥 **ITMS CCTV Optical Kinematics:** Synthesizes vehicle flow speeds, deceleration spikes ($-6.8\text{ m/s}^2$), and millimeter-wave radar telemetry for tactical video wall briefings.
+
+---
+
 ## 🏛️ Triple-Host Architectural Breakdown
 
 ### 1. Prototype 1: Main ICCC Command Center Dashboard

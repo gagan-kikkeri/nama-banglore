@@ -716,6 +716,13 @@
                   <span class="font-bold">⚠️ Collision Ahead (20 km/h)</span>
                   <div class="text-[9px] text-slate-400">Lanes 1 & 2 cordoned • Merge right</div>
                 </button>
+                <button onclick="generateAiVmsWithGemini()" id="btn-gemini-vms" class="p-2.5 rounded bg-gradient-to-r from-purple-950/90 to-indigo-950/90 hover:from-purple-900 hover:to-indigo-900 border border-purple-500/60 text-left text-purple-300 transition col-span-1 sm:col-span-2 flex items-center justify-between cursor-pointer shadow-md shadow-purple-950/40">
+                  <div>
+                    <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-brain text-purple-400"></i>⚡ Auto-Generate Advisory with Gemini AI</span>
+                    <div class="text-[9px] text-slate-300">Synthesizes 77 GHz radar water depth, ΔH choke index, & speed limit</div>
+                  </div>
+                  <span class="px-2 py-0.5 rounded bg-purple-500/30 text-[10px] font-bold text-purple-200">Gemini 3.8</span>
+                </button>
               </div>
             </div>
 
@@ -1686,6 +1693,35 @@
       }
       
       document.getElementById('sim-led-text').innerText = textArea.value;
+    }
+
+    async function generateAiVmsWithGemini() {
+      const btn = document.getElementById('btn-gemini-vms');
+      if (btn) btn.innerHTML = '<span class="text-purple-300 font-bold"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Gemini AI Synthesizing Live Telemetry...</span>';
+      
+      try {
+        const res = await fetch(`${ICCC_HOST}/api/ai/vms-generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ zone_id: selectedVmsZoneId, auto_apply: false })
+        });
+        const data = await res.json();
+        
+        const textArea = document.getElementById('vms-custom-text');
+        textArea.dataset.userEdited = "true";
+        textArea.value = data.vms_text_en || "WATERLOGGING WARNING • SLOW DOWN 25 KM/H";
+        
+        updateVmsPreviewColor(data.led_color || 'AMBER');
+        setSpeedLimit(data.recommended_speed_limit || 30);
+        document.getElementById('sim-led-text').innerText = textArea.value;
+        
+        if (btn) btn.innerHTML = '<span class="text-emerald-300 font-bold"><i class="fa-solid fa-circle-check mr-1.5"></i> Gemini 3.8 Advisory Generated!</span>';
+        setTimeout(() => {
+          if (btn) btn.innerHTML = '<div><span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-brain text-purple-400"></i>⚡ Auto-Generate Advisory with Gemini AI</span><div class="text-[9px] text-slate-300">Synthesizes 77 GHz radar water depth, ΔH choke index, & speed limit</div></div><span class="px-2 py-0.5 rounded bg-purple-500/30 text-[10px] font-bold text-purple-200">Gemini 3.8</span>';
+        }, 2200);
+      } catch (e) {
+        if (btn) btn.innerHTML = '<span class="text-rose-300 font-bold">Gemini generation failed</span>';
+      }
     }
 
     function updateVmsPreviewColor(color) {

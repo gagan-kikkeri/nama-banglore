@@ -142,6 +142,12 @@
           HK-RHS Hydro-Kinetic Road Hazard System
         </span>
         <span class="text-slate-500">•</span>
+        <span class="px-2 py-0.5 rounded text-[10px] bg-gradient-to-r from-purple-950 to-indigo-950 border border-purple-500/50 text-purple-300 font-mono font-bold flex items-center gap-1.5 shadow-sm shadow-purple-950/40">
+          <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping"></span>
+          <i class="fa-solid fa-brain text-purple-400"></i>
+          <span>GEMINI 3.8 / FLASH AI CORE</span>
+        </span>
+        <span class="text-slate-500">•</span>
         <span class="text-slate-200">
           REVA UNIVERSITY HACKathon 3.0 • <strong class="text-white">Team CyberSentinel / Apex Achievers (BMSIT)</strong>
         </span>
@@ -2249,7 +2255,11 @@
         <tr class="hover:bg-slate-900/60 transition ${o.status === 'RESOLVED' ? 'opacity-60 bg-slate-950/40' : ''}">
           <td class="p-2.5 font-bold ${o.status === 'RESOLVED' ? 'text-slate-400 line-through' : 'text-cyan-400'}">${o.id}</td>
           <td class="p-2.5 text-slate-200">${o.zone_name.split(' - ')[0]}<br><span class="text-[10px] text-slate-400">${o.ward}</span></td>
-          <td class="p-2.5 text-slate-300 text-[11px] max-w-xs">${o.cause}</td>
+          <td class="p-2.5 text-slate-300 text-[11px] max-w-xs">
+            ${o.cause}
+            ${o.equipment_needed ? `<div class="mt-1"><span class="text-[9px] text-amber-300 font-mono bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-500/30">🛠️ ${o.equipment_needed}</span></div>` : ''}
+            ${o.ai_rationale ? `<div class="mt-0.5 text-[9px] text-purple-300 font-mono">⚡ Gemini Prioritization: ${o.ai_rationale}</div>` : ''}
+          </td>
           <td class="p-2.5 text-slate-200">${o.unit}</td>
           <td class="p-2.5"><span class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded text-[10px]">${o.sla_minutes}m SLA</span></td>
           <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.status === 'RESOLVED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : o.status === 'EN_ROUTE' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">${o.status}</span></td>
@@ -2293,6 +2303,9 @@
                 <i class="fa-solid fa-circle-check"></i>
                 <span>${r.ai_verification}</span>
               </div>
+              ${r.ai_summary ? `<div class="text-[10px] text-purple-300/90 mt-1 font-mono bg-purple-950/30 p-1.5 rounded border border-purple-500/20"><i class="fa-solid fa-brain text-purple-400 mr-1"></i><strong>Gemini Insight:</strong> ${r.ai_summary}</div>` : ''}
+              ${r.kannada_advisory ? `<div class="text-[10px] text-amber-300/90 mt-1 font-mono bg-amber-950/20 p-1 rounded border border-amber-500/20"><i class="fa-solid fa-language text-amber-400 mr-1"></i>${r.kannada_advisory}</div>` : ''}
+              ${r.suggested_action ? `<div class="text-[10px] text-cyan-300/80 mt-0.5 font-mono">🚒 Recommended: ${r.suggested_action}</div>` : ''}
             </div>
           </div>
           <div class="flex items-center gap-2">

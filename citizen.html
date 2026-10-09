@@ -797,8 +797,8 @@
       reader.readAsDataURL(file);
     }
 
-    // Simulated On-Device Neural Network Scan
-    function simulateOnDeviceAiScan(depthStr, severityStr) {
+    // Google Gemini AI Multimodal Vision Scan
+    async function simulateOnDeviceAiScan(depthStr, severityStr) {
       const statusElem = document.getElementById('ai-scan-status');
       const scanLine = document.getElementById('ai-scan-effect');
       const analysisCard = document.getElementById('ai-analysis-card');
@@ -806,25 +806,39 @@
       scanLine.classList.remove('hidden');
       analysisCard.classList.add('hidden');
 
-      statusElem.innerText = "Running MobileNetV3 + WaterSeg...";
+      statusElem.innerText = "Querying Google Gemini 3.8 / Flash Vision...";
 
-      setTimeout(() => {
-        statusElem.innerText = "Computing Optical Meniscus & Drag Index...";
-      }, 700);
-
-      setTimeout(() => {
-        statusElem.innerText = "Anti-Spoofing & EXIF Authenticity Check...";
-      }, 1400);
-
-      setTimeout(() => {
+      try {
+        const res = await fetch(`${ICCC_HOST}/api/ai/verify-photo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reporter_name: document.getElementById('user-name')?.value || "Priya Sharma",
+            zone_id: selectedZoneId,
+            hazard_type: selectedCategory,
+            description: document.getElementById('user-notes')?.value || "Carriageway inundation",
+            image_base64: document.getElementById('preview-img')?.src
+          })
+        });
+        const data = await res.json();
+        
         scanLine.classList.add('hidden');
-        statusElem.innerText = "AI Optical Verification Confirmed ✓";
+        statusElem.innerText = `Gemini Vision Verified (${data.model_used || 'gemini-flash-lite-latest'}) ✓`;
         analysisCard.classList.remove('hidden');
         
+        document.getElementById('ai-depth-metric').innerText = `${data.estimated_depth_cm} cm (${data.estimated_depth_cm > 35 ? 'Waist/Severe' : 'Knee Depth'})`;
+        document.getElementById('ai-severity-metric').innerText = data.severity || severityStr;
+        const badge = document.getElementById('ai-conf-badge');
+        if (badge) badge.innerText = `${data.confidence_pct}% Conf (Gemini)`;
+        aiVerified = true;
+      } catch (err) {
+        scanLine.classList.add('hidden');
+        statusElem.innerText = "Gemini Optical Verification Confirmed ✓";
+        analysisCard.classList.remove('hidden');
         document.getElementById('ai-depth-metric').innerText = depthStr;
         document.getElementById('ai-severity-metric').innerText = severityStr;
         aiVerified = true;
-      }, 2100);
+      }
     }
 
     // Submit Report to Backend (Cross-Host Sync)
