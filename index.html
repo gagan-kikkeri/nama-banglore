@@ -83,9 +83,26 @@
       animation: pulse-ring 2s infinite ease-in-out;
     }
 
-    /* Custom Leaflet Dark Stying */
+    /* Fix Leaflet stacking context & z-index bleed through modals */
     .leaflet-container {
       background: #060b13 !important;
+      z-index: 1 !important;
+    }
+    .leaflet-pane, .leaflet-tile-pane, .leaflet-overlay-pane, .leaflet-shadow-pane, .leaflet-marker-pane, .leaflet-tooltip-pane, .leaflet-popup-pane {
+      z-index: 2 !important;
+    }
+    .leaflet-top, .leaflet-bottom, .leaflet-control {
+      z-index: 3 !important;
+    }
+
+    /* Clean Dark Sci-Fi Filter for OpenStreetMap Tiles (Zero Watermark / No API Key required) */
+    .leaflet-tile {
+      filter: brightness(0.55) invert(1) contrast(2.4) hue-rotate(185deg) saturate(0.35) !important;
+    }
+
+    /* All modal popups must have absolute top-layer z-index */
+    .iccc-modal-backdrop {
+      z-index: 99999 !important;
     }
 
     /* Gauge Arc */
@@ -552,7 +569,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL: DETAILED HAZARD WARNING & INCIDENT DIAGNOSTIC AUDIT -->
   <!-- ========================================================================= -->
-  <div id="hazard-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+  <div id="hazard-modal" class="fixed inset-0 iccc-modal-backdrop z-[99999] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
     <div class="bg-iccc-panel border border-slate-700 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto border-cyan-500/30">
       
       <!-- Modal Header -->
@@ -787,7 +804,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL: METRIC CARDS DEEP-DIVE INSPECTOR (4-IN-1 KPI MODAL) -->
   <!-- ========================================================================= -->
-  <div id="kpi-detail-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+  <div id="kpi-detail-modal" class="fixed inset-0 iccc-modal-backdrop z-[99999] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
     <div class="bg-iccc-panel border border-slate-700 w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto border-cyan-500/30">
       
       <!-- Modal Header -->
@@ -912,7 +929,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL: CITIZEN SAFETY WEB PORTAL (MOBILE-RESPONSIVE INTERFACE) -->
   <!-- ========================================================================= -->
-  <div id="citizen-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div id="citizen-modal" class="fixed inset-0 iccc-modal-backdrop z-[99999] bg-black/90 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-iccc-panel border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
       <div class="p-4 bg-gradient-to-r from-cyan-950/60 to-slate-900 border-b border-slate-800 flex items-center justify-between">
         <div class="flex items-center space-x-2">
@@ -1017,9 +1034,9 @@
         attributionControl: false
       }).setView([12.9716, 77.6200], 11);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
-        subdomains: 'abcd'
+        subdomains: 'abc'
       }).addTo(mainMap);
 
       // Mini Radar Map (Bottom Left)
@@ -1030,9 +1047,9 @@
         scrollWheelZoom: false
       }).setView([12.9716, 77.6200], 10);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
-        subdomains: 'abcd'
+        subdomains: 'abc'
       }).addTo(miniMap);
     }
 
