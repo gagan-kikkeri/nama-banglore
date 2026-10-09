@@ -790,7 +790,30 @@
             <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">EDGE AI ACTIVE</span>
           </div>
           <div class="relative w-full h-44 bg-slate-950 rounded-lg overflow-hidden border border-slate-800">
-            <img src="/media_1789805951816.png" class="w-full h-full object-cover opacity-85" alt="Camera 1">
+            <!-- Simulated CCTV Highway Optical Feed -->
+            <svg class="w-full h-full object-cover opacity-80" viewBox="0 0 400 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="cctv-road" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#0f172a"/>
+                  <stop offset="60%" stop-color="#1e293b"/>
+                  <stop offset="100%" stop-color="#090d16"/>
+                </linearGradient>
+                <linearGradient id="horizon" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#0284c7" stop-opacity="0.2"/>
+                  <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#0284c7" stop-opacity="0.2"/>
+                </linearGradient>
+              </defs>
+              <rect width="400" height="200" fill="url(#cctv-road)"/>
+              <polygon points="120,70 280,70 380,200 20,200" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+              <line x1="0" y1="70" x2="400" y2="70" stroke="url(#horizon)" stroke-width="2"/>
+              <line x1="200" y1="70" x2="200" y2="200" stroke="#facc15" stroke-width="2" stroke-dasharray="10 8" opacity="0.6"/>
+              <line x1="160" y1="70" x2="100" y2="200" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.4"/>
+              <line x1="240" y1="70" x2="300" y2="200" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.4"/>
+              <circle cx="200" cy="120" r="45" fill="none" stroke="#06b6d4" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>
+              <line x1="150" y1="120" x2="250" y2="120" stroke="#06b6d4" stroke-width="1" opacity="0.5"/>
+              <line x1="200" y1="75" x2="200" y2="165" stroke="#06b6d4" stroke-width="1" opacity="0.5"/>
+            </svg>
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
             <!-- Dynamic Bounding Box -->
             <div id="split-cam-box" class="absolute top-8 left-12 border-2 border-emerald-400 bg-emerald-500/10 rounded px-2 py-0.5 text-[9px] font-mono text-emerald-300 flex items-center gap-1 shadow-md">

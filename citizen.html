@@ -769,21 +769,21 @@
 
       if (type === 'flood') {
         isCurrentScanDeepfake = false;
-        sampleUrl = "media_1789805951816.png";
+        sampleUrl = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect fill='%231e293b' width='600' height='400'/><rect y='220' width='600' height='180' fill='%230284c7' opacity='0.75'/><circle cx='300' cy='300' r='140' fill='none' stroke='%2338bdf8' stroke-width='3' opacity='0.5'/><text x='50%25' y='42%25' dominant-baseline='middle' text-anchor='middle' fill='%2338bdf8' font-family='monospace' font-size='22' font-weight='bold'>WATERLOGGED CORRIDOR</text><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23cbd5e1' font-family='monospace' font-size='14'>EST. INUNDATION: 34.8 CM (CRITICAL)</text></svg>";
         depthText = "~34.8 cm (Knee Depth)";
         severityText = "CRITICAL WATERLOGGING";
         selectHazardCategory('Waterlogging', document.querySelector('.category-card'));
         document.getElementById('user-notes').value = "Severe carriageway inundation stalling 2-wheelers at Silk Board underpass.";
       } else if (type === 'pothole') {
         isCurrentScanDeepfake = false;
-        sampleUrl = "media_1789805951821.png";
+        sampleUrl = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect fill='%231e293b' width='600' height='400'/><ellipse cx='300' cy='260' rx='160' ry='80' fill='%23090d16' stroke='%23f59e0b' stroke-width='4'/><ellipse cx='300' cy='270' rx='110' ry='45' fill='%230284c7' opacity='0.6'/><text x='50%25' y='35%25' dominant-baseline='middle' text-anchor='middle' fill='%23f59e0b' font-family='monospace' font-size='22' font-weight='bold'>SUBMERGED ROAD CAVITY</text><text x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' fill='%23cbd5e1' font-family='monospace' font-size='14'>EST. DEPTH: 18.5 CM (SEVERITY TIER-2)</text></svg>";
         depthText = "~18.5 cm (Cavity Depth)";
         severityText = "CRITICAL POTHOLE";
         selectHazardCategory('Pothole Hazard', document.querySelectorAll('.category-card')[2]);
         document.getElementById('user-notes').value = "Deep road cavity submerged underwater along outer lane.";
       } else if (type === 'deepfake') {
         isCurrentScanDeepfake = true;
-        sampleUrl = "media_1789805951816.png";
+        sampleUrl = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect fill='%2331102f' width='600' height='400'/><rect x='40' y='40' width='520' height='320' fill='none' stroke='%23ec4899' stroke-width='3' stroke-dasharray='10 5'/><text x='50%25' y='42%25' dominant-baseline='middle' text-anchor='middle' fill='%23f43f5e' font-family='monospace' font-size='22' font-weight='bold'>[SYNTHETIC ARTIFACT DETECTED]</text><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23f472b6' font-family='monospace' font-size='14'>DIFFUSION NOISE LATENT PATTERN DETECTED</text><text x='50%25' y='68%25' dominant-baseline='middle' text-anchor='middle' fill='%23fda4af' font-family='monospace' font-size='12'>GEMINI MULTIMODAL FORENSIC FIREWALL: REJECTED</text></svg>";
         depthText = "0.0 cm (Invalidated)";
         severityText = "REJECTED_SPOOF";
         selectHazardCategory('Waterlogging', document.querySelector('.category-card'));

@@ -200,8 +200,7 @@ hackathon 3.0/
 ├── manifest.json        # PWA Web App Manifest
 ├── sw.js                # PWA Service Worker for offline resilience
 ├── run_demo.bat         # 1-Click launcher script for Windows
-├── README.md            # Comprehensive documentation & pitch evaluation walkthrough
-└── media_*.png          # Demo hazard benchmarks & verification assets
+└── README.md            # Comprehensive documentation & pitch evaluation walkthrough
 ```
 
 ---
