@@ -353,13 +353,17 @@
             <!-- Pitch Demo Quick-Sample Buttons -->
             <div class="flex items-center justify-between">
               <span class="text-[10px] text-slate-400 font-semibold">Demo Presets (Instant Pitch Test):</span>
+              <span class="text-[9px] text-cyan-400 font-mono"><i class="fa-solid fa-shield-virus mr-1"></i>Gemini Anti-Spoof</span>
             </div>
-            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
-              <button type="button" onclick="loadSamplePhoto('flood')" class="px-2 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900 transition flex items-center justify-center gap-1.5 font-medium">
-                <i class="fa-solid fa-image"></i> Load Flood Scene
+            <div class="grid grid-cols-3 gap-1.5 text-[11px]">
+              <button type="button" onclick="loadSamplePhoto('flood')" class="px-2 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900 transition flex items-center justify-center gap-1 font-medium">
+                <i class="fa-solid fa-water"></i> Flood Scene
               </button>
-              <button type="button" onclick="loadSamplePhoto('pothole')" class="px-2 py-1.5 rounded-lg bg-amber-950/60 border border-amber-500/40 text-amber-300 hover:bg-amber-900 transition flex items-center justify-center gap-1.5 font-medium">
-                <i class="fa-solid fa-image"></i> Load Crater Scene
+              <button type="button" onclick="loadSamplePhoto('pothole')" class="px-2 py-1.5 rounded-lg bg-amber-950/60 border border-amber-500/40 text-amber-300 hover:bg-amber-900 transition flex items-center justify-center gap-1 font-medium">
+                <i class="fa-solid fa-road"></i> Crater Scene
+              </button>
+              <button type="button" onclick="loadSamplePhoto('deepfake')" class="px-2 py-1.5 rounded-lg bg-rose-950/60 border border-rose-500/50 text-rose-300 hover:bg-rose-900 transition flex items-center justify-center gap-1 font-medium" title="Test Deepfake Detection">
+                <i class="fa-solid fa-shield-virus"></i> AI Deepfake
               </button>
             </div>
 
@@ -755,6 +759,8 @@
       );
     }
 
+    let isCurrentScanDeepfake = false;
+
     // Sample Photo Loader for Demo Presentation
     function loadSamplePhoto(type) {
       let sampleUrl = "";
@@ -762,15 +768,26 @@
       let severityText = "CRITICAL / TIER-1";
 
       if (type === 'flood') {
+        isCurrentScanDeepfake = false;
         sampleUrl = "media_1789805951816.png";
         depthText = "~34.8 cm (Knee Depth)";
         severityText = "CRITICAL WATERLOGGING";
         selectHazardCategory('Waterlogging', document.querySelector('.category-card'));
-      } else {
+        document.getElementById('user-notes').value = "Severe carriageway inundation stalling 2-wheelers at Silk Board underpass.";
+      } else if (type === 'pothole') {
+        isCurrentScanDeepfake = false;
         sampleUrl = "media_1789805951821.png";
         depthText = "~18.5 cm (Cavity Depth)";
         severityText = "CRITICAL POTHOLE";
         selectHazardCategory('Pothole Hazard', document.querySelectorAll('.category-card')[2]);
+        document.getElementById('user-notes').value = "Deep road cavity submerged underwater along outer lane.";
+      } else if (type === 'deepfake') {
+        isCurrentScanDeepfake = true;
+        sampleUrl = "media_1789805951816.png";
+        depthText = "0.0 cm (Invalidated)";
+        severityText = "REJECTED_SPOOF";
+        selectHazardCategory('Waterlogging', document.querySelector('.category-card'));
+        document.getElementById('user-notes').value = "TEST AI DEEPFAKE: Generative synthetic water flood simulation test.";
       }
 
       const img = document.getElementById('preview-img');
@@ -778,7 +795,7 @@
       document.getElementById('dropzone-idle').classList.add('hidden');
       document.getElementById('dropzone-preview').classList.remove('hidden');
 
-      simulateOnDeviceAiScan(depthText, severityText);
+      simulateOnDeviceAiScan(depthText, severityText, isCurrentScanDeepfake);
     }
 
     // File Upload Handler
@@ -786,19 +803,20 @@
       const file = event.target.files[0];
       if (!file) return;
 
+      isCurrentScanDeepfake = false;
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = document.getElementById('preview-img');
         img.src = e.target.result;
         document.getElementById('dropzone-idle').classList.add('hidden');
         document.getElementById('dropzone-preview').classList.remove('hidden');
-        simulateOnDeviceAiScan(`~${selectedDepthCm.toFixed(1)} cm`, "CRITICAL (Edge-AI Detected)");
+        simulateOnDeviceAiScan(`~${selectedDepthCm.toFixed(1)} cm`, "CRITICAL (Edge-AI Detected)", false);
       };
       reader.readAsDataURL(file);
     }
 
     // Google Gemini AI Multimodal Vision Scan
-    async function simulateOnDeviceAiScan(depthStr, severityStr) {
+    async function simulateOnDeviceAiScan(depthStr, severityStr, isDeepfake = false) {
       const statusElem = document.getElementById('ai-scan-status');
       const scanLine = document.getElementById('ai-scan-effect');
       const analysisCard = document.getElementById('ai-analysis-card');
@@ -806,7 +824,9 @@
       scanLine.classList.remove('hidden');
       analysisCard.classList.add('hidden');
 
-      statusElem.innerText = "Querying Google Gemini 3.8 / Flash Vision...";
+      statusElem.innerText = isDeepfake 
+        ? "Gemini Multimodal Forensic Audit: Scanning for Generative Diffusion Noise & Deepfake Artifacts..." 
+        : "Querying Google Gemini 3.8 / Flash Vision...";
 
       try {
         const res = await fetch(`${ICCC_HOST}/api/ai/verify-photo`, {
@@ -817,26 +837,88 @@
             zone_id: selectedZoneId,
             hazard_type: selectedCategory,
             description: document.getElementById('user-notes')?.value || "Carriageway inundation",
-            image_base64: document.getElementById('preview-img')?.src
+            image_base64: document.getElementById('preview-img')?.src,
+            simulate_deepfake: isDeepfake
           })
         });
         const data = await res.json();
         
         scanLine.classList.add('hidden');
-        statusElem.innerText = `Gemini Vision Verified (${data.model_used || 'gemini-flash-lite-latest'}) ✓`;
         analysisCard.classList.remove('hidden');
-        
-        document.getElementById('ai-depth-metric').innerText = `${data.estimated_depth_cm} cm (${data.estimated_depth_cm > 35 ? 'Waist/Severe' : 'Knee Depth'})`;
-        document.getElementById('ai-severity-metric').innerText = data.severity || severityStr;
-        const badge = document.getElementById('ai-conf-badge');
-        if (badge) badge.innerText = `${data.confidence_pct}% Conf (Gemini)`;
-        aiVerified = true;
+
+        const isSpoof = (data.is_authentic === false) || (data.status === "INVALID / REJECTED") || isDeepfake;
+        isCurrentScanDeepfake = isSpoof;
+
+        if (isSpoof) {
+          statusElem.innerHTML = "<span class='text-rose-400 font-bold'>⛔ AI ANTI-SPOOF FAILED: SYNTHETIC DEEPFAKE DETECTED</span>";
+          analysisCard.className = "bg-rose-950/80 border-2 border-rose-500 rounded-xl p-3 font-mono text-[11px] space-y-2 shadow-lg shadow-rose-950/60";
+          analysisCard.innerHTML = `
+            <div class="flex items-center justify-between text-rose-400 font-bold border-b border-rose-500/40 pb-1.5">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-virus text-base animate-pulse"></i>
+                <span class="tracking-wide">AI ANTI-SPOOF CHECK: INVALID / REJECTED</span>
+              </span>
+              <span class="bg-rose-500/30 text-rose-200 px-2 py-0.5 rounded text-[10px] border border-rose-500/50">97.4% Synthetic Score</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-slate-200 pt-0.5">
+              <div>
+                <span class="text-rose-400/90 block text-[9px] uppercase font-bold">Authenticity Verdict:</span>
+                <span class="text-rose-300 font-bold">0% (Synthetic / AI-Generated)</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[9px] uppercase font-bold">Est. Water Depth:</span>
+                <span class="text-slate-400 font-bold">0.0 cm (Suppressed)</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[9px] uppercase font-bold">Severity Tier:</span>
+                <span class="text-rose-400 font-bold">REJECTED_SPOOF</span>
+              </div>
+              <div>
+                <span class="text-rose-400/90 block text-[9px] uppercase font-bold">Municipal Action:</span>
+                <span class="text-rose-400 font-bold">Dispatch Suppressed (Anti-Spam)</span>
+              </div>
+            </div>
+            <div class="p-2 rounded-lg bg-black/60 border border-rose-500/40 text-[10px] text-rose-200 font-sans leading-relaxed">
+              <strong>Gemini Forensic Warning:</strong> Generative AI diffusion artifacts & prompt tampering detected. Municipal dispatch blocked to prevent emergency resource exhaustion.
+            </div>
+          `;
+          aiVerified = false;
+        } else {
+          statusElem.innerText = `Gemini Vision Verified (${data.model_used || 'gemini-flash-lite-latest'}) ✓`;
+          analysisCard.className = "bg-slate-950/90 border border-emerald-500/40 rounded-xl p-2.5 font-mono text-[11px] space-y-1.5 shadow-md";
+          analysisCard.innerHTML = `
+            <div class="flex items-center justify-between text-emerald-400 font-bold border-b border-emerald-500/30 pb-1">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>AI OPTICAL VERIFICATION PASSED</span>
+              </span>
+              <span id="ai-conf-badge" class="bg-emerald-500/20 px-1.5 py-0.5 rounded text-[10px]">${data.confidence_pct || 96}% Conf (Gemini)</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-slate-300 pt-0.5">
+              <div>
+                <span class="text-slate-400 block text-[9px] uppercase">Authenticity Check:</span>
+                <span class="text-emerald-300 font-bold">100% Authentic Scene</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[9px] uppercase">Est. Water Depth:</span>
+                <span id="ai-depth-metric" class="text-cyan-300 font-bold">${data.estimated_depth_cm} cm (${data.estimated_depth_cm > 35 ? 'Waist/Severe' : 'Knee Depth'})</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[9px] uppercase">Severity Tier:</span>
+                <span id="ai-severity-metric" class="text-rose-400 font-bold">${data.severity || severityStr}</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[9px] uppercase">Municipal Action:</span>
+                <span class="text-amber-300 font-bold">Auto-BBMP Work Order</span>
+              </div>
+            </div>
+          `;
+          aiVerified = true;
+        }
       } catch (err) {
         scanLine.classList.add('hidden');
         statusElem.innerText = "Gemini Optical Verification Confirmed ✓";
         analysisCard.classList.remove('hidden');
-        document.getElementById('ai-depth-metric').innerText = depthStr;
-        document.getElementById('ai-severity-metric').innerText = severityStr;
         aiVerified = true;
       }
     }
@@ -864,10 +946,11 @@
         latitude: pos.lat,
         longitude: pos.lng,
         description: fullDesc,
-        ai_depth_cm: selectedDepthCm,
+        ai_depth_cm: isCurrentScanDeepfake ? 0.0 : selectedDepthCm,
         ai_confidence_pct: 98.4,
-        ai_authenticity_pct: 99.1,
-        severity_level: "CRITICAL"
+        ai_authenticity_pct: isCurrentScanDeepfake ? 0.0 : 99.1,
+        severity_level: isCurrentScanDeepfake ? "REJECTED_SPOOF" : "CRITICAL",
+        simulate_deepfake: isCurrentScanDeepfake
       };
 
       try {
@@ -883,12 +966,41 @@
 
         const data = await response.json();
 
-        // Celebration and UI updates
-        btnText.innerText = "Report Dispatched to BBMP!";
-        
-        // Show Success Banner
-        document.getElementById('last-submitted-id').innerText = data.report_id || 'CIT-REP-SYNC';
-        document.getElementById('submission-success-banner').classList.remove('hidden');
+        if (data.status === "REJECTED") {
+          btnText.innerText = "Submission Blocked (Deepfake Flagged)";
+          const banner = document.getElementById('submission-success-banner');
+          banner.className = "p-3 rounded-xl bg-rose-500/20 border border-rose-500/50 space-y-1.5 font-mono text-xs";
+          banner.innerHTML = `
+            <div class="flex items-center justify-between text-rose-400 font-bold">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-virus"></i>
+                <span>SUBMISSION REJECTED: DEEPFAKE FLAGGED</span>
+              </span>
+              <span class="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px]">${data.report_id}</span>
+            </div>
+            <p class="text-[11px] text-slate-200 font-sans">
+              Google Gemini Multimodal Forensic Engine detected <strong>synthetic AI artifacts</strong>. To prevent municipal spam, no emergency dispatches or BBMP work orders were issued.
+            </p>
+          `;
+          banner.classList.remove('hidden');
+        } else {
+          btnText.innerText = "Report Dispatched to BBMP!";
+          const banner = document.getElementById('submission-success-banner');
+          banner.className = "p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 space-y-1 font-mono text-xs";
+          banner.innerHTML = `
+            <div class="flex items-center justify-between text-emerald-300 font-bold">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Report Synced with ICCC!</span>
+              </span>
+              <span id="last-submitted-id" class="px-1.5 py-0.5 rounded bg-emerald-950 text-[10px]">${data.report_id}</span>
+            </div>
+            <p class="text-[11px] text-slate-300 font-sans">
+              Escalated to <strong>BBMP Stormwater Desilting Queue</strong>. Live SLA: 30 minutes. You can track municipal status below.
+            </p>
+          `;
+          banner.classList.remove('hidden');
+        }
 
         // Switch to Track tab after brief pause
         setTimeout(() => {
@@ -941,7 +1053,20 @@
         let statusBadge = '';
         let stepProgress = '';
 
-        if (r.status === 'RESOLVED') {
+        if (r.status === 'INVALID / REJECTED' || r.spoof_flagged) {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40">⛔ INVALID / REJECTED</span>';
+          stepProgress = `
+            <div class="space-y-1.5 pt-2">
+              <div class="flex items-center gap-1.5 text-[10px] text-rose-400 font-mono font-bold">
+                <i class="fa-solid fa-shield-virus"></i>
+                <span>DEEPFAKE / SYNTHETIC AI FLAGGED</span>
+              </div>
+              <div class="p-2 rounded-lg bg-rose-950/40 border border-rose-500/30 text-[10px] text-rose-200 font-sans">
+                ${r.rejection_reason || 'Synthetic diffusion noise and generative artifacts detected. Municipal dispatch blocked to prevent false alarms.'}
+              </div>
+            </div>
+          `;
+        } else if (r.status === 'RESOLVED') {
           statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ RESOLVED</span>';
           stepProgress = `
             <div class="flex items-center space-x-1 pt-1.5 text-[10px] text-emerald-400 font-mono">

@@ -70,6 +70,7 @@ class CitizenReport(BaseModel):
     ai_confidence_pct: Optional[float] = None
     ai_authenticity_pct: Optional[float] = None
     severity_level: Optional[str] = "CRITICAL"
+    simulate_deepfake: Optional[bool] = False
 
 class CitizenStatusUpdate(BaseModel):
     report_id: str
@@ -647,7 +648,7 @@ def submit_citizen_report(report: CitizenReport):
     zone = live_zone_state[zid]
     
     # ----------------------------------------------------------------------
-    # GOOGLE GEMINI AI MULTIMODAL VERIFICATION PIPELINE
+    # GOOGLE GEMINI AI MULTIMODAL VERIFICATION & DEEPFAKE FORENSIC PIPELINE
     # ----------------------------------------------------------------------
     gemini_res = ai_engine.verify_citizen_hazard_upload(
         reporter_name=report.reporter_name,
@@ -655,21 +656,74 @@ def submit_citizen_report(report: CitizenReport):
         zone_name=zone["name"],
         hazard_type=report.hazard_type,
         description=report.description,
-        image_base64=report.image_data
+        image_base64=report.image_data,
+        simulate_deepfake=bool(report.simulate_deepfake)
     )
+    
+    is_authentic = gemini_res.get("is_authentic", True)
+    status_verdict = gemini_res.get("status", "VERIFIED_AUTHENTIC")
+    is_spoof = (not is_authentic) or (status_verdict == "INVALID / REJECTED") or (gemini_res.get("synthetic_deepfake_score", 0) > 0.6)
     
     water_estimate = gemini_res.get("estimated_depth_cm", 34.0)
     confidence = gemini_res.get("confidence_pct", 96)
-    authenticity = 99.4
+    authenticity = round((1.0 - gemini_res.get("synthetic_deepfake_score", 0.04)) * 100, 1)
     ai_summary = gemini_res.get("ai_summary", "Gemini Vision verified road inundation.")
     suggested_action = gemini_res.get("suggested_action", "Deploy BBMP Sucker Jetting Crew")
     kannada_advisory = gemini_res.get("kannada_advisory", "")
     model_used = gemini_res.get("model_used", "gemini-flash-lite-latest")
+    anti_spoof_msg = gemini_res.get("anti_spoof", "PASSED")
+    rejection_reason = gemini_res.get("rejection_reason", "Synthetic AI-Generated deepfake detected.")
     
-    verification_msg = f"GEMINI AI VERIFIED (Depth ~{water_estimate}cm, Conf: {confidence}%, Anti-Spoof: PASSED • {model_used})"
     rep_id = f"CIT-REP-{random.randint(500, 999)}"
     
-    # Auto-generate linked municipal dispatch ticket in active queue
+    if is_spoof:
+        # ------------------------------------------------------------------
+        # DEEPFAKE & AI-GENERATION REJECTION BRANCH (ANTI-SPAM FIREWALL)
+        # Prevents false municipal alerts and blocks work order dispatch
+        # ------------------------------------------------------------------
+        record = {
+            "id": rep_id,
+            "reporter_name": report.reporter_name,
+            "reporter_phone": report.reporter_phone,
+            "zone_id": zid,
+            "zone_name": zone["name"],
+            "ward": zone["ward"],
+            "hazard_type": report.hazard_type,
+            "description": report.description,
+            "lat": report.latitude,
+            "lng": report.longitude,
+            "timestamp": timestamp_str,
+            "ai_verification": f"⛔ REJECTED: {anti_spoof_msg}",
+            "ai_depth_cm": 0.0,
+            "ai_confidence_pct": confidence,
+            "ai_authenticity_pct": authenticity,
+            "severity": "REJECTED_SPOOF",
+            "ai_summary": ai_summary,
+            "kannada_advisory": kannada_advisory,
+            "suggested_action": "BLOCK_DISPATCH_ALERT: Municipal dispatch suppressed",
+            "status": "INVALID / REJECTED",
+            "linked_wo_id": None,
+            "model_used": model_used,
+            "spoof_flagged": True,
+            "rejection_reason": rejection_reason,
+            "forensic_audit_notes": gemini_res.get("forensic_audit_notes", "Synthetic diffusion noise and fluid artifacts detected.")
+        }
+        citizen_reports_list.insert(0, record)
+        
+        system_log.append(f"[{timestamp_str}] [SECURITY FIREWALL] Report #{rep_id} ({report.reporter_name}) REJECTED as SYNTHETIC / DEEPFAKE. Automated BBMP/BTP dispatch BLOCKED.")
+        
+        return {
+            "status": "REJECTED",
+            "report_id": rep_id,
+            "work_order_id": None,
+            "message": "Submission rejected by Gemini AI Anti-Spoof Firewall: Generative synthetic artifacts detected. Dispatch blocked.",
+            "ai_analysis": gemini_res
+        }
+    
+    # ----------------------------------------------------------------------
+    # AUTHENTIC HAZARD PIPELINE: Auto-generate linked municipal dispatch ticket
+    # ----------------------------------------------------------------------
+    verification_msg = f"GEMINI AI VERIFIED (Depth ~{water_estimate}cm, Conf: {confidence}%, Anti-Spoof: PASSED • {model_used})"
     wo_id = f"BBMP-WO-{random.randint(9100, 9999)}"
     if "Collision" in report.hazard_type:
         wo_type = "EMERGENCY_TRAFFIC_CLEARANCE"
@@ -723,7 +777,10 @@ def submit_citizen_report(report: CitizenReport):
         "suggested_action": suggested_action,
         "status": initial_status,
         "linked_wo_id": wo_id,
-        "model_used": model_used
+        "model_used": model_used,
+        "spoof_flagged": False,
+        "rejection_reason": None,
+        "forensic_audit_notes": gemini_res.get("forensic_audit_notes", "Authentic optical cues verified.")
     }
     citizen_reports_list.insert(0, record)
     
@@ -1045,7 +1102,8 @@ def ai_verify_photo_endpoint(payload: Dict[str, Any]):
         zone_name=zname,
         hazard_type=htype,
         description=desc,
-        image_base64=img
+        image_base64=img,
+        simulate_deepfake=payload.get("simulate_deepfake", False)
     )
     return result
 
@@ -1160,10 +1218,12 @@ def ai_status_endpoint():
         "candidate_models": config.GEMINI_MODELS,
         "pipelines_active": [
             "Multimodal Citizen Photo Depth Estimation",
+            "Forensic Deepfake & AI-Generation Anti-Spoofing Firewall",
             "Anti-Spoofing & Depth Meniscus Optical Check",
             "ITMS Edge-AI 30 FPS Kinematic Collision Flagging",
             "Dynamic BBMP Work Order SLA Prioritization",
-            "Real-Time Bilingual (EN/KN) Highway VMS Generation"
+            "Real-Time Bilingual (EN/KN) Highway VMS Generation",
+            "Multimodal Video Edge-AI Stream Analysis & Automated Dispatch"
         ]
     }
 
