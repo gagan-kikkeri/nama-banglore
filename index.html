@@ -347,12 +347,19 @@
               </div>
               
               <div class="mt-2.5 space-y-2">
-                <div class="text-[11px] font-semibold text-amber-400 flex items-center gap-1.5">
-                  <i class="fa-solid fa-triangle-exclamation"></i>
-                  <span id="vms-status-title">Dynamic VMS Highway Advisories</span>
+                <div class="flex items-center justify-between">
+                  <div class="text-[11px] font-semibold text-amber-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="vms-status-title">Dynamic VMS Highway Advisories</span>
+                  </div>
+                  <!-- Interactive HAZARD WARNING Button -->
+                  <button id="btn-hazard-warning" onclick="openHazardModal()" class="px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/35 flex items-center gap-1.5 transition shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="btn-hazard-text">HAZARD WARNING</span>
+                  </button>
                 </div>
                 <!-- Glowing VMS Message Screen -->
-                <div class="bg-black/80 border-2 border-slate-800 rounded-lg p-2.5 font-mono text-xs text-amber-400 tracking-wide font-bold shadow-inner" id="vms-screen-message">
+                <div class="bg-black/80 border-2 border-slate-800 rounded-lg p-2.5 font-mono text-xs text-amber-400 tracking-wide font-bold shadow-inner cursor-pointer hover:border-amber-500/50 transition" onclick="openHazardModal()" id="vms-screen-message" title="Click to view detailed hazard diagnostics">
                   CORRIDOR CLEAR • MAINTAIN SAFE LANE DISTANCE • SPEED 50 KM/H
                 </div>
               </div>
@@ -522,6 +529,241 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: DETAILED HAZARD WARNING & INCIDENT DIAGNOSTIC AUDIT -->
+  <!-- ========================================================================= -->
+  <div id="hazard-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+    <div class="bg-iccc-panel border border-slate-700 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto border-cyan-500/30">
+      
+      <!-- Modal Header -->
+      <div class="p-4 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl font-bold shadow-md shadow-amber-950/40" id="hm-header-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-extrabold text-white text-base md:text-lg tracking-wide uppercase" id="hm-corridor-title">
+                Silk Board Junction - Hosur Rd
+              </h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-800/40" id="hm-ward-tag">
+                Ward 174
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
+              <span>Pole: <strong class="text-slate-200" id="hm-pole-id">BTP-ITMS-SB-04</strong></span>
+              <span>•</span>
+              <span>Basin Sump: <strong class="text-slate-200" id="hm-basin-id">CB-FMCW-SB-102</strong></span>
+              <span>•</span>
+              <span class="text-emerald-400" id="hm-live-timestamp">Real-time Live Sync</span>
+            </p>
+          </div>
+        </div>
+        <button onclick="closeHazardModal()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800/60 transition">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Severity Banner -->
+      <div class="px-5 py-2.5 bg-amber-950/40 border-b border-amber-500/30 flex flex-wrap items-center justify-between gap-2" id="hm-severity-banner">
+        <div class="flex items-center gap-2 text-xs font-mono">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+          <span class="text-slate-300 font-bold uppercase">HAZARD CLASSIFICATION:</span>
+          <span class="text-amber-300 font-black tracking-wider text-sm" id="hm-classification-text">
+            SILT / DEBRIS CLOG (LOCALIZED CATCHMENT ANOMALY)
+          </span>
+        </div>
+        <div class="text-xs font-mono">
+          <span class="text-slate-400">HK-RHS Risk Index:</span>
+          <span class="text-amber-400 font-black text-sm ml-1" id="hm-risk-score">0.88 / 1.00</span>
+        </div>
+      </div>
+
+      <!-- Modal Body (Two-Column Deep-Dive Diagnostics) -->
+      <div class="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- LEFT CARD 1: 60/77 GHz FMCW SENSOR TELEMETRY & RADOME BARRIER -->
+          <div class="bg-slate-950/90 rounded-xl p-3.5 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between text-xs font-mono border-b border-slate-850 pb-2">
+              <span class="text-cyan-400 font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-tower-broadcast"></i>
+                <span>60/77 GHz FMCW Millimeter-Wave Telemetry</span>
+              </span>
+              <span class="text-emerald-400 text-[10px]">Soffit Neck Mounted</span>
+            </div>
+
+            <!-- Water Level Metrics -->
+            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div class="bg-slate-900/80 p-2.5 rounded border border-slate-850">
+                <div class="text-slate-400 text-[10px]">Basin Water Depth:</div>
+                <div class="text-lg font-black text-white mt-0.5" id="hm-depth-metric">86.4 cm (72%)</div>
+                <div class="text-[9px] text-slate-500">Max Capacity: 120.0 cm</div>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded border border-slate-850">
+                <div class="text-slate-400 text-[10px]">Rate of Basin Rise:</div>
+                <div class="text-lg font-black text-amber-400 mt-0.5" id="hm-rate-metric">+3.8 cm/min</div>
+                <div class="text-[9px] text-slate-500">Recession: 0.2 cm/min</div>
+              </div>
+            </div>
+
+            <!-- HDPE Radome Window Chemical Isolation Specs -->
+            <div class="bg-slate-900/60 p-2.5 rounded border border-slate-850 text-xs font-mono space-y-1">
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-slate-300 font-semibold flex items-center gap-1">
+                  <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                  <span>3.2mm Tilted HDPE Radome Window:</span>
+                </span>
+                <span class="text-emerald-400 font-bold">100% Hermetic Seal</span>
+              </div>
+              <div class="text-[10px] text-slate-400 leading-relaxed">
+                • <strong>H₂S Sewer Gas Ingress:</strong> 0.0 ppm (Zero corrosion of radar electronics)<br>
+                • <strong>Dielectric Constant:</strong> εᵣ ≈ 2.3 | Millimeter-wave transparency &gt; 98.4%<br>
+                • <strong>Run-off Angle:</strong> 15° tilted soffit avoids condensation droplets.
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT CARD 2: HYDRO-KINETIC DIFFERENTIAL INFLOW INDEX (ΔH) MATHEMATICS -->
+          <div class="bg-slate-950/90 rounded-xl p-3.5 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between text-xs font-mono border-b border-slate-850 pb-2">
+              <span class="text-cyan-400 font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-square-root-variable"></i>
+                <span>Differential Inflow Index (ΔH) Isolation</span>
+              </span>
+              <span class="text-amber-400 font-mono text-[10px]" id="hm-delta-badge">ANOMALY TRIGGERED</span>
+            </div>
+
+            <!-- Mathematical Equation Breakdown -->
+            <div class="bg-slate-900/80 p-3 rounded border border-slate-850 font-mono space-y-2">
+              <div class="text-[11px] text-cyan-300 font-bold">
+                Formula: ΔH = (∂h_basin / ∂t) - [ α · R_inflow(t) ]
+              </div>
+              <div class="text-xs text-slate-200 bg-slate-950 p-2 rounded border border-slate-800">
+                <div class="flex justify-between text-[11px]">
+                  <span>Calculated Inflow Index (ΔH):</span>
+                  <span class="text-amber-400 font-black text-sm" id="hm-delta-calc">2.45</span>
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                  <span>Precipitation (R): <strong class="text-slate-300" id="hm-rain-calc">18.0 mm/hr</strong></span>
+                  <span>Choke Threshold: <strong class="text-slate-300">0.80</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Algorithmic Decision Explanation -->
+            <div class="p-2.5 rounded bg-amber-950/20 border border-amber-500/30 text-[11px] text-slate-300 leading-relaxed font-sans" id="hm-decision-explanation">
+              <strong>Hydrodynamic Verdict:</strong> Because local rainfall is moderate (18 mm/hr) but catch-basin water level is rising at 3.8 cm/min, the differential index ΔH spikes to <strong>2.45 (&gt;&gt; 0.80)</strong>. This isolates a <strong>physical silt or debris choke</strong> in the flume neck, rather than cloudburst saturation.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- LOWER SECTION: EDGE-AI CV EVIDENCE & DISPATCH WORK ORDER PIPELINE -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- EDGE-AI COMPUTER VISION EVIDENCE -->
+          <div class="bg-slate-950/90 rounded-xl p-3.5 border border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between text-xs font-mono border-b border-slate-850 pb-2">
+              <span class="text-cyan-400 font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-eye"></i>
+                <span>ITMS Speed Pole Edge-AI CV Inference</span>
+              </span>
+              <span class="text-emerald-400 text-[10px]">Zero Civil Excavation</span>
+            </div>
+
+            <div class="bg-slate-900 rounded-lg p-2.5 border border-slate-850 font-mono text-xs space-y-1.5">
+              <div class="flex justify-between">
+                <span class="text-slate-400">Deceleration Spike:</span>
+                <span class="text-rose-400 font-bold" id="hm-decel-metric">-6.8 m/s² (Severe Brake)</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Carriageway Obstruction:</span>
+                <span class="text-amber-400 font-bold" id="hm-obstruction-metric">2 Stationary Vehicles</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Optical Confidence:</span>
+                <span class="text-cyan-300 font-bold" id="hm-confidence-metric">96.4% (YOLOv8 Edge)</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Corridor Traffic Speed:</span>
+                <span class="text-slate-200" id="hm-speed-metric">18.0 km/h (Congested)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- AUTOMATED MUNICIPAL & POLICE ACTION PIPELINE -->
+          <div class="bg-slate-950/90 rounded-xl p-3.5 border border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between text-xs font-mono border-b border-slate-850 pb-2">
+              <span class="text-emerald-400 font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Automated ICCC Dispatch Actions</span>
+              </span>
+              <span class="text-cyan-400 text-[10px]">Direct API Routing</span>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <div class="bg-slate-900/90 p-2 rounded border border-slate-850 flex items-start gap-2">
+                <i class="fa-solid fa-truck-pickup text-emerald-400 mt-0.5"></i>
+                <div>
+                  <div class="font-bold text-slate-200 font-mono text-[11px]" id="hm-wo-title">
+                    BBMP Work Order #8821 Issued
+                  </div>
+                  <div class="text-[10px] text-slate-400" id="hm-wo-desc">
+                    Quick-reaction hydro-vacuum silt suction unit deployed. SLA: 25 minutes.
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/90 p-2 rounded border border-slate-850 flex items-start gap-2">
+                <i class="fa-solid fa-rectangle-ad text-amber-400 mt-0.5"></i>
+                <div>
+                  <div class="font-bold text-slate-200 font-mono text-[11px]">
+                    Dynamic Highway VMS Advisory Activated
+                  </div>
+                  <div class="text-[10px] text-amber-300 font-mono" id="hm-vms-preview">
+                    "WATERLOGGING WARNING • DRAIN SILT CHOKE • SLOW DOWN 30 KM/H"
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/90 p-2 rounded border border-slate-850 flex items-start gap-2">
+                <i class="fa-solid fa-shield-halved text-rose-400 mt-0.5"></i>
+                <div>
+                  <div class="font-bold text-slate-200 font-mono text-[11px]">
+                    BTP Traffic & 112 Emergency Sync
+                  </div>
+                  <div class="text-[10px] text-slate-400">
+                    Auto-alerted South Division Traffic Control for upstream signal timing adjustment.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3.5 bg-slate-900/95 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+        <div class="text-slate-400">
+          Status: <span class="text-emerald-400 font-bold">DISPATCH IN PROGRESS</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="injectDemo('silt_clog')" class="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition">
+            Re-test Silt Choke
+          </button>
+          <button onclick="closeHazardModal()" class="px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition">
+            Close Diagnostics
+          </button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <!-- ========================================================================= -->
@@ -964,11 +1206,33 @@
         vmsTitle.innerText = "Dynamic VMS Highway Advisories";
       }
 
+      // Update Dynamic HAZARD WARNING Button State
+      const hazardBtn = document.getElementById('btn-hazard-warning');
+      const hazardText = document.getElementById('btn-hazard-text');
+      if (zone.accident_detected) {
+        hazardBtn.className = 'px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-rose-500/25 text-rose-300 border border-rose-500/50 hover:bg-rose-500/35 flex items-center gap-1.5 transition shadow-sm cursor-pointer animate-pulse';
+        hazardText.innerText = '💥 COLLISION DETECTED';
+      } else if (zone.hazard_classification === 'SILT_DEBRIS_CLOG') {
+        hazardBtn.className = 'px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-amber-500/25 text-amber-300 border border-amber-500/50 hover:bg-amber-500/35 flex items-center gap-1.5 transition shadow-sm cursor-pointer animate-pulse';
+        hazardText.innerText = `⚠️ SILT CHOKE (ΔH ${zone.delta_h.toFixed(2)})`;
+      } else if (zone.hazard_classification === 'CLOUDBURST_OVERLOAD') {
+        hazardBtn.className = 'px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-blue-500/25 text-blue-300 border border-blue-500/50 hover:bg-blue-500/35 flex items-center gap-1.5 transition shadow-sm cursor-pointer animate-pulse';
+        hazardText.innerText = `⛈️ CLOUDBURST (${zone.rainfall_rate_mmhr.toFixed(0)} mm/h)`;
+      } else {
+        hazardBtn.className = 'px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center gap-1.5 transition shadow-sm cursor-pointer';
+        hazardText.innerText = 'NORMAL FLOW (STABLE)';
+      }
+
       // Sparkline update
       if (sparklineChart && zone.history_delta_h) {
         sparklineChart.data.datasets[0].data = zone.history_delta_h.slice(-8);
         sparklineChart.data.datasets[0].borderColor = zone.delta_h > 0.8 ? '#f59e0b' : '#10b981';
         sparklineChart.update();
+      }
+
+      // Live update modal if currently open
+      if (!document.getElementById('hazard-modal').classList.contains('hidden')) {
+        populateHazardModal(zone);
       }
     }
 
@@ -1012,6 +1276,104 @@
         await updateSystemState();
       } catch (err) {
         alert("Demo injection error: " + err);
+      }
+    }
+
+    // Hazard Warning Modal Controls
+    function openHazardModal() {
+      if (stateCache && stateCache.zones[activeCorridorId]) {
+        populateHazardModal(stateCache.zones[activeCorridorId]);
+      }
+      document.getElementById('hazard-modal').classList.remove('hidden');
+    }
+
+    function closeHazardModal() {
+      document.getElementById('hazard-modal').classList.add('hidden');
+    }
+
+    function populateHazardModal(zone) {
+      if (!zone) return;
+
+      document.getElementById('hm-corridor-title').innerText = zone.name;
+      document.getElementById('hm-ward-tag').innerText = zone.ward;
+      document.getElementById('hm-pole-id').innerText = zone.itms_pole_id;
+      document.getElementById('hm-basin-id').innerText = zone.catch_basin_id;
+      document.getElementById('hm-live-timestamp').innerText = new Date().toLocaleTimeString() + ' IST Sync';
+
+      document.getElementById('hm-depth-metric').innerText = `${zone.water_level_cm.toFixed(1)} cm (${zone.water_level_pct}%)`;
+      document.getElementById('hm-rate-metric').innerText = `+${zone.rate_of_rise_cm_min.toFixed(1)} cm/min`;
+      document.getElementById('hm-delta-calc').innerText = zone.delta_h.toFixed(2);
+      document.getElementById('hm-rain-calc').innerText = `${zone.rainfall_rate_mmhr.toFixed(1)} mm/hr`;
+      document.getElementById('hm-risk-score').innerText = `${zone.risk_score.toFixed(2)} / 1.00`;
+      document.getElementById('hm-speed-metric').innerText = `${zone.traffic_speed_kmh.toFixed(1)} km/h`;
+      document.getElementById('hm-vms-preview').innerText = `"${zone.vms_text}"`;
+
+      const headerIcon = document.getElementById('hm-header-icon');
+      const banner = document.getElementById('hm-severity-banner');
+      const classText = document.getElementById('hm-classification-text');
+      const deltaBadge = document.getElementById('hm-delta-badge');
+      const explanation = document.getElementById('hm-decision-explanation');
+      const woTitle = document.getElementById('hm-wo-title');
+      const woDesc = document.getElementById('hm-wo-desc');
+      const decelMetric = document.getElementById('hm-decel-metric');
+      const obstructMetric = document.getElementById('hm-obstruction-metric');
+
+      if (zone.accident_detected) {
+        headerIcon.className = 'w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 text-xl font-bold shadow-md shadow-rose-950/40 animate-pulse';
+        headerIcon.innerHTML = '<i class="fa-solid fa-car-burst"></i>';
+        banner.className = 'px-5 py-2.5 bg-rose-950/50 border-b border-rose-500/40 flex flex-wrap items-center justify-between gap-2';
+        classText.className = 'text-rose-300 font-black tracking-wider text-sm';
+        classText.innerText = 'CRITICAL VEHICLE ACCIDENT & CARRIAGEWAY OBSTRUCTION';
+        deltaBadge.className = 'text-rose-400 font-mono text-[10px] font-bold';
+        deltaBadge.innerText = 'EDGE-AI VISION TRIGGER';
+        decelMetric.innerText = '-6.8 m/s² (Severe Crash Spike)';
+        obstructMetric.innerText = '2 Vehicles Stationary in Lane 1 & 2';
+        explanation.className = 'p-2.5 rounded bg-rose-950/30 border border-rose-500/40 text-[11px] text-slate-200 leading-relaxed font-sans';
+        explanation.innerHTML = '<strong>Edge-AI Vision Diagnostics:</strong> ITMS optical sensor on pole <code>' + zone.itms_pole_id + '</code> flagged an instantaneous deceleration spike below -4.5 m/s² followed by persistent stationary vehicles on the carriageway. Automated alerts routed to Bangalore Traffic Police and 112 emergency services.';
+        woTitle.innerText = 'Police & EMS 112 Dispatch Dispatched';
+        woDesc.innerText = 'Patrol Unit & Emergency Paramedics routed. Dynamic VMS gantry advises merge-right.';
+      } else if (zone.hazard_classification === 'SILT_DEBRIS_CLOG' || zone.delta_h >= 0.80) {
+        headerIcon.className = 'w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xl font-bold shadow-md shadow-amber-950/40 animate-pulse';
+        headerIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        banner.className = 'px-5 py-2.5 bg-amber-950/40 border-b border-amber-500/30 flex flex-wrap items-center justify-between gap-2';
+        classText.className = 'text-amber-300 font-black tracking-wider text-sm';
+        classText.innerText = 'SILT / DEBRIS CLOG (LOCALIZED CATCHMENT ANOMALY)';
+        deltaBadge.className = 'text-amber-400 font-mono text-[10px] font-bold';
+        deltaBadge.innerText = 'ΔH BOTTLENECK SPIKE';
+        decelMetric.innerText = '-1.2 m/s² (Water Drag Deceleration)';
+        obstructMetric.innerText = 'High Water Drag (Right Flume Flooded)';
+        explanation.className = 'p-2.5 rounded bg-amber-950/20 border border-amber-500/30 text-[11px] text-slate-300 leading-relaxed font-sans';
+        explanation.innerHTML = '<strong>Hydrodynamic Verdict:</strong> Because local rainfall is moderate (' + zone.rainfall_rate_mmhr.toFixed(1) + ' mm/hr) but catch-basin water level is rising at ' + zone.rate_of_rise_cm_min.toFixed(1) + ' cm/min, the differential index ΔH spikes to <strong>' + zone.delta_h.toFixed(2) + ' (&gt;&gt; 0.80)</strong>. This isolates a <strong>physical silt or debris choke</strong> in the flume neck, rather than cloudburst saturation.';
+        woTitle.innerText = 'BBMP Emergency Hydro-Vacuum Work Order Issued';
+        woDesc.innerText = 'Quick-reaction silt suction unit deployed. SLA: 25 minutes to prevent road overflow.';
+      } else if (zone.hazard_classification === 'CLOUDBURST_OVERLOAD' || zone.rainfall_rate_mmhr > 60) {
+        headerIcon.className = 'w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 text-xl font-bold shadow-md shadow-blue-950/40 animate-pulse';
+        headerIcon.innerHTML = '<i class="fa-solid fa-cloud-showers-heavy"></i>';
+        banner.className = 'px-5 py-2.5 bg-blue-950/50 border-b border-blue-500/40 flex flex-wrap items-center justify-between gap-2';
+        classText.className = 'text-blue-300 font-black tracking-wider text-sm';
+        classText.innerText = 'MACRO CLOUDBURST OVERLOAD (REGIONAL RUN-OFF SURGE)';
+        deltaBadge.className = 'text-blue-400 font-mono text-[10px] font-bold';
+        deltaBadge.innerText = 'REGIONAL HIGH RAINFALL';
+        decelMetric.innerText = '-2.8 m/s² (Heavy Road Spray & Flooding)';
+        obstructMetric.innerText = 'Low Ground Clearance Vehicles Diverting';
+        explanation.className = 'p-2.5 rounded bg-blue-950/25 border border-blue-500/30 text-[11px] text-slate-300 leading-relaxed font-sans';
+        explanation.innerHTML = '<strong>Hydrodynamic Verdict:</strong> Severe precipitation surge (' + zone.rainfall_rate_mmhr.toFixed(1) + ' mm/hr) has exceeded the overall hydraulic capacity of the regional stormwater corridor. ΔH is balanced, confirming <strong>uniform regional cloudburst overload</strong> rather than a localized silt blockage.';
+        woTitle.innerText = 'High-Capacity 500 GPM Dewatering Pumps Engaged';
+        woDesc.innerText = 'Underpass flood gates armed. Dynamic VMS boards diverting commuters to elevated expressways.';
+      } else {
+        headerIcon.className = 'w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl font-bold shadow-md shadow-emerald-950/40';
+        headerIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+        banner.className = 'px-5 py-2.5 bg-emerald-950/40 border-b border-emerald-500/30 flex flex-wrap items-center justify-between gap-2';
+        classText.className = 'text-emerald-300 font-black tracking-wider text-sm';
+        classText.innerText = 'NORMAL HYDRO-KINETIC FLOW (STABLE RUN-OFF)';
+        deltaBadge.className = 'text-emerald-400 font-mono text-[10px] font-bold';
+        deltaBadge.innerText = 'NOMINAL BASELINE';
+        decelMetric.innerText = '-0.4 m/s² (Normal Flow Traffic)';
+        obstructMetric.innerText = 'Zero Obstructions (Carriageway Clear)';
+        explanation.className = 'p-2.5 rounded bg-emerald-950/20 border border-emerald-500/30 text-[11px] text-slate-300 leading-relaxed font-sans';
+        explanation.innerHTML = '<strong>Hydrodynamic Verdict:</strong> Catch-basin inflow and outflow curves are balanced within designed flume parameters. Differential index ΔH (' + zone.delta_h.toFixed(2) + ') is well below the 0.80 anomaly threshold. No municipal intervention needed.';
+        woTitle.innerText = 'Routine Preventive Sump Maintenance (Nominal)';
+        woDesc.innerText = 'Telemetry transmitting cleanly every 3 seconds through corrosion-immune HDPE radome.';
       }
     }
 
