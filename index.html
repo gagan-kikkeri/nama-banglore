@@ -148,14 +148,31 @@
       </div>
     </div>
 
-    <!-- Center/Right Action: Launch Prototype 2 (Citizen Safety PWA on Port 8001) -->
-    <div class="hidden md:flex items-center gap-2">
-      <a href="http://127.0.0.1:8001" target="_blank" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-950/80 to-blue-950/80 border border-cyan-500/50 text-cyan-300 hover:text-white hover:border-cyan-400 transition text-xs font-mono font-bold flex items-center gap-2 shadow-md shadow-cyan-950/40 group">
-        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-        <i class="fa-solid fa-mobile-screen text-cyan-400 group-hover:scale-110 transition"></i>
-        <span>Prototype 2: Citizen PWA (Port 8001)</span>
-        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
-      </a>
+    <!-- Master Multi-Portal Integrated Switcher -->
+    <div class="flex items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-cyan-500/40 shadow-xl shadow-cyan-950/40">
+      <button onclick="switchMasterView('iccc')" id="master-nav-iccc" class="master-nav-btn px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all duration-200 bg-gradient-to-r from-cyan-950 to-blue-900 text-cyan-300 border border-cyan-400 shadow-md shadow-cyan-950/60 cursor-pointer">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        <i class="fa-solid fa-server text-cyan-400"></i>
+        <span>🖥️ ICCC Video Wall</span>
+      </button>
+
+      <button onclick="switchMasterView('citizen')" id="master-nav-citizen" class="master-nav-btn px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-800/70 border border-transparent cursor-pointer">
+        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+        <i class="fa-solid fa-mobile-screen text-blue-400"></i>
+        <span>📱 Citizen Portal</span>
+      </button>
+
+      <button onclick="switchMasterView('responder')" id="master-nav-responder" class="master-nav-btn px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-800/70 border border-transparent cursor-pointer">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <i class="fa-solid fa-truck-fast text-amber-400"></i>
+        <span>🚒 Field Responder</span>
+      </button>
+
+      <button onclick="switchMasterView('split')" id="master-nav-split" class="master-nav-btn px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all duration-200 text-slate-400 hover:text-emerald-300 hover:bg-slate-800/70 border border-transparent cursor-pointer">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <i class="fa-solid fa-table-columns text-emerald-400"></i>
+        <span>⚡ Tri-Portal Split View</span>
+      </button>
     </div>
 
     <!-- Right Header Team Roster Badge (Hexagonal Capsule Box) -->
@@ -178,11 +195,11 @@
   </header>
 
   <!-- ========================================================================= -->
-  <!-- INTEGRATED ICCC SCREEN WALL (3-COLUMN VIDEO WALL LAYOUT) -->
+  <!-- VIEW 1: INTEGRATED ICCC SCREEN WALL (3-COLUMN VIDEO WALL LAYOUT) -->
   <!-- ========================================================================= -->
-  <div class="p-3.5 flex-1 flex flex-col gap-3 max-w-[1920px] mx-auto w-full">
+  <div id="view-iccc" class="master-view flex flex-col flex-1 p-3.5 gap-3 max-w-[1920px] mx-auto w-full">
 
-    <!-- Real-time Cross-Host Sync Toast Banner (Pops when citizen submits on port 8001) -->
+    <!-- Real-time Closed-Loop Sync Toast Banner -->
     <div id="crosshost-sync-toast" class="hidden command-panel bg-gradient-to-r from-cyan-950/90 via-slate-900/90 to-amber-950/90 border border-cyan-500/60 rounded-xl p-3 flex items-center justify-between shadow-xl">
       <div class="flex items-center space-x-3">
         <div class="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center text-lg">
@@ -190,8 +207,8 @@
         </div>
         <div>
           <div class="text-xs font-mono font-bold text-white flex items-center gap-2">
-            <span class="text-cyan-400">⚡ CROSS-HOST TELEMETRY SYNC:</span>
-            <span id="toast-title">New Citizen Report Received from Port 8001!</span>
+            <span class="text-cyan-400">⚡ UNIFIED CLOSED-LOOP SYNC:</span>
+            <span id="toast-title">New Citizen Hazard Report Received & AI Depth Verified!</span>
           </div>
           <p id="toast-desc" class="text-[11px] text-slate-300 mt-0.5 font-sans"></p>
         </div>
@@ -199,6 +216,9 @@
       <div class="flex items-center space-x-2">
         <button onclick="openKpiModal('citizen')" class="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold font-mono transition">
           Inspect in Modal
+        </button>
+        <button onclick="switchMasterView('citizen'); dismissSyncToast();" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono transition">
+          Open Citizen Tab
         </button>
         <button onclick="dismissSyncToast()" class="text-slate-400 hover:text-white p-1">
           <i class="fa-solid fa-xmark"></i>
@@ -602,6 +622,256 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- VIEW 2: CITIZEN SAFETY PORTAL (STANDALONE / EMBEDDED TAB) -->
+  <!-- ========================================================================= -->
+  <div id="view-citizen" class="master-view hidden flex-col w-full flex-1 max-w-[1920px] mx-auto p-3.5 gap-3">
+    <!-- Citizen Portal Navigation & Sub-Header -->
+    <div class="command-panel rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-slate-900 via-blue-950/40 to-slate-900 border border-blue-500/30">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/40 flex items-center justify-center text-sm font-bold shadow-md shadow-blue-950/40">
+          <i class="fa-solid fa-mobile-screen"></i>
+        </div>
+        <div>
+          <div class="text-xs font-mono font-bold text-white flex items-center gap-2">
+            <span>PROTOTYPE 2 • NAMMA BENGALURU CITIZEN SAFETY PWA</span>
+            <span class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/40 font-mono">PORT 8000 UNIFIED</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-sans">1-Tap Hazard Geo-Reporting • AI Optical Flood Depth Estimation • Live Commuter Risk Heatmap</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="switchMasterView('iccc')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono font-bold flex items-center gap-1.5 border border-slate-700 transition cursor-pointer">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to ICCC Wall</span>
+        </button>
+        <button onclick="document.getElementById('frame-citizen').src = '/citizen'" class="px-3 py-1.5 rounded-lg bg-blue-950 hover:bg-blue-900 text-blue-300 text-xs font-mono font-bold flex items-center gap-1.5 border border-blue-500/40 transition cursor-pointer">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Refresh</span>
+        </button>
+        <a href="/citizen" target="_blank" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 shadow-md shadow-blue-950/60 transition">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          <span>Open Standalone Tab</span>
+        </a>
+      </div>
+    </div>
+    
+    <!-- Embedded Full Height Frame -->
+    <div class="flex-1 w-full bg-slate-950 rounded-2xl border border-blue-500/30 overflow-hidden shadow-2xl relative" style="min-height: calc(100vh - 165px);">
+      <iframe id="frame-citizen" src="/citizen" class="w-full h-full border-0 absolute inset-0" title="Citizen Safety Portal"></iframe>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 3: FIELD RESPONDER & TACTICAL CONSOLE -->
+  <!-- ========================================================================= -->
+  <div id="view-responder" class="master-view hidden flex-col w-full flex-1 max-w-[1920px] mx-auto p-3.5 gap-3">
+    <!-- Responder Portal Sub-Header -->
+    <div class="command-panel rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-slate-900 via-amber-950/40 to-slate-900 border border-amber-500/30">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-sm font-bold shadow-md shadow-amber-950/40">
+          <i class="fa-solid fa-truck-fast"></i>
+        </div>
+        <div>
+          <div class="text-xs font-mono font-bold text-white flex items-center gap-2">
+            <span>PROTOTYPE 3 • BBMP & TRAFFIC POLICE TACTICAL DISPATCH</span>
+            <span class="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono">PORT 8000 UNIFIED</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-sans">Stormwater Wing Hydro-Jetting Dispatches • Dynamic VMS Diversions • Police Rapid Response</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="switchMasterView('iccc')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono font-bold flex items-center gap-1.5 border border-slate-700 transition cursor-pointer">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to ICCC Wall</span>
+        </button>
+        <button onclick="document.getElementById('frame-responder').src = '/responder'" class="px-3 py-1.5 rounded-lg bg-amber-950 hover:bg-amber-900 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5 border border-amber-500/40 transition cursor-pointer">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Refresh</span>
+        </button>
+        <a href="/responder" target="_blank" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-mono font-bold flex items-center gap-1.5 shadow-md shadow-amber-950/60 transition">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          <span>Open Standalone Tab</span>
+        </a>
+      </div>
+    </div>
+    
+    <!-- Embedded Full Height Frame -->
+    <div class="flex-1 w-full bg-slate-950 rounded-2xl border border-amber-500/30 overflow-hidden shadow-2xl relative" style="min-height: calc(100vh - 165px);">
+      <iframe id="frame-responder" src="/responder" class="w-full h-full border-0 absolute inset-0" title="Field Responder Portal"></iframe>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 4: TRI-PORTAL MULTI-AGENCY SPLIT COCKPIT -->
+  <!-- ========================================================================= -->
+  <div id="view-split" class="master-view hidden flex-col w-full flex-1 max-w-[1920px] mx-auto p-3.5 gap-3">
+    <!-- Master Closed-Loop Demo Orchestration Bar -->
+    <div class="command-panel rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-cyan-950/90 via-slate-900 to-amber-950/90 border border-cyan-500/50 shadow-xl">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center text-sm font-bold shadow-md">
+          <i class="fa-solid fa-network-wired"></i>
+        </div>
+        <div>
+          <div class="text-xs font-mono font-bold text-white flex items-center gap-2">
+            <span>TRI-PORTAL CLOSED-LOOP ECOSYSTEM • MULTI-AGENCY LIVE DEMONSTRATION</span>
+            <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">SYNCHRONIZED INSTANCE</span>
+          </div>
+          <p class="text-[11px] text-slate-300 font-sans">Witness simultaneous end-to-end resilience: ICCC 77 GHz Radar detection &rarr; Citizen crowd verification &rarr; Automated BBMP hydro-jet dispatch.</p>
+        </div>
+      </div>
+      
+      <!-- Interactive Closed Loop Steps Trigger -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="injectDemo('cloudburst'); reloadSplitFrames();" class="px-3 py-1.5 rounded-lg bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500/30 transition text-xs font-mono font-bold flex items-center gap-1.5 shadow-sm cursor-pointer" title="Inject 48 mm/hr cloudburst at Silk Board">
+          <i class="fa-solid fa-cloud-bolt text-rose-400"></i>
+          <span>1. Flood Silk Board</span>
+        </button>
+        <button onclick="injectDemo('accident'); reloadSplitFrames();" class="px-3 py-1.5 rounded-lg bg-orange-500/20 border border-orange-500/50 text-orange-300 hover:bg-orange-500/30 transition text-xs font-mono font-bold flex items-center gap-1.5 shadow-sm cursor-pointer" title="Simulate high deceleration crash">
+          <i class="fa-solid fa-car-burst text-orange-400"></i>
+          <span>2. Edge Collision</span>
+        </button>
+        <button onclick="triggerQuickCitizenReport();" class="px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/50 text-blue-300 hover:bg-blue-500/30 transition text-xs font-mono font-bold flex items-center gap-1.5 shadow-sm cursor-pointer" title="Simulate citizen crowd SOS">
+          <i class="fa-solid fa-mobile-screen text-blue-400"></i>
+          <span>3. Citizen SOS</span>
+        </button>
+        <button onclick="injectDemo('reset'); reloadSplitFrames();" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/30 transition text-xs font-mono font-bold flex items-center gap-1.5 shadow-sm cursor-pointer" title="Restore normal baseline">
+          <i class="fa-solid fa-shield-check text-emerald-400"></i>
+          <span>4. Resolve & Restore</span>
+        </button>
+        <button onclick="reloadSplitFrames()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition text-xs font-mono font-bold cursor-pointer" title="Refresh split panes">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2-Column High-Tech Cockpit Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1">
+      
+      <!-- Left Column: ICCC Master Telemetry & Live CCTV Cockpit (5 COLS) -->
+      <div class="lg:col-span-5 flex flex-col gap-3">
+        <!-- 6 Corridors Miniature Radar Mesh Grid -->
+        <div class="command-panel rounded-xl p-3 border border-cyan-500/30 flex flex-col gap-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-xs font-mono">
+            <span class="text-cyan-400 font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-satellite-dish"></i>
+              <span>P1: ICCC 77 GHz RADAR MESH (6 CORRIDORS)</span>
+            </span>
+            <span class="text-emerald-400 font-bold">100% HEALTH</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs font-mono" id="split-corridors-grid">
+            <!-- Dynamically populated 6 corridors mini cards -->
+          </div>
+        </div>
+
+        <!-- Live ITMS Video Feed with AI Object Box -->
+        <div class="command-panel rounded-xl p-3 border border-slate-800 flex flex-col gap-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-xs font-mono">
+            <span class="text-white font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-video text-cyan-400"></i>
+              <span>ITMS OPTICAL CAM • SILK BOARD JUNCTION</span>
+            </span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">EDGE AI ACTIVE</span>
+          </div>
+          <div class="relative w-full h-44 bg-slate-950 rounded-lg overflow-hidden border border-slate-800">
+            <img src="/media_1789805951816.png" class="w-full h-full object-cover opacity-85" alt="Camera 1">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+            <!-- Dynamic Bounding Box -->
+            <div id="split-cam-box" class="absolute top-8 left-12 border-2 border-emerald-400 bg-emerald-500/10 rounded px-2 py-0.5 text-[9px] font-mono text-emerald-300 flex items-center gap-1 shadow-md">
+              <i class="fa-solid fa-car"></i>
+              <span id="split-cam-box-text">FLOW: 42 km/h • CLEAR</span>
+            </div>
+            <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] font-mono text-slate-300">
+              <span id="split-cam-status" class="text-emerald-400 font-bold">● Status: NORMAL FLOW</span>
+              <span class="text-slate-400">Pole #ITMS-SB-04</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Physics Calculation & Summary -->
+        <div class="command-panel rounded-xl p-3 border border-slate-800 flex-1 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-mono font-bold text-slate-200 pb-2 border-b border-slate-800 mb-2 flex items-center justify-between">
+              <span>HYDRO-KINETIC SENSOR TELEMETRY</span>
+              <span class="text-cyan-400">ΔH = ∂h/∂t - αR</span>
+            </div>
+            <div class="space-y-1.5 text-xs font-mono text-slate-300">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Differential Inflow ΔH:</span>
+                <span id="split-dh-val" class="text-cyan-400 font-bold font-mono">0.12 m/hr (NORMAL)</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Active Corridor Risk:</span>
+                <span id="split-risk-val" class="text-emerald-400 font-bold font-mono">0.14 / 1.00</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">BBMP Work Orders:</span>
+                <span id="split-orders-val" class="text-amber-400 font-bold font-mono">2 Active</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Citizen Reports:</span>
+                <span id="split-citizen-val" class="text-blue-400 font-bold font-mono">3 Verified</span>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="switchMasterView('iccc')" class="mt-3 w-full py-2 rounded-lg bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-expand"></i>
+            <span>Expand Full ICCC Video Wall</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Dual Synchronized Panels (Citizen Top, Responder Bottom) (7 COLS) -->
+      <div class="lg:col-span-7 flex flex-col gap-3">
+        <!-- Top Half: Citizen Safety Portal -->
+        <div class="command-panel rounded-xl border border-blue-500/40 overflow-hidden flex flex-col h-[395px] shadow-lg shadow-blue-950/20">
+          <div class="px-3.5 py-1.5 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
+            <span class="text-blue-400 font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-mobile-screen"></i>
+              <span>P2: CITIZEN HAZARD & SAFETY APP (Integrated on :8000/citizen)</span>
+            </span>
+            <div class="flex items-center gap-2">
+              <button onclick="document.getElementById('split-frame-citizen').src = '/citizen'" class="text-slate-400 hover:text-white p-1" title="Refresh Frame">
+                <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
+              </button>
+              <a href="/citizen" target="_blank" class="text-blue-400 hover:text-blue-300 text-[11px] font-bold flex items-center gap-1">
+                <span>Popout Tab</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+              </a>
+            </div>
+          </div>
+          <div class="flex-1 w-full bg-slate-950 relative">
+            <iframe id="split-frame-citizen" src="/citizen" class="w-full h-full border-0 absolute inset-0" title="Citizen Safety App"></iframe>
+          </div>
+        </div>
+
+        <!-- Bottom Half: Field Responder Portal -->
+        <div class="command-panel rounded-xl border border-amber-500/40 overflow-hidden flex flex-col h-[395px] shadow-lg shadow-amber-950/20">
+          <div class="px-3.5 py-1.5 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
+            <span class="text-amber-400 font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-truck-fast"></i>
+              <span>P3: BBMP & POLICE TACTICAL DISPATCH (Integrated on :8000/responder)</span>
+            </span>
+            <div class="flex items-center gap-2">
+              <button onclick="document.getElementById('split-frame-responder').src = '/responder'" class="text-slate-400 hover:text-white p-1" title="Refresh Frame">
+                <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
+              </button>
+              <a href="/responder" target="_blank" class="text-amber-400 hover:text-amber-300 text-[11px] font-bold flex items-center gap-1">
+                <span>Popout Tab</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+              </a>
+            </div>
+          </div>
+          <div class="flex-1 w-full bg-slate-950 relative">
+            <iframe id="split-frame-responder" src="/responder" class="w-full h-full border-0 absolute inset-0" title="Field Responder Console"></iframe>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
   <!-- MODAL: DETAILED HAZARD WARNING & INCIDENT DIAGNOSTIC AUDIT -->
   <!-- ========================================================================= -->
   <div id="hazard-modal" class="fixed inset-0 iccc-modal-backdrop z-[99999] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
@@ -905,6 +1175,10 @@
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
             <span>BBMP Stormwater Wing • Automated SLA Hydro-Jetting Dispatches</span>
             <div class="flex items-center gap-2">
+              <button onclick="closeKpiModal(); switchMasterView('responder');" class="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition text-[11px] font-bold flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>Open Tactical Console Tab</span>
+              </button>
               <button onclick="clearResolvedWorkOrders()" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition text-[11px] font-bold flex items-center gap-1.5" title="Clear all completed work orders">
                 <i class="fa-solid fa-broom text-[10px]"></i>
                 <span>Clear Resolved</span>
@@ -940,10 +1214,16 @@
         <div id="kpi-pane-citizen" class="hidden space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
             <span>Namma Bengaluru Commuter Safety Network • AI Photo Verified</span>
-            <button onclick="closeKpiModal(); openCitizenModal();" class="px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition text-[11px] font-bold flex items-center gap-1.5">
-              <i class="fa-solid fa-camera"></i>
-              <span>Submit New Commuter Report</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="closeKpiModal(); switchMasterView('citizen');" class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 hover:bg-blue-500/30 transition text-[11px] font-bold flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-mobile-screen"></i>
+                <span>Open Citizen Portal Tab</span>
+              </button>
+              <button onclick="closeKpiModal(); openCitizenModal();" class="px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition text-[11px] font-bold flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-camera"></i>
+                <span>Submit New Commuter Report</span>
+              </button>
+            </div>
           </div>
 
           <div class="space-y-2.5" id="kpi-citizen-feed-list">
@@ -1066,6 +1346,164 @@
     let flowChart = null;
     let historyChart = null;
     let sparklineChart = null;
+
+    // =========================================================================
+    // MASTER VIEW CONTROLLER (ICCC, CITIZEN, RESPONDER, SPLIT COCKPIT)
+    // =========================================================================
+    function switchMasterView(view) {
+      const views = ['iccc', 'citizen', 'responder', 'split'];
+      views.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        const btn = document.getElementById('master-nav-' + v);
+        if (el) {
+          if (v === view) {
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+          } else {
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+          }
+        }
+        if (btn) {
+          if (v === view) {
+            btn.className = "master-nav-btn px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all duration-200 bg-gradient-to-r from-cyan-950 to-blue-900 text-cyan-300 border border-cyan-400 shadow-md shadow-cyan-950/60 cursor-pointer";
+          } else {
+            btn.className = "master-nav-btn px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-800/70 border border-transparent cursor-pointer";
+          }
+        }
+      });
+
+      if (view === 'iccc') {
+        setTimeout(() => {
+          if (mainMap) mainMap.invalidateSize();
+          if (miniMap) miniMap.invalidateSize();
+        }, 120);
+      } else if (view === 'split') {
+        if (stateCache) renderSplitViewStatus(stateCache);
+      }
+    }
+
+    function reloadSplitFrames() {
+      const fc = document.getElementById('split-frame-citizen');
+      const fr = document.getElementById('split-frame-responder');
+      if (fc) fc.src = '/citizen';
+      if (fr) fr.src = '/responder';
+      const fMainCit = document.getElementById('frame-citizen');
+      const fMainResp = document.getElementById('frame-responder');
+      if (fMainCit) fMainCit.src = '/citizen';
+      if (fMainResp) fMainResp.src = '/responder';
+    }
+
+    async function triggerQuickCitizenReport() {
+      try {
+        await fetch('/api/citizen/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reporter_name: 'Gagan N Prasad (Lead Architect)',
+            reporter_phone: '+91 98450 77123',
+            zone_id: 'silk_board',
+            hazard_type: 'Severe Waterlogging',
+            latitude: 12.9177,
+            longitude: 77.6238,
+            description: 'Live SOS from Citizen App: Carriageway inundated >35cm!'
+          })
+        });
+        await updateSystemState();
+        reloadSplitFrames();
+      } catch (e) {
+        console.error("Citizen SOS trigger failed:", e);
+      }
+    }
+
+    // Keyboard Shortcuts (1: ICCC, 2: Citizen, 3: Responder, 4: Split)
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+      if (e.key === '1') switchMasterView('iccc');
+      else if (e.key === '2') switchMasterView('citizen');
+      else if (e.key === '3') switchMasterView('responder');
+      else if (e.key === '4') switchMasterView('split');
+    });
+
+    // Render Split View Cockpit Live Status
+    function renderSplitViewStatus(data) {
+      if (!data || !data.zones) return;
+      const zones = Object.values(data.zones);
+      const activeZone = data.zones[activeCorridorId] || zones[0];
+
+      // Update split mini grid
+      const grid = document.getElementById('split-corridors-grid');
+      if (grid) {
+        grid.innerHTML = zones.map(z => {
+          let isCrit = z.risk_score > 0.70 || z.accident_detected;
+          let isMod = z.risk_score > 0.40;
+          let colorClass = isCrit ? 'border-rose-500/60 bg-rose-950/30 text-rose-300' : isMod ? 'border-amber-500/40 bg-amber-950/20 text-amber-300' : 'border-slate-800 bg-slate-950 text-slate-300';
+          let dotColor = isCrit ? 'bg-rose-400 animate-ping' : isMod ? 'bg-amber-400' : 'bg-emerald-400';
+          return `
+            <div class="p-2 rounded-lg border ${colorClass} flex flex-col justify-between cursor-pointer" onclick="selectCorridor('${z.id}')">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-[11px] truncate">${z.name.split(' - ')[0]}</span>
+                <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+              </div>
+              <div class="flex items-center justify-between text-[10px] mt-1 text-slate-400">
+                <span>${z.water_level_cm.toFixed(0)}cm (${z.water_level_pct}%)</span>
+                <span class="font-bold ${isCrit ? 'text-rose-400' : isMod ? 'text-amber-400' : 'text-emerald-400'}">R:${z.risk_score.toFixed(2)}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Update camera bounding box & status
+      const camBox = document.getElementById('split-cam-box');
+      const camBoxText = document.getElementById('split-cam-box-text');
+      const camStatus = document.getElementById('split-cam-status');
+      if (activeZone.accident_detected) {
+        if (camBox) camBox.className = "absolute top-8 left-12 border-2 border-rose-500 bg-rose-500/20 rounded px-2 py-0.5 text-[9px] font-mono text-rose-300 flex items-center gap-1 shadow-lg shadow-rose-950/50 animate-pulse";
+        if (camBoxText) camBoxText.innerText = "COLLISION DETECTED (-6.8 m/s²)";
+        if (camStatus) {
+          camStatus.className = "text-rose-400 font-bold";
+          camStatus.innerText = "● Status: EMERGENCY CRASH";
+        }
+      } else if (activeZone.water_level_pct > 75) {
+        if (camBox) camBox.className = "absolute top-8 left-12 border-2 border-rose-500 bg-rose-500/20 rounded px-2 py-0.5 text-[9px] font-mono text-rose-300 flex items-center gap-1 shadow-lg shadow-rose-950/50";
+        if (camBoxText) camBoxText.innerText = "WATERLOGGING: INUNDATION >40cm";
+        if (camStatus) {
+          camStatus.className = "text-rose-400 font-bold";
+          camStatus.innerText = "● Status: CLOUDBURST OVERFLOW";
+        }
+      } else {
+        if (camBox) camBox.className = "absolute top-8 left-12 border-2 border-emerald-400 bg-emerald-500/10 rounded px-2 py-0.5 text-[9px] font-mono text-emerald-300 flex items-center gap-1 shadow-md";
+        if (camBoxText) camBoxText.innerText = `FLOW: ${activeZone.traffic_speed_kmh.toFixed(0)} km/h • CLEAR`;
+        if (camStatus) {
+          camStatus.className = "text-emerald-400 font-bold";
+          camStatus.innerText = "● Status: NORMAL FLOW";
+        }
+      }
+
+      // Update telemetry numbers
+      const dhElem = document.getElementById('split-dh-val');
+      if (dhElem) {
+        let dhColor = activeZone.hazard_classification === 'SILT_DEBRIS_CLOG' ? 'text-amber-400' : activeZone.hazard_classification === 'CLOUDBURST_OVERLOAD' ? 'text-rose-400' : 'text-cyan-400';
+        dhElem.className = `${dhColor} font-bold font-mono`;
+        dhElem.innerText = `${activeZone.delta_h.toFixed(2)} (${activeZone.hazard_classification || 'NORMAL'})`;
+      }
+      const riskElem = document.getElementById('split-risk-val');
+      if (riskElem) {
+        let rColor = activeZone.risk_score > 0.70 ? 'text-rose-400' : activeZone.risk_score > 0.40 ? 'text-amber-400' : 'text-emerald-400';
+        riskElem.className = `${rColor} font-bold font-mono`;
+        riskElem.innerText = `${activeZone.risk_score.toFixed(2)} / 1.00 (${activeZone.risk_level || 'NORMAL'})`;
+      }
+      const ordersElem = document.getElementById('split-orders-val');
+      if (ordersElem && data.work_orders) {
+        const pendingCount = data.work_orders.filter(o => o.status !== 'RESOLVED').length;
+        ordersElem.innerText = `${pendingCount} Active in Queue`;
+      }
+      const citElem = document.getElementById('split-citizen-val');
+      if (citElem && data.citizen_reports) {
+        citElem.innerText = `${data.citizen_reports.length} Verified Reports`;
+      }
+    }
 
     // Initialize Map with Custom Dark Visuals
     function initMaps() {
@@ -1312,6 +1750,9 @@
         else if (currentKpiTab === 'desilting') renderKpiDesilting();
         else if (currentKpiTab === 'citizen') renderKpiCitizen();
       }
+
+      // Update split view status if active
+      renderSplitViewStatus(data);
     }
 
     // Select and Highlight Corridor
@@ -1395,24 +1836,36 @@
       const vmsMsg = document.getElementById('vms-screen-message');
       const vmsTitle = document.getElementById('vms-status-title');
 
-      if (zone.accident_detected) {
+      if (zone.vms_manual_override && zone.vms_text) {
+        hudAlert.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span class="text-amber-300 font-bold uppercase">BTP INSPECTOR VMS OVERRIDE ACTIVE</span>`;
+        vmsMsg.innerText = zone.vms_text;
+        const color = (zone.vms_color || 'AMBER').toUpperCase();
+        if (color === 'RED') {
+          vmsMsg.className = "bg-black/90 border-2 border-rose-500 rounded-lg p-2.5 font-mono text-xs text-rose-400 tracking-wide font-bold shadow-inner";
+        } else if (color === 'AMBER') {
+          vmsMsg.className = "bg-black/90 border-2 border-amber-500 rounded-lg p-2.5 font-mono text-xs text-amber-400 tracking-wide font-bold shadow-inner";
+        } else {
+          vmsMsg.className = "bg-black/80 border-2 border-emerald-500 rounded-lg p-2.5 font-mono text-xs text-emerald-400 tracking-wide font-bold shadow-inner";
+        }
+        vmsTitle.innerText = `BTP TRAFFIC INSPECTOR OVERRIDE (SPEED: ${zone.vms_speed_limit_kmh || 40} KM/H)`;
+      } else if (zone.accident_detected) {
         hudAlert.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span><span class="text-rose-400 font-bold uppercase">COLLISION DETECTED (-6.8 m/s²)</span>`;
-        vmsMsg.innerText = "⚠️ COLLISION AHEAD IN LANE 1 & 2 • POLICE/112 DISPATCHED • MERGE RIGHT • 20 KM/H";
+        vmsMsg.innerText = zone.vms_text || "⚠️ COLLISION AHEAD IN LANE 1 & 2 • POLICE/112 DISPATCHED • MERGE RIGHT • 20 KM/H";
         vmsMsg.className = "bg-black/90 border-2 border-rose-500 rounded-lg p-2.5 font-mono text-xs text-rose-400 tracking-wide font-bold shadow-inner";
         vmsTitle.innerText = "CRITICAL COLLISION & ROAD IMPAIRMENT";
       } else if (zone.hazard_classification === 'SILT_DEBRIS_CLOG') {
         hudAlert.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span class="text-amber-300 font-bold uppercase">DRAIN SILT CHOKE IN PROGRESS</span>`;
-        vmsMsg.innerText = "⚠️ WATERLOGGING WARNING • DESILTING CREW ROUTED • CAUTION SLOW DOWN 30 KM/H";
+        vmsMsg.innerText = zone.vms_text || "⚠️ WATERLOGGING WARNING • DESILTING CREW ROUTED • CAUTION SLOW DOWN 30 KM/H";
         vmsMsg.className = "bg-black/90 border-2 border-amber-500 rounded-lg p-2.5 font-mono text-xs text-amber-400 tracking-wide font-bold shadow-inner";
         vmsTitle.innerText = "MUNICIPAL DRAINAGE SILT ADVISORY";
       } else if (zone.hazard_classification === 'CLOUDBURST_OVERLOAD') {
         hudAlert.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span class="text-rose-300 font-bold uppercase">MONSOON CLOUDBURST OVERFLOW</span>`;
-        vmsMsg.innerText = "⛈️ MONSOON CLOUDBURST • UNDERPASS CLOSED • HIGH WATER RESISTANCE • DIVERT AHEAD";
+        vmsMsg.innerText = zone.vms_text || "⛈️ MONSOON CLOUDBURST • UNDERPASS CLOSED • HIGH WATER RESISTANCE • DIVERT AHEAD";
         vmsMsg.className = "bg-black/90 border-2 border-rose-500 rounded-lg p-2.5 font-mono text-xs text-rose-400 tracking-wide font-bold shadow-inner";
         vmsTitle.innerText = "REGIONAL MONSOON FLOOD ADVISORY";
       } else {
         hudAlert.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="text-slate-300">CARRIAGEWAY FLOW STABLE</span>`;
-        vmsMsg.innerText = "CORRIDOR CLEAR • MAINTAIN SAFE LANE DISTANCE • SPEED 50 KM/H";
+        vmsMsg.innerText = zone.vms_text || "CORRIDOR CLEAR • MAINTAIN SAFE LANE DISTANCE • SPEED 50 KM/H";
         vmsMsg.className = "bg-black/80 border-2 border-slate-800 rounded-lg p-2.5 font-mono text-xs text-emerald-400 tracking-wide font-bold shadow-inner";
         vmsTitle.innerText = "Dynamic VMS Highway Advisories";
       }

@@ -1,0 +1,25 @@
+{
+  "name": "Namma Bengaluru HK-RHS • Citizen Safety Portal",
+  "short_name": "HK-RHS Suraksha",
+  "description": "Namma Bengaluru Hydro-Kinetic Road Hazard & Flood Citizen Reporter | REVA University HACKathon 3.0 | Team CyberSentinel / Apex Achievers (BMSIT)",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060b13",
+  "theme_color": "#06b6d4",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "government", "travel", "navigation"]
+}

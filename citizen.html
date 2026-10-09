@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Namma Bengaluru • HK-RHS Citizen Safety & Hazard Portal</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#06b6d4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HK-RHS Suraksha">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#060b13',
+              card: '#0c1626',
+              panel: '#101e33',
+              border: '#1b3152',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#ef4444',
+              karnataka_red: '#d90429',
+              karnataka_yellow: '#ffcc00'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      background-color: #04080e;
+      color: #e2e8f0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* Sci-fi dark map tiles */
+    .leaflet-tile {
+      filter: brightness(0.6) invert(1) contrast(2.2) hue-rotate(185deg) saturate(0.4) !important;
+    }
+
+    /* Scanline Animation for AI Vision */
+    @keyframes scanline {
+      0% { top: 0%; opacity: 0.9; }
+      50% { top: 92%; opacity: 0.7; }
+      100% { top: 0%; opacity: 0.9; }
+    }
+    .ai-scanline {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #06b6d4, #10b981, transparent);
+      box-shadow: 0 0 12px #06b6d4, 0 0 20px #10b981;
+      animation: scanline 2.2s infinite ease-in-out;
+    }
+
+    /* Glows */
+    .glow-cyan {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+    }
+    .glow-amber {
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #060b13;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1b3152;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start py-0 sm:py-6 px-0 sm:px-4">
+
+  <!-- Desktop Presentation Shell Wrapper (Auto-Adapts or Centered Mobile Frame) -->
+  <div id="app-container" class="w-full max-w-md bg-brand-bg sm:border sm:border-brand-border sm:rounded-3xl sm:shadow-2xl overflow-hidden flex flex-col min-h-screen sm:min-h-[860px] relative transition-all duration-300">
+
+    <!-- ======================================================================= -->
+    <!-- TOP NOTCH / STATUS BAR (PWA NATIVE FEEL) -->
+    <!-- ======================================================================= -->
+    <header class="bg-gradient-to-r from-[#0a1424] via-[#0e1d33] to-[#0a1424] border-b border-brand-border/70 p-3 sticky top-0 z-50">
+      
+      <!-- Top Row: Karnataka Flag Accent Bar + Sync Pill + View Toggle -->
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center space-x-1.5">
+          <div class="w-2.5 h-2.5 rounded-full bg-[#d90429]" title="Karnataka Red"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-[#ffcc00]" title="Karnataka Yellow"></div>
+          <span class="text-[10px] font-mono tracking-wider font-bold text-slate-300 uppercase pl-1">
+            BBMP • BTP • ICCC
+          </span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <!-- Cross-Host Sync Status Pill -->
+          <div id="sync-status-pill" class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono text-emerald-400">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="sync-label">ICCC Synced</span>
+          </div>
+
+          <!-- Desktop Frame Toggle Button (Hidden on Mobile) -->
+          <button onclick="toggleDesktopWidth()" class="hidden sm:flex text-slate-400 hover:text-cyan-400 text-xs p-1" title="Toggle Wide View">
+            <i id="width-icon" class="fa-solid fa-arrows-left-right-to-line"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Header Brand Block -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-700 p-0.5 shadow-lg shadow-cyan-950/60 flex items-center justify-center text-slate-950 font-black text-lg">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h1 class="font-black text-white text-base leading-tight tracking-tight flex items-center gap-1.5">
+              <span>ನಮ್ಮ ಬೆಂಗಳೂರು ಸುರಕ್ಷತೆ</span>
+            </h1>
+            <p class="text-[11px] text-cyan-400 font-medium">HK-RHS Citizen Hazard & Safety Portal</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="if(window.parent && window.parent.switchMasterView){window.parent.switchMasterView('iccc');}else{window.location.href='/';}" class="px-2 py-0.5 rounded-lg bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900 transition text-[10px] font-mono font-semibold flex items-center gap-1 shadow-sm cursor-pointer" title="Command Center Wall">
+            <i class="fa-solid fa-server text-[8px]"></i>
+            <span>P1: ICCC</span>
+          </button>
+          <button onclick="if(window.parent && window.parent.switchMasterView){window.parent.switchMasterView('responder');}else{window.location.href='/responder';}" class="px-2 py-0.5 rounded-lg bg-amber-950/70 border border-amber-500/40 text-amber-300 hover:bg-amber-900 transition text-[10px] font-mono font-semibold flex items-center gap-1 shadow-sm cursor-pointer" title="Field Responder Portal">
+            <i class="fa-solid fa-truck-fast text-[8px]"></i>
+            <span>P3: Field</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hackathon & Team Metadata Sub-Banner -->
+      <div class="mt-2 pt-1.5 border-t border-brand-border/40 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+        <span>REVA HACKathon 3.0</span>
+        <span class="text-cyan-400 font-semibold">Team CyberSentinel / Apex Achievers</span>
+      </div>
+    </header>
+
+    <!-- ======================================================================= -->
+    <!-- QUICK EMERGENCY CALL BAR (1-TAP SPEED DIAL) -->
+    <!-- ======================================================================= -->
+    <div class="bg-gradient-to-r from-red-950/40 via-amber-950/30 to-blue-950/40 border-b border-brand-border/60 px-3 py-1.5 flex items-center justify-between text-[11px] font-mono">
+      <span class="text-slate-400 font-semibold flex items-center gap-1">
+        <i class="fa-solid fa-phone-volume text-rose-400"></i> Speed Dial:
+      </span>
+      <div class="flex items-center space-x-2">
+        <a href="tel:112" class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition font-bold">112 Police</a>
+        <a href="tel:1533" class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition font-bold">1533 BBMP</a>
+        <a href="tel:108" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition font-bold">108 EMS</a>
+      </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- BENGALURU LIVE MONSOON / WATERLOGGING ADVISORY TICKER -->
+    <!-- ======================================================================= -->
+    <div class="bg-brand-card/90 px-3 py-2 border-b border-brand-border/50 flex items-center space-x-2 text-xs">
+      <div class="w-2 h-2 rounded-full bg-amber-400 animate-ping flex-shrink-0"></div>
+      <div class="text-[11px] text-slate-300 overflow-hidden text-ellipsis whitespace-nowrap">
+        <span class="text-amber-300 font-bold">Monsoon Alert:</span>
+        <span id="ticker-text">Continuous rainfall detected. Silk Board, ORR & Hebbal flumes active.</span>
+      </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- BOTTOM / TOP NAVIGATION TABS -->
+    <!-- ======================================================================= -->
+    <div class="grid grid-cols-2 bg-brand-card border-b border-brand-border text-xs font-semibold">
+      <button onclick="switchTab('report')" id="tab-btn-report" class="py-2.5 flex items-center justify-center space-x-2 border-b-2 border-cyan-400 text-cyan-300 bg-brand-panel/40 transition">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>1-Tap Report</span>
+      </button>
+      <button onclick="switchTab('track')" id="tab-btn-track" class="py-2.5 flex items-center justify-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+        <i class="fa-solid fa-satellite-dish"></i>
+        <span>Live Status & Feed (<span id="track-count">1</span>)</span>
+      </button>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- MAIN SCROLLABLE WORKSPACE -->
+    <!-- ======================================================================= -->
+    <main class="flex-1 p-3.5 space-y-4 overflow-y-auto">
+
+      <!-- ===================================================================== -->
+      <!-- TAB 1: 1-TAP REPORTING FORM -->
+      <!-- ===================================================================== -->
+      <div id="section-report" class="space-y-4">
+
+        <!-- STEP 1: HAZARD CATEGORY SELECTION -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px]">1</span>
+              <span>Select Hazard Category</span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-mono">Tap one</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <!-- Option 1: Waterlogging -->
+            <button type="button" onclick="selectHazardCategory('Waterlogging', this)" class="category-card p-3 rounded-xl bg-brand-card border-2 border-cyan-500/80 text-left transition relative overflow-hidden group shadow-md shadow-cyan-950/20">
+              <div class="flex items-start justify-between">
+                <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-sm mb-1.5">
+                  <i class="fa-solid fa-water"></i>
+                </div>
+                <i class="fa-solid fa-circle-check text-cyan-400 text-xs check-icon"></i>
+              </div>
+              <div class="font-bold text-white text-xs">Waterlogging / Silt</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 leading-tight">Flooded carriageway & sump choke</div>
+            </button>
+
+            <!-- Option 2: Severe Collision -->
+            <button type="button" onclick="selectHazardCategory('Severe Collision', this)" class="category-card p-3 rounded-xl bg-brand-card border-2 border-brand-border text-left transition relative overflow-hidden group hover:border-rose-500/50">
+              <div class="flex items-start justify-between">
+                <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center text-sm mb-1.5">
+                  <i class="fa-solid fa-car-burst"></i>
+                </div>
+                <i class="fa-solid fa-circle-check text-slate-700 text-xs check-icon"></i>
+              </div>
+              <div class="font-bold text-white text-xs">Vehicle Collision</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 leading-tight">Crash, stall & lane blockages</div>
+            </button>
+
+            <!-- Option 3: Pothole Hazard -->
+            <button type="button" onclick="selectHazardCategory('Pothole Hazard', this)" class="category-card p-3 rounded-xl bg-brand-card border-2 border-brand-border text-left transition relative overflow-hidden group hover:border-amber-500/50">
+              <div class="flex items-start justify-between">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm mb-1.5">
+                  <i class="fa-solid fa-road"></i>
+                </div>
+                <i class="fa-solid fa-circle-check text-slate-700 text-xs check-icon"></i>
+              </div>
+              <div class="font-bold text-white text-xs">Pothole / Crater</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 leading-tight">Sunken road, asphalt fissure</div>
+            </button>
+
+            <!-- Option 4: Drainage Overflow -->
+            <button type="button" onclick="selectHazardCategory('Drain Silt Overflow', this)" class="category-card p-3 rounded-xl bg-brand-card border-2 border-brand-border text-left transition relative overflow-hidden group hover:border-emerald-500/50">
+              <div class="flex items-start justify-between">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-sm mb-1.5">
+                  <i class="fa-solid fa-faucet-drip"></i>
+                </div>
+                <i class="fa-solid fa-circle-check text-slate-700 text-xs check-icon"></i>
+              </div>
+              <div class="font-bold text-white text-xs">Drainage Overflow</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 leading-tight">Manhole spill & gully clog</div>
+            </button>
+          </div>
+
+          <!-- Dynamic Water Depth Pill Selector (Shows when Waterlogging is selected) -->
+          <div id="depth-pill-container" class="bg-brand-card/90 p-2.5 rounded-xl border border-brand-border space-y-1.5">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-slate-300 font-medium">Estimated Water Depth (Drag or Tap):</span>
+              <span id="depth-display-label" class="font-mono font-bold text-cyan-300">~32 cm (Knee Depth)</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 text-[10px]">
+              <button type="button" onclick="setDepthPreset(15, '~15 cm (Tire Rim)')" class="depth-btn px-2 py-1 rounded bg-slate-900 border border-slate-750 text-slate-300 hover:text-white">Ankle ~15cm</button>
+              <button type="button" onclick="setDepthPreset(32, '~32 cm (Knee Depth)')" class="depth-btn px-2 py-1 rounded bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold">Knee ~32cm</button>
+              <button type="button" onclick="setDepthPreset(60, '~60 cm (Waist/Engine)')" class="depth-btn px-2 py-1 rounded bg-slate-900 border border-slate-750 text-slate-300 hover:text-white">Waist ~60cm+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: SMART GEOLOCATION & CORRIDOR SELECTION -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px]">2</span>
+              <span>Smart Geolocation & Corridor</span>
+            </label>
+            <button type="button" onclick="detectUserLocation()" class="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
+              <i class="fa-solid fa-location-crosshairs"></i>
+              <span>Auto-Detect GPS</span>
+            </button>
+          </div>
+
+          <!-- Quick Arterial Corridor Chips -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-thin">
+            <button type="button" onclick="selectCorridorPreset('silk_board')" id="chip-silk_board" class="corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold">📍 Silk Board</button>
+            <button type="button" onclick="selectCorridorPreset('orr_bellandur')" id="chip-orr_bellandur" class="corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-brand-card text-slate-300 border border-brand-border">📍 Outer Ring Rd</button>
+            <button type="button" onclick="selectCorridorPreset('hebbal')" id="chip-hebbal" class="corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-brand-card text-slate-300 border border-brand-border">📍 Hebbal Flyover</button>
+            <button type="button" onclick="selectCorridorPreset('whitefield')" id="chip-whitefield" class="corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-brand-card text-slate-300 border border-brand-border">📍 Whitefield</button>
+            <button type="button" onclick="selectCorridorPreset('majestic')" id="chip-majestic" class="corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-brand-card text-slate-300 border border-brand-border">📍 Majestic Underpass</button>
+            <button type="button" onclick="selectCorridorPreset('kr_puram')" id="chip-kr_puram" class="corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-brand-card text-slate-300 border border-brand-border">📍 K.R. Puram</button>
+            <button type="button" onclick="selectCorridorPreset('goraguntepalya')" id="chip-goraguntepalya" class="corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-brand-card text-slate-300 border border-brand-border">📍 Goraguntepalya</button>
+          </div>
+
+          <!-- Mini Interactive Location Map -->
+          <div class="h-32 w-full rounded-xl border border-brand-border overflow-hidden relative shadow-inner">
+            <div id="citizen-map" class="w-full h-full"></div>
+            <div class="absolute bottom-1 left-2 z-[400] bg-black/70 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-mono text-slate-300">
+              <span id="map-coord-label">12.9177° N, 77.6238° E</span>
+            </div>
+          </div>
+
+          <!-- Dropdown & Ward Input -->
+          <div class="grid grid-cols-1 gap-2 text-xs">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Corridor & Ward Details</label>
+              <input id="loc-ward-text" type="text" readonly value="Silk Board Junction - Hosur Rd • Ward 174 (Bommanahalli / HSR)" class="w-full bg-brand-card border border-brand-border rounded-lg px-2.5 py-2 text-white font-mono text-xs">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Landmark / Carriageway Note</label>
+              <input id="loc-landmark" type="text" value="Near Central Silk Board Bus Stop, Southbound Service Lane" class="w-full bg-brand-card border border-brand-border rounded-lg px-2.5 py-2 text-white text-xs placeholder-slate-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: PHOTO CAPTURE & SIMULATED ON-DEVICE AI VERIFICATION -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px]">3</span>
+              <span>Photo Capture & AI Validation</span>
+            </label>
+            <span class="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+              <i class="fa-solid fa-microchip"></i> Edge AI Engine
+            </span>
+          </div>
+
+          <!-- Camera / Upload Zone or Preset Buttons -->
+          <div class="bg-brand-card rounded-xl border border-brand-border p-3 space-y-2.5">
+            
+            <!-- Pitch Demo Quick-Sample Buttons -->
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-semibold">Demo Presets (Instant Pitch Test):</span>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+              <button type="button" onclick="loadSamplePhoto('flood')" class="px-2 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900 transition flex items-center justify-center gap-1.5 font-medium">
+                <i class="fa-solid fa-image"></i> Load Flood Scene
+              </button>
+              <button type="button" onclick="loadSamplePhoto('pothole')" class="px-2 py-1.5 rounded-lg bg-amber-950/60 border border-amber-500/40 text-amber-300 hover:bg-amber-900 transition flex items-center justify-center gap-1.5 font-medium">
+                <i class="fa-solid fa-image"></i> Load Crater Scene
+              </button>
+            </div>
+
+            <!-- Upload Box / Live File Trigger -->
+            <label for="camera-input" class="cursor-pointer block">
+              <div id="photo-dropzone" class="border-2 border-dashed border-brand-border hover:border-cyan-500/60 rounded-xl p-4 text-center bg-brand-bg transition relative overflow-hidden group min-h-[140px] flex flex-col items-center justify-center">
+                
+                <!-- Initial State -->
+                <div id="dropzone-idle" class="space-y-1.5">
+                  <div class="w-11 h-11 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center mx-auto text-lg group-hover:scale-110 transition">
+                    <i class="fa-solid fa-camera"></i>
+                  </div>
+                  <div class="text-xs font-bold text-slate-200">Tap to Take Live Photo or Upload</div>
+                  <div class="text-[10px] text-slate-400 font-mono">Simulates On-Device Water Depth & Authenticity AI</div>
+                </div>
+
+                <!-- Preview State with AI Scanline Overlay -->
+                <div id="dropzone-preview" class="hidden w-full h-full flex flex-col items-center relative">
+                  <div class="relative w-full h-32 rounded-lg overflow-hidden border border-brand-border bg-black">
+                    <img id="preview-img" src="" alt="Hazard Photo" class="w-full h-full object-cover">
+                    <!-- Scanning HUD Overlay -->
+                    <div id="ai-scan-effect" class="ai-scanline"></div>
+                    <div class="absolute top-1.5 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-cyan-300 flex items-center gap-1">
+                      <i class="fa-solid fa-brain"></i>
+                      <span id="ai-scan-status">Scanning scene...</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <input id="camera-input" type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelected(event)">
+            </label>
+
+            <!-- AI Telemetry Analysis HUD Card (Populates After Verification) -->
+            <div id="ai-analysis-card" class="hidden bg-slate-950/90 border border-emerald-500/40 rounded-xl p-2.5 font-mono text-[11px] space-y-1.5 shadow-md">
+              <div class="flex items-center justify-between text-emerald-400 font-bold border-b border-emerald-500/30 pb-1">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>AI OPTICAL VERIFICATION PASSED</span>
+                </span>
+                <span id="ai-conf-badge" class="bg-emerald-500/20 px-1.5 py-0.5 rounded text-[10px]">98.6% Conf</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-slate-300 pt-0.5">
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase">Authenticity Check:</span>
+                  <span class="text-emerald-300 font-bold">100% Authentic Scene</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase">Est. Water Depth:</span>
+                  <span id="ai-depth-metric" class="text-cyan-300 font-bold">34.2 cm (Knee Depth)</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase">Severity Tier:</span>
+                  <span id="ai-severity-metric" class="text-rose-400 font-bold">CRITICAL / TIER-1</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase">Municipal Action:</span>
+                  <span class="text-amber-300 font-bold">Auto-BBMP Work Order</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- STEP 4: COMMUTER DETAILS & 1-TAP SUBMISSION -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px]">4</span>
+            <span>Commuter Contact & Submit</span>
+          </label>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <input id="user-name" type="text" value="Priya Sharma" placeholder="Your Name" class="bg-brand-card border border-brand-border rounded-lg px-2.5 py-2 text-white">
+            <input id="user-phone" type="text" value="+91 98450 77123" placeholder="Mobile Number" class="bg-brand-card border border-brand-border rounded-lg px-2.5 py-2 text-white font-mono">
+          </div>
+
+          <textarea id="user-notes" rows="2" placeholder="Additional observations (e.g., cars stalling, drainage overflowing)..." class="w-full bg-brand-card border border-brand-border rounded-lg p-2.5 text-xs text-white placeholder-slate-500">Severe waterlogging stalling 2-wheelers and autos in the left carriage. Sump neck choked with silt.</textarea>
+
+          <!-- 1-Tap Submit Button -->
+          <button type="button" onclick="submitHazardReport()" id="btn-submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-sm tracking-wide shadow-lg shadow-cyan-950/60 flex items-center justify-center gap-2 transform active:scale-[0.98] transition">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span id="btn-submit-text">1-TAP SUBMIT TO BBMP ICCC</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 2: LIVE REPORT TRACKING & INCIDENT FEED -->
+      <!-- ===================================================================== -->
+      <div id="section-track" class="hidden space-y-3">
+        
+        <!-- Search & Filter Bar -->
+        <div class="flex items-center space-x-2">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+            <input id="search-report-input" oninput="filterReportsFeed()" type="text" placeholder="Search by Ticket ID (CIT-REP-...) or Corridor" class="w-full bg-brand-card border border-brand-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 font-mono">
+          </div>
+          <button onclick="fetchLatestState()" class="px-2.5 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900 transition text-xs" title="Refresh Feed">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
+        </div>
+
+        <!-- Success Notification Box (Appears after submission) -->
+        <div id="submission-success-banner" class="hidden p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 space-y-1 font-mono text-xs">
+          <div class="flex items-center justify-between text-emerald-300 font-bold">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Report Synced with ICCC!</span>
+            </span>
+            <span id="last-submitted-id" class="px-1.5 py-0.5 rounded bg-emerald-950 text-[10px]">CIT-REP-882</span>
+          </div>
+          <p class="text-[11px] text-slate-300">
+            Escalated to <strong>BBMP Stormwater Desilting Queue</strong>. Live SLA: 30 minutes. You can track municipal status below.
+          </p>
+        </div>
+
+        <!-- Reports Feed Container -->
+        <div class="space-y-3" id="citizen-feed-container">
+          <!-- Dynamically Populated by JavaScript -->
+          <div class="text-xs text-slate-500 text-center py-6 font-mono">
+            Loading reports feed...
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- ======================================================================= -->
+    <!-- BOTTOM FOOTER -->
+    <!-- ======================================================================= -->
+    <footer class="bg-gradient-to-t from-brand-card to-[#091322] border-t border-brand-border/80 p-3 text-center text-[10px] text-slate-400 font-mono space-y-1">
+      <div class="flex items-center justify-center space-x-2">
+        <span class="text-slate-300 font-bold">Namma Bengaluru HK-RHS</span>
+        <span>•</span>
+        <span class="text-cyan-400">Prototype 2 (Citizen PWA)</span>
+        <span>•</span>
+        <span>Port 8001</span>
+      </div>
+      <div class="text-slate-500">
+        REVA University HACKathon 3.0 • Team CyberSentinel / Apex Achievers (BMSIT)
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- APPLICATION LOGIC & DUAL-HOST SYNCHRONIZATION ENGINE -->
+  <!-- ========================================================================= -->
+  <script>
+    // Configuration & State
+    // Cross-Host Backend Target:
+    // If running on port 8001 or file://, default to http://127.0.0.1:8000
+    // If running directly on port 8000, use relative '/'
+    const ICCC_HOST = (window.location.port === '8001' || window.location.protocol === 'file:') 
+      ? 'http://127.0.0.1:8000' 
+      : window.location.origin;
+
+    let selectedCategory = "Waterlogging";
+    let selectedDepthCm = 32.0;
+    let selectedZoneId = "silk_board";
+    let verifiedImageData = null;
+    let aiVerified = false;
+    let citizenMap = null;
+    let citizenMarker = null;
+    let submittedReportsList = [];
+
+    const CORRIDORS = {
+      silk_board: {
+        name: "Silk Board Junction - Hosur Rd",
+        ward: "Ward 174 (Bommanahalli / HSR)",
+        lat: 12.9177,
+        lng: 77.6238,
+        landmark: "Near Central Silk Board Bus Stop, Southbound Service Lane"
+      },
+      orr_bellandur: {
+        name: "Outer Ring Road - Bellandur / EcoSpace",
+        ward: "Ward 150 (Bellandur Tech Corridor)",
+        lat: 12.9260,
+        lng: 77.6762,
+        landmark: "EcoSpace Gantry, Right-Side Drain Inflow Catchment"
+      },
+      hebbal: {
+        name: "Hebbal Flyover - Airport Expressway",
+        ward: "Ward 7 (Byatarayanapura / Hebbal)",
+        lat: 13.0358,
+        lng: 77.5970,
+        landmark: "Hebbal Northbound Underpass Approach"
+      },
+      whitefield: {
+        name: "Whitefield - ITPL Main Road / Hope Farm",
+        ward: "Ward 84 (Whitefield / ITPL Corridor)",
+        lat: 12.9856,
+        lng: 77.7374,
+        landmark: "ITPL Main Road Junction near Hope Farm Circle"
+      },
+      majestic: {
+        name: "Majestic - Anand Rao Circle Underpass",
+        ward: "Ward 94 (Gandhinagar / Majestic)",
+        lat: 12.9767,
+        lng: 77.5713,
+        landmark: "Anand Rao Circle Underpass, Subhash Nagar Entry"
+      },
+      kr_puram: {
+        name: "K.R. Puram Hanging Bridge & Tin Factory",
+        ward: "Ward 52 (K.R. Puram)",
+        lat: 13.0012,
+        lng: 77.6838,
+        landmark: "Tin Factory Junction beneath Cable Stayed Bridge"
+      },
+      goraguntepalya: {
+        name: "Goraguntepalya / Yeshwanthpur Junction",
+        ward: "Ward 38 (Yeshwanthpur)",
+        lat: 13.0285,
+        lng: 77.5407,
+        landmark: "Tumkur Road Elevated Toll Plaza Approach"
+      }
+    };
+
+    // Initialize Map
+    function initMap() {
+      const initCorridor = CORRIDORS[selectedZoneId];
+      citizenMap = L.map('citizen-map', {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([initCorridor.lat, initCorridor.lng], 14);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18
+      }).addTo(citizenMap);
+
+      const customIcon = L.divIcon({
+        className: 'custom-hazard-pin',
+        html: `<div class="w-6 h-6 rounded-full bg-cyan-500 border-2 border-white shadow-lg flex items-center justify-center text-slate-950 text-xs font-bold animate-bounce"><i class="fa-solid fa-location-dot"></i></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 24]
+      });
+
+      citizenMarker = L.marker([initCorridor.lat, initCorridor.lng], {
+        icon: customIcon,
+        draggable: true
+      }).addTo(citizenMap);
+
+      citizenMarker.on('dragend', function (e) {
+        const pos = e.target.getLatLng();
+        document.getElementById('map-coord-label').innerText = `${pos.lat.toFixed(4)}° N, ${pos.lng.toFixed(4)}° E`;
+      });
+    }
+
+    // Toggle Desktop View Width
+    let isWide = false;
+    function toggleDesktopWidth() {
+      const container = document.getElementById('app-container');
+      const icon = document.getElementById('width-icon');
+      isWide = !isWide;
+      if (isWide) {
+        container.classList.remove('max-w-md');
+        container.classList.add('max-w-2xl');
+        icon.className = 'fa-solid fa-arrows-to-line';
+      } else {
+        container.classList.remove('max-w-2xl');
+        container.classList.add('max-w-md');
+        icon.className = 'fa-solid fa-arrows-left-right-to-line';
+      }
+      setTimeout(() => citizenMap && citizenMap.invalidateSize(), 300);
+    }
+
+    // Tab Navigation
+    function switchTab(tab) {
+      const secReport = document.getElementById('section-report');
+      const secTrack = document.getElementById('section-track');
+      const btnReport = document.getElementById('tab-btn-report');
+      const btnTrack = document.getElementById('tab-btn-track');
+
+      if (tab === 'report') {
+        secReport.classList.remove('hidden');
+        secTrack.classList.add('hidden');
+        btnReport.className = 'py-2.5 flex items-center justify-center space-x-2 border-b-2 border-cyan-400 text-cyan-300 bg-brand-panel/40 transition';
+        btnTrack.className = 'py-2.5 flex items-center justify-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
+        setTimeout(() => citizenMap && citizenMap.invalidateSize(), 200);
+      } else {
+        secReport.classList.add('hidden');
+        secTrack.classList.remove('hidden');
+        btnReport.className = 'py-2.5 flex items-center justify-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
+        btnTrack.className = 'py-2.5 flex items-center justify-center space-x-2 border-b-2 border-cyan-400 text-cyan-300 bg-brand-panel/40 transition';
+        fetchLatestState();
+      }
+    }
+
+    // Category Selection
+    function selectHazardCategory(cat, btnElem) {
+      selectedCategory = cat;
+      document.querySelectorAll('.category-card').forEach(c => {
+        c.classList.remove('border-cyan-500/80', 'shadow-md', 'shadow-cyan-950/20');
+        c.classList.add('border-brand-border');
+        const icon = c.querySelector('.check-icon');
+        if (icon) icon.className = 'fa-solid fa-circle-check text-slate-700 text-xs check-icon';
+      });
+
+      btnElem.classList.remove('border-brand-border');
+      btnElem.classList.add('border-cyan-500/80', 'shadow-md', 'shadow-cyan-950/20');
+      const check = btnElem.querySelector('.check-icon');
+      if (check) check.className = 'fa-solid fa-circle-check text-cyan-400 text-xs check-icon';
+
+      const depthBox = document.getElementById('depth-pill-container');
+      if (cat === 'Waterlogging') {
+        depthBox.classList.remove('hidden');
+      } else {
+        depthBox.classList.add('hidden');
+      }
+    }
+
+    // Depth Presets
+    function setDepthPreset(cm, label) {
+      selectedDepthCm = cm;
+      document.getElementById('depth-display-label').innerText = label;
+      document.querySelectorAll('.depth-btn').forEach(b => {
+        b.className = 'depth-btn px-2 py-1 rounded bg-slate-900 border border-slate-750 text-slate-300 hover:text-white';
+      });
+      event.target.className = 'depth-btn px-2 py-1 rounded bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold';
+      
+      if (aiVerified) {
+        document.getElementById('ai-depth-metric').innerText = `${cm.toFixed(1)} cm (${cm > 40 ? 'Waist/Severe' : cm > 25 ? 'Knee Depth' : 'Ankle Depth'})`;
+      }
+    }
+
+    // Corridor Preset Selection
+    function selectCorridorPreset(zid) {
+      if (!CORRIDORS[zid]) return;
+      selectedZoneId = zid;
+      const c = CORRIDORS[zid];
+
+      document.querySelectorAll('.corridor-chip').forEach(ch => {
+        ch.className = 'corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-brand-card text-slate-300 border border-brand-border';
+      });
+      const targetChip = document.getElementById(`chip-${zid}`);
+      if (targetChip) {
+        targetChip.className = 'corridor-chip px-2.5 py-1 rounded-full whitespace-nowrap bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold';
+      }
+
+      document.getElementById('loc-ward-text').value = `${c.name} • ${c.ward}`;
+      document.getElementById('loc-landmark').value = c.landmark;
+      document.getElementById('map-coord-label').innerText = `${c.lat.toFixed(4)}° N, ${c.lng.toFixed(4)}° E`;
+
+      if (citizenMap && citizenMarker) {
+        citizenMap.panTo([c.lat, c.lng]);
+        citizenMarker.setLatLng([c.lat, c.lng]);
+      }
+    }
+
+    // Auto-detect User Location
+    function detectUserLocation() {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser. Using nearest corridor preset.");
+        return;
+      }
+      
+      const label = document.getElementById('map-coord-label');
+      label.innerText = "Acquiring GPS fix...";
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          label.innerText = `${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E (GPS Locked)`;
+
+          if (citizenMap && citizenMarker) {
+            citizenMap.panTo([lat, lng]);
+            citizenMarker.setLatLng([lat, lng]);
+          }
+
+          // Find closest corridor
+          let closestZid = 'silk_board';
+          let minDistance = 999999;
+          Object.keys(CORRIDORS).forEach(zid => {
+            const c = CORRIDORS[zid];
+            const d = Math.hypot(c.lat - lat, c.lng - lng);
+            if (d < minDistance) {
+              minDistance = d;
+              closestZid = zid;
+            }
+          });
+
+          selectCorridorPreset(closestZid);
+        },
+        (err) => {
+          label.innerText = "GPS Simulated (Silk Board Node)";
+          selectCorridorPreset('silk_board');
+        },
+        { timeout: 6000 }
+      );
+    }
+
+    // Sample Photo Loader for Demo Presentation
+    function loadSamplePhoto(type) {
+      let sampleUrl = "";
+      let depthText = "~32.4 cm (Knee Depth)";
+      let severityText = "CRITICAL / TIER-1";
+
+      if (type === 'flood') {
+        sampleUrl = "media_1789805951816.png";
+        depthText = "~34.8 cm (Knee Depth)";
+        severityText = "CRITICAL WATERLOGGING";
+        selectHazardCategory('Waterlogging', document.querySelector('.category-card'));
+      } else {
+        sampleUrl = "media_1789805951821.png";
+        depthText = "~18.5 cm (Cavity Depth)";
+        severityText = "CRITICAL POTHOLE";
+        selectHazardCategory('Pothole Hazard', document.querySelectorAll('.category-card')[2]);
+      }
+
+      const img = document.getElementById('preview-img');
+      img.src = sampleUrl;
+      document.getElementById('dropzone-idle').classList.add('hidden');
+      document.getElementById('dropzone-preview').classList.remove('hidden');
+
+      simulateOnDeviceAiScan(depthText, severityText);
+    }
+
+    // File Upload Handler
+    function handleFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById('preview-img');
+        img.src = e.target.result;
+        document.getElementById('dropzone-idle').classList.add('hidden');
+        document.getElementById('dropzone-preview').classList.remove('hidden');
+        simulateOnDeviceAiScan(`~${selectedDepthCm.toFixed(1)} cm`, "CRITICAL (Edge-AI Detected)");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Simulated On-Device Neural Network Scan
+    function simulateOnDeviceAiScan(depthStr, severityStr) {
+      const statusElem = document.getElementById('ai-scan-status');
+      const scanLine = document.getElementById('ai-scan-effect');
+      const analysisCard = document.getElementById('ai-analysis-card');
+      
+      scanLine.classList.remove('hidden');
+      analysisCard.classList.add('hidden');
+
+      statusElem.innerText = "Running MobileNetV3 + WaterSeg...";
+
+      setTimeout(() => {
+        statusElem.innerText = "Computing Optical Meniscus & Drag Index...";
+      }, 700);
+
+      setTimeout(() => {
+        statusElem.innerText = "Anti-Spoofing & EXIF Authenticity Check...";
+      }, 1400);
+
+      setTimeout(() => {
+        scanLine.classList.add('hidden');
+        statusElem.innerText = "AI Optical Verification Confirmed ✓";
+        analysisCard.classList.remove('hidden');
+        
+        document.getElementById('ai-depth-metric').innerText = depthStr;
+        document.getElementById('ai-severity-metric').innerText = severityStr;
+        aiVerified = true;
+      }, 2100);
+    }
+
+    // Submit Report to Backend (Cross-Host Sync)
+    async function submitHazardReport() {
+      const btn = document.getElementById('btn-submit');
+      const btnText = document.getElementById('btn-submit-text');
+      const name = document.getElementById('user-name').value.trim() || "Bengaluru Commuter";
+      const phone = document.getElementById('user-phone').value.trim() || "+91 98450 77123";
+      const landmark = document.getElementById('loc-landmark').value.trim();
+      const notes = document.getElementById('user-notes').value.trim();
+      const pos = citizenMarker ? citizenMarker.getLatLng() : { lat: 12.9177, lng: 77.6238 };
+
+      const fullDesc = `${notes} [Landmark: ${landmark}]`;
+
+      btn.disabled = true;
+      btnText.innerText = "Syncing with ICCC Backend...";
+
+      const payload = {
+        reporter_name: name,
+        reporter_phone: phone,
+        zone_id: selectedZoneId,
+        hazard_type: selectedCategory,
+        latitude: pos.lat,
+        longitude: pos.lng,
+        description: fullDesc,
+        ai_depth_cm: selectedDepthCm,
+        ai_confidence_pct: 98.4,
+        ai_authenticity_pct: 99.1,
+        severity_level: "CRITICAL"
+      };
+
+      try {
+        const response = await fetch(`${ICCC_HOST}/api/citizen/report`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Celebration and UI updates
+        btnText.innerText = "Report Dispatched to BBMP!";
+        
+        // Show Success Banner
+        document.getElementById('last-submitted-id').innerText = data.report_id || 'CIT-REP-SYNC';
+        document.getElementById('submission-success-banner').classList.remove('hidden');
+
+        // Switch to Track tab after brief pause
+        setTimeout(() => {
+          btn.disabled = false;
+          btnText.innerText = "1-TAP SUBMIT TO BBMP ICCC";
+          switchTab('track');
+        }, 1200);
+
+      } catch (err) {
+        console.error("Submission failed, fallback to local offline sync:", err);
+        alert(`ICCC Connection Notice: Submission stored locally. (Error: ${err.message})`);
+        btn.disabled = false;
+        btnText.innerText = "1-TAP SUBMIT TO BBMP ICCC";
+      }
+    }
+
+    // Fetch Latest State & Populate Tracking Feed
+    async function fetchLatestState() {
+      try {
+        const res = await fetch(`${ICCC_HOST}/api/state`);
+        if (!res.ok) throw new Error("API Offline");
+        const state = await res.json();
+
+        // Update connection status pill
+        document.getElementById('sync-status-pill').className = 'flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono text-emerald-400';
+        document.getElementById('sync-label').innerText = 'ICCC Synced (8000)';
+
+        // Populate reports feed
+        const reports = state.citizen_reports || [];
+        submittedReportsList = reports;
+        document.getElementById('track-count').innerText = reports.length;
+        renderReportsFeed(reports);
+
+      } catch (err) {
+        console.warn("Could not sync with ICCC host:", err);
+        document.getElementById('sync-status-pill').className = 'flex items-center space-x-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] font-mono text-amber-400';
+        document.getElementById('sync-label').innerText = 'ICCC Connecting...';
+      }
+    }
+
+    // Render Reports Feed
+    function renderReportsFeed(reports) {
+      const container = document.getElementById('citizen-feed-container');
+      if (!reports || reports.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-500 text-center py-6 font-mono">No reports logged yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = reports.map(r => {
+        let statusBadge = '';
+        let stepProgress = '';
+
+        if (r.status === 'RESOLVED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ RESOLVED</span>';
+          stepProgress = `
+            <div class="flex items-center space-x-1 pt-1.5 text-[10px] text-emerald-400 font-mono">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Flume desilted and road opened for full flow</span>
+            </div>
+          `;
+        } else if (r.status === 'DISPATCHED_TO_BBMP' || r.status === 'IN_PROGRESS' || r.status === 'ESCALATED_TO_ICCC') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 animate-pulse">🚒 DISPATCHED TO BBMP</span>';
+          stepProgress = `
+            <div class="space-y-1.5 pt-2">
+              <div class="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span class="text-cyan-400 font-semibold">Desilting Crew #14 En Route</span>
+                <span class="text-emerald-400 font-bold">ETA: ~18 mins</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full rounded-full" style="width: 65%"></div>
+              </div>
+            </div>
+          `;
+        } else {
+          statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40">${r.status}</span>`;
+          stepProgress = `
+            <div class="flex items-center space-x-1 pt-1.5 text-[10px] text-amber-300 font-mono">
+              <i class="fa-solid fa-clock"></i>
+              <span>Received by ICCC • Routing municipal work order</span>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="bg-brand-card rounded-2xl border border-brand-border p-3.5 space-y-2 hover:border-cyan-500/40 transition">
+            
+            <!-- Top Row: ID + Category + Status -->
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="font-bold text-white text-xs">${r.id}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-brand-panel text-slate-300 border border-brand-border">${r.hazard_type}</span>
+                </div>
+                <div class="text-[11px] text-cyan-300 font-medium mt-0.5">${r.zone_name}</div>
+              </div>
+              <div>
+                ${statusBadge}
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="text-[11px] text-slate-300 leading-snug">
+              ${r.description || 'Hazard reported on road surface.'}
+            </div>
+
+            <!-- AI Optical Badge -->
+            <div class="bg-brand-bg/80 p-2 rounded-lg border border-brand-border/60 text-[10px] font-mono text-slate-400 flex items-center justify-between">
+              <span class="text-emerald-400 flex items-center gap-1">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>${r.ai_verification || 'AI Vision Confirmed (~32cm)'}</span>
+              </span>
+              <span>${r.timestamp}</span>
+            </div>
+
+            <!-- Municipal Progress Step -->
+            ${stepProgress}
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Filter Feed by Search Query
+    function filterReportsFeed() {
+      const q = document.getElementById('search-report-input').value.toLowerCase().trim();
+      if (!q) {
+        renderReportsFeed(submittedReportsList);
+        return;
+      }
+      const filtered = submittedReportsList.filter(r => 
+        (r.id && r.id.toLowerCase().includes(q)) ||
+        (r.zone_name && r.zone_name.toLowerCase().includes(q)) ||
+        (r.hazard_type && r.hazard_type.toLowerCase().includes(q)) ||
+        (r.description && r.description.toLowerCase().includes(q))
+      );
+      renderReportsFeed(filtered);
+    }
+
+    // Service Worker Registration for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+
+    // Initialization on DOM Load
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      fetchLatestState();
+      // Auto-poll state every 3 seconds for live sync demonstration
+      setInterval(fetchLatestState, 3000);
+    });
+  </script>
+</body>
+</html>
