@@ -1074,6 +1074,78 @@ def ai_vms_generate_endpoint(payload: Dict[str, Any]):
         zone["vms_manual_override"] = True
     return vms_res
 
+@app.post("/api/ai/video-analyze")
+def ai_video_analyze_endpoint(payload: Dict[str, Any]):
+    """
+    Multimodal video frame edge-AI analysis via Google Gemini 3.8 / Flash.
+    Computes structural diagnostics, object bounding logs, severity score, and automated dispatch.
+    """
+    frame_b64 = payload.get("frame_base64")
+    corridor = payload.get("corridor_name", "Silk Board Junction - Hosur Rd")
+    mode = payload.get("feed_mode", "waterlogging")
+    timestamp_sec = float(payload.get("timestamp_sec", 0.0))
+    
+    result = ai_engine.analyze_video_frame_gemini(
+        frame_base64=frame_b64,
+        corridor_name=corridor,
+        feed_mode=mode,
+        timestamp_sec=timestamp_sec
+    )
+    return result
+
+@app.post("/api/ai/video-dispatch")
+def ai_video_dispatch_endpoint(payload: Dict[str, Any]):
+    """
+    Executes automated municipal dispatch directly from Video AI Studio output.
+    Injects high-priority ticket into BBMP / BTP dispatch queues with SLA timer.
+    """
+    global work_orders, system_log
+    corridor = payload.get("corridor_name", "Silk Board Junction - Hosur Rd")
+    severity = float(payload.get("severity_score", 0.88))
+    order_type = payload.get("order_type", "Rapid Hydro-Jetting & Silt Clearance")
+    action_notes = payload.get("action_notes", "Automated Gemini Video Edge-AI Triggered Dispatch")
+    zone_id = payload.get("zone_id", "silk_board")
+    
+    zone = live_zone_state.get(zone_id, live_zone_state.get("silk_board", {}))
+    wo_id = f"BBMP-WO-AI-{random.randint(100, 999)}"
+    sla = 25 if severity > 0.8 else 45
+    timestamp_str = datetime.now().strftime("%H:%M:%S")
+    
+    new_order = {
+        "id": wo_id,
+        "zone_id": zone_id,
+        "zone_name": zone.get("name", corridor),
+        "ward": zone.get("ward", "Ward 174"),
+        "catch_basin_id": zone.get("catch_basin_id", "CB-FMCW-SB-102"),
+        "action_required": order_type,
+        "equipment_type": "10,000L Silt-Suction Jetting Tanker & De-watering Pump" if "Jetting" in order_type or "Silt" in order_type else "BTP Emergency Incident Response Vehicle",
+        "crew_assigned": "Crew SuperSucker-AI (Rapid Response)",
+        "priority": "CRITICAL" if severity > 0.75 else "HIGH",
+        "status": "DISPATCHED",
+        "sla_minutes": sla,
+        "sla_remaining_min": sla,
+        "reported_by": "Google Gemini 3.8 Multimodal Video Core",
+        "created_at": timestamp_str,
+        "notes": action_notes,
+        "gemini_verified": True
+    }
+    work_orders.insert(0, new_order)
+    
+    # If accident or critical waterlogging, set alert / override VMS
+    if payload.get("vms_highway_advisory_en"):
+        zone["vms_text"] = payload.get("vms_highway_advisory_en")
+        zone["vms_color"] = "RED" if severity > 0.8 else "AMBER"
+        zone["vms_speed_limit_kmh"] = int(payload.get("recommended_speed_limit", 20))
+        zone["vms_manual_override"] = True
+
+    system_log.append(f"[{timestamp_str}] [GEMINI VIDEO AI DISPATCH] {order_type} mobilized for {corridor} (Severity: {severity:.2f}, Ticket: {wo_id}). SLA: {sla}m.")
+    
+    return {
+        "status": "SUCCESS",
+        "work_order": new_order,
+        "message": f"Municipal unit dispatched to {corridor} successfully."
+    }
+
 @app.get("/api/ai/status")
 def ai_status_endpoint():
     """

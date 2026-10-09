@@ -179,6 +179,12 @@
         <i class="fa-solid fa-table-columns text-emerald-400"></i>
         <span>⚡ Tri-Portal Split View</span>
       </button>
+
+      <button onclick="switchMasterView('video')" id="master-nav-video" class="master-nav-btn px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all duration-200 text-slate-400 hover:text-cyan-300 hover:bg-slate-800/70 border border-transparent cursor-pointer">
+        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+        <i class="fa-solid fa-video text-cyan-400"></i>
+        <span>🎥 Video AI Studio</span>
+      </button>
     </div>
 
     <!-- Right Header Team Roster Badge (Hexagonal Capsule Box) -->
@@ -375,6 +381,11 @@
               <span class="text-cyan-400 font-semibold"><i class="fa-solid fa-video mr-1"></i>ITMS Edge-AI Optical:</span>
               <span class="text-slate-200" id="hud-itms-pole">BTP-ITMS-SB-04</span>
               <span class="text-emerald-400">29.8 FPS (14ms Latency)</span>
+              <button onclick="switchMasterView('video')" class="ml-1 px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition">
+                <i class="fa-solid fa-video"></i>
+                <span>Launch Video AI Studio</span>
+                <i class="fa-solid fa-arrow-right text-[8px]"></i>
+              </button>
             </div>
             <div id="hud-incident-alert" class="text-slate-300 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -878,6 +889,277 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- VIEW 5: INTERACTIVE VIDEO DEMONSTRATION & MULTIMODAL AI STUDIO -->
+  <!-- ========================================================================= -->
+  <div id="view-video" class="master-view hidden flex-col w-full flex-1 max-w-[1920px] mx-auto p-3.5 gap-3">
+    
+    <!-- Top Action Bar & Scenario Switcher -->
+    <div class="command-panel rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 border border-cyan-500/30">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg">
+          <i class="fa-solid fa-video animate-pulse"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-black text-white tracking-wider font-mono">MULTIMODAL VIDEO DEMONSTRATION & EDGE-AI STUDIO</h2>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-500/40">
+              <i class="fa-solid fa-microchip mr-1"></i>GEMINI 3.8 / FLASH CORE
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-mono">Real-time kinematic optical flow, carriageway inundation profiling & automated municipal dispatch</p>
+        </div>
+      </div>
+
+      <!-- Demonstration Scenario Selector Buttons -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-mono text-slate-400 mr-1">Surveillance Scenarios:</span>
+        <button onclick="selectVideoScenario('waterlogging')" id="btn-scen-waterlogging" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 cursor-pointer">
+          <i class="fa-solid fa-water"></i>
+          <span>1. Silk Board Flood</span>
+        </button>
+        <button onclick="selectVideoScenario('accident')" id="btn-scen-accident" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 border border-slate-700 hover:text-white cursor-pointer">
+          <i class="fa-solid fa-car-burst"></i>
+          <span>2. Expressway Crash</span>
+        </button>
+        <button onclick="selectVideoScenario('silt')" id="btn-scen-silt" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 border border-slate-700 hover:text-white cursor-pointer">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>3. Silt Choke Sump</span>
+        </button>
+        <label for="video-upload-input" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 bg-purple-900/30 text-purple-300 border border-purple-500/40 hover:bg-purple-900/50 cursor-pointer">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Upload Custom Clip</span>
+          <input type="file" id="video-upload-input" accept="video/*" class="hidden" onchange="handleUserVideoUpload(event)">
+        </label>
+      </div>
+    </div>
+
+    <!-- Main Studio Grid (Left: Video Player & AI Canvas, Right: Gemini Multimodal Diagnostic Intelligence Panel) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1">
+      
+      <!-- LEFT: Video Surveillance Feed & Canvas HUD (7 COLS) -->
+      <div class="lg:col-span-7 flex flex-col gap-3">
+        
+        <!-- Video Container Box -->
+        <div class="command-panel rounded-xl overflow-hidden flex flex-col border border-slate-800 shadow-2xl relative bg-black">
+          
+          <!-- Stream Header HUD -->
+          <div class="px-3 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs font-mono z-20">
+            <div class="flex items-center gap-3">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span class="text-white font-bold tracking-wider" id="video-stream-title">SURVEILLANCE CAM #04 • SILK BOARD JUNCTION</span>
+              <span class="text-[10px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 rounded" id="video-feed-mode-badge">
+                MODE: MONSOON OVERFLOW
+              </span>
+            </div>
+            <div class="flex items-center gap-3 text-[11px] text-slate-400">
+              <span id="video-hud-timestamp">00:04.28</span>
+              <span>1080p @ 29.8 FPS</span>
+              <span class="text-emerald-400"><i class="fa-solid fa-shield-halved mr-1"></i>LIVE EDGE HUD</span>
+            </div>
+          </div>
+
+          <!-- The Video Screen & Overlaid Canvas AI HUD -->
+          <div class="relative w-full aspect-video bg-slate-950 flex items-center justify-center overflow-hidden" id="video-container">
+            <!-- Native HTML5 Video Element (used for uploaded or synthetic clips) -->
+            <video id="studio-video" class="w-full h-full object-cover hidden" playsinline muted loop></video>
+            
+            <!-- Dynamic Synthetic Scene Simulation Canvas (used for 3 preset scenarios) -->
+            <canvas id="studio-simulation-canvas" class="w-full h-full object-cover"></canvas>
+            
+            <!-- Real-Time Overlaid AI Detection HUD Canvas (superimposed bounding boxes, optical vectors & labels) -->
+            <canvas id="studio-ai-hud-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10"></canvas>
+
+            <!-- Video Loading / Analyzing Spinner Overlay -->
+            <div id="video-ai-spinner" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-3 z-30">
+              <div class="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+              <div class="text-xs font-mono text-cyan-300 font-bold tracking-wider animate-pulse" id="video-spinner-text">
+                ANALYZING FRAME WITH GOOGLE GEMINI 3.8 MULTIMODAL VISION...
+              </div>
+            </div>
+
+            <!-- On-Screen Telemetry Watermark -->
+            <div class="absolute bottom-2 left-3 z-20 pointer-events-none font-mono text-[10px] text-cyan-400/80 bg-black/50 px-2 py-1 rounded border border-cyan-500/20 backdrop-blur-sm">
+              <span class="text-white font-bold">HK-RHS FMCW EDGE-AI CORE</span> • LAT: <span id="hud-lat">12.9177°N</span> LNG: <span id="hud-lng">77.6238°E</span> • ΔH: <span id="hud-deltah">2.15</span>
+            </div>
+          </div>
+
+          <!-- Video Playback & Analysis Controls Bar -->
+          <div class="p-3 bg-slate-900/95 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+            <!-- Left Controls: Play, Restart, Scrub -->
+            <div class="flex items-center gap-2">
+              <button onclick="toggleVideoPlayback()" id="btn-video-play" class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 flex items-center justify-center cursor-pointer transition">
+                <i class="fa-solid fa-pause" id="icon-video-play"></i>
+              </button>
+              <button onclick="restartVideoPlayback()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center justify-center cursor-pointer transition" title="Restart">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+              <div class="flex items-center gap-2 ml-2">
+                <span class="text-[11px] text-slate-400" id="video-time-curr">00:00</span>
+                <input type="range" id="video-scrubber" min="0" max="30" step="0.1" value="0" class="w-28 md:w-44 accent-cyan-400 h-1 bg-slate-800 rounded-lg cursor-pointer" oninput="handleVideoSeek(this.value)">
+                <span class="text-[11px] text-slate-400" id="video-time-total">00:30</span>
+              </div>
+            </div>
+
+            <!-- Right Controls: Trigger Gemini AI Scan -->
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer bg-slate-800/80 px-2.5 py-1 rounded border border-slate-700">
+                <input type="checkbox" id="check-continuous-ai" checked onchange="toggleContinuousAi(this.checked)" class="accent-cyan-400">
+                <span>Continuous Stream Scan (3s)</span>
+              </label>
+
+              <button onclick="triggerGeminiFrameAnalysis()" id="btn-analyze-frame" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold transition flex items-center gap-2 shadow-lg shadow-cyan-950/60 cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles text-cyan-200"></i>
+                <span>Scan Frame with Gemini AI</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Telemetry & Optical Kinematics Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+          <div class="command-panel rounded-xl p-3 flex flex-col justify-between">
+            <span class="text-[10px] font-mono text-slate-400 uppercase">Kinematic Optical State:</span>
+            <div class="text-sm font-bold font-mono text-amber-400 flex items-center gap-1.5 mt-1" id="stat-kinematic-state">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>HYDRODYNAMIC_STALL</span>
+            </div>
+            <span class="text-[10px] text-slate-500 mt-1 font-mono" id="stat-kinematic-sub">Frame Inflow: -3.4 m/s² deceleration</span>
+          </div>
+
+          <div class="command-panel rounded-xl p-3 flex flex-col justify-between">
+            <span class="text-[10px] font-mono text-slate-400 uppercase">Estimated Water Depth:</span>
+            <div class="text-lg font-black font-mono text-cyan-300 mt-0.5" id="stat-water-depth">
+              42.0 cm
+            </div>
+            <span class="text-[10px] text-rose-400 font-mono">Threshold: > 30 cm Critical</span>
+          </div>
+
+          <div class="command-panel rounded-xl p-3 flex flex-col justify-between">
+            <span class="text-[10px] font-mono text-slate-400 uppercase">Inference Engine / Model:</span>
+            <div class="text-xs font-bold font-mono text-emerald-400 mt-1" id="stat-model-name">
+              gemini-flash-lite-latest
+            </div>
+            <span class="text-[10px] text-slate-500 mt-1 font-mono">Latency: 178ms • Hardcoded Key</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Gemini Multimodal Diagnostic Intelligence Panel (5 COLS) -->
+      <div class="lg:col-span-5 flex flex-col gap-3">
+        
+        <!-- Severity Risk Gauge Card -->
+        <div class="command-panel rounded-xl p-3.5 flex flex-col gap-3 border border-slate-800">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-xs font-mono">
+            <span class="font-bold text-white flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-virus text-cyan-400"></i>
+              <span>HK-RHS HAZARD SEVERITY RISK SCORE</span>
+            </span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40" id="video-severity-badge">
+              CRITICAL HAZARD
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="text-3xl font-black font-mono text-rose-400 flex items-baseline gap-1" id="video-severity-score">
+                <span>0.88</span>
+                <span class="text-xs text-slate-400 font-normal">/ 1.00</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5 font-mono" id="video-severity-desc">Immediate municipal intervention required</p>
+            </div>
+            
+            <!-- Severity Bar -->
+            <div class="flex-1 max-w-[200px]">
+              <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5">
+                <div id="video-severity-bar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 transition-all duration-700" style="width: 88%;"></div>
+              </div>
+              <div class="flex justify-between text-[9px] font-mono text-slate-500 mt-1">
+                <span>0.0 Low</span>
+                <span>0.5 Mod</span>
+                <span class="text-rose-400">1.0 Critical</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Structural Diagnostics from Gemini -->
+        <div class="command-panel rounded-xl p-3.5 flex flex-col gap-2 border border-slate-800">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="font-bold text-cyan-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-brain"></i>
+              <span>GEMINI MULTIMODAL STRUCTURAL DIAGNOSTICS</span>
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono" id="video-diag-timestamp">Live</span>
+          </div>
+
+          <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80 text-xs font-sans text-slate-200 leading-relaxed" id="video-structural-diagnostics">
+            Carriageway inundation exceeding curb thresholds along Silk Board Junction. Surface runoff volume exceeds storm drain capacity by 84%. Hydrodynamic stall imminent on outer lanes.
+          </div>
+        </div>
+
+        <!-- Detected Objects & Bounding Boxes Log -->
+        <div class="command-panel rounded-xl p-3.5 flex flex-col gap-2.5 border border-slate-800">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="font-bold text-white flex items-center gap-1.5">
+              <i class="fa-solid fa-crosshairs text-emerald-400"></i>
+              <span>OBJECT DETECTION & RETICLE TRACKING</span>
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono" id="video-object-count">3 Targets Detected</span>
+          </div>
+
+          <div class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1" id="video-detected-objects-list">
+            <!-- Dynamically populated objects -->
+          </div>
+        </div>
+
+        <!-- Automated Municipal Dispatch Recommendation Card -->
+        <div class="command-panel rounded-xl p-3.5 flex flex-col gap-2.5 border border-amber-500/40 bg-gradient-to-br from-slate-900/90 to-amber-950/20">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="font-bold text-amber-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-truck-fast"></i>
+              <span>AUTOMATED MUNICIPAL DISPATCH RECOMMENDATION</span>
+            </span>
+            <span class="text-[10px] text-amber-300/80 font-mono">AI Action Order</span>
+          </div>
+
+          <p class="text-xs text-slate-200 font-mono bg-slate-950/70 p-2.5 rounded-lg border border-slate-800" id="video-dispatch-recommendation">
+            Dispatch BBMP 15,000L Super Sucker Tanker + High-Velocity De-watering Pump + Traffic Cordon.
+          </p>
+
+          <button onclick="executeVideoAiDispatch()" id="btn-video-dispatch" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-mono font-black text-xs uppercase tracking-wider transition-all duration-200 shadow-lg shadow-amber-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Execute Municipal Dispatch (BBMP & BTP)</span>
+          </button>
+        </div>
+
+        <!-- Live Bilingual Highway VMS Preview -->
+        <div class="command-panel rounded-xl p-3 flex flex-col gap-2 border border-slate-800">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="font-bold text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-display text-cyan-400"></i>
+              <span>GENERATED HIGHWAY VMS SIGN PREVIEW</span>
+            </span>
+            <span class="text-[10px] text-cyan-400 font-mono" id="video-vms-speed">Speed Limit: 20 KM/H</span>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-black border-2 border-amber-500/60 flex flex-col gap-1 text-center font-mono">
+            <div class="text-amber-400 font-black text-xs tracking-wider" id="video-vms-en">
+              ⛈️ CLOUDBURST OVERFLOW • WATERLOGGED 42CM • DIVERT TO FLYOVER • 20 KM/H
+            </div>
+            <div class="text-amber-300 font-bold text-[11px]" id="video-vms-kn">
+              ⛈️ ರಸ್ತೆಯಲ್ಲಿ ಭಾರಿ ನೀರು • ಪರ್ಯಾಯ ಮಾರ್ಗ ಬಳಸಿ • 20 ಕಿ.ಮೀ
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
   <!-- MODAL: DETAILED HAZARD WARNING & INCIDENT DIAGNOSTIC AUDIT -->
   <!-- ========================================================================= -->
   <div id="hazard-modal" class="fixed inset-0 iccc-modal-backdrop z-[99999] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
@@ -1357,7 +1639,7 @@
     // MASTER VIEW CONTROLLER (ICCC, CITIZEN, RESPONDER, SPLIT COCKPIT)
     // =========================================================================
     function switchMasterView(view) {
-      const views = ['iccc', 'citizen', 'responder', 'split'];
+      const views = ['iccc', 'citizen', 'responder', 'split', 'video'];
       views.forEach(v => {
         const el = document.getElementById('view-' + v);
         const btn = document.getElementById('master-nav-' + v);
@@ -1386,6 +1668,8 @@
         }, 120);
       } else if (view === 'split') {
         if (stateCache) renderSplitViewStatus(stateCache);
+      } else if (view === 'video') {
+        initVideoAiStudio();
       }
     }
 
@@ -1422,13 +1706,14 @@
       }
     }
 
-    // Keyboard Shortcuts (1: ICCC, 2: Citizen, 3: Responder, 4: Split)
+    // Keyboard Shortcuts (1: ICCC, 2: Citizen, 3: Responder, 4: Split, 5: Video)
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
       if (e.key === '1') switchMasterView('iccc');
       else if (e.key === '2') switchMasterView('citizen');
       else if (e.key === '3') switchMasterView('responder');
       else if (e.key === '4') switchMasterView('split');
+      else if (e.key === '5') switchMasterView('video');
     });
 
     // Render Split View Cockpit Live Status
@@ -2474,6 +2759,617 @@
         alert("Submission failed: " + e);
         btn.innerText = "Submit Verified Report to BBMP ICCC";
         btn.disabled = false;
+      }
+    }
+
+    // =========================================================================
+    // 5. INTERACTIVE VIDEO DEMONSTRATION & GEMINI MULTIMODAL AI STUDIO ENGINE
+    // =========================================================================
+    let videoCurrentScenario = 'waterlogging'; // 'waterlogging', 'accident', 'silt', 'custom'
+    let videoIsPlaying = true;
+    let videoPlaybackTime = 0.0;
+    let videoContinuousAi = true;
+    let videoLastAiScanTime = 0;
+    let videoAiScanInProgress = false;
+    let videoCurrentAnalysis = null;
+    let videoSimAnimId = null;
+    let studioVideoEl = null;
+    let simCanvasEl = null;
+    let hudCanvasEl = null;
+    let simCtx = null;
+    let hudCtx = null;
+    let rainParticles = [];
+
+    const SCENARIO_CONFIGS = {
+      waterlogging: {
+        title: "SURVEILLANCE CAM #04 • SILK BOARD JUNCTION",
+        badge: "MODE: MONSOON OVERFLOW",
+        corridor: "Silk Board Junction - Hosur Rd",
+        zone_id: "silk_board",
+        lat: "12.9177°N",
+        lng: "77.6238°E",
+        deltah: "2.15"
+      },
+      accident: {
+        title: "SURVEILLANCE CAM #09 • AIRPORT EXPRESSWAY FLYOVER",
+        badge: "MODE: HIGH-SPEED COLLISION",
+        corridor: "Hebbal Flyover - Airport Expressway",
+        zone_id: "hebbal",
+        lat: "13.0358°N",
+        lng: "77.5970°E",
+        deltah: "0.38"
+      },
+      silt: {
+        title: "SURVEILLANCE CAM #11 • ORR BELLANDUR SOFFIT SUMP",
+        badge: "MODE: SILT CHOKE & BACKFLOW",
+        corridor: "Outer Ring Road - Bellandur Ecospace",
+        zone_id: "orr_bellandur",
+        lat: "12.9260°N",
+        lng: "77.6762°E",
+        deltah: "1.85"
+      }
+    };
+
+    function initVideoAiStudio() {
+      studioVideoEl = document.getElementById('studio-video');
+      simCanvasEl = document.getElementById('studio-simulation-canvas');
+      hudCanvasEl = document.getElementById('studio-ai-hud-canvas');
+
+      if (!simCanvasEl || !hudCanvasEl) return;
+
+      const rect = simCanvasEl.getBoundingClientRect();
+      const w = Math.floor(rect.width || 800);
+      const h = Math.floor(rect.height || 450);
+      simCanvasEl.width = w;
+      simCanvasEl.height = h;
+      hudCanvasEl.width = w;
+      hudCanvasEl.height = h;
+
+      simCtx = simCanvasEl.getContext('2d');
+      hudCtx = hudCanvasEl.getContext('2d');
+
+      rainParticles = [];
+      for (let i = 0; i < 90; i++) {
+        rainParticles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          len: 10 + Math.random() * 15,
+          speed: 14 + Math.random() * 8,
+          alpha: 0.2 + Math.random() * 0.4
+        });
+      }
+
+      if (!videoSimAnimId) {
+        animateVideoStudio();
+      }
+
+      if (!videoCurrentAnalysis) {
+        triggerGeminiFrameAnalysis();
+      }
+    }
+
+    function selectVideoScenario(scen) {
+      videoCurrentScenario = scen;
+      const btns = ['waterlogging', 'accident', 'silt'];
+      btns.forEach(b => {
+        const btn = document.getElementById('btn-scen-' + b);
+        if (btn) {
+          if (b === scen) {
+            btn.className = "px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 cursor-pointer";
+          } else {
+            btn.className = "px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 border border-slate-700 hover:text-white cursor-pointer";
+          }
+        }
+      });
+
+      const cfg = SCENARIO_CONFIGS[scen];
+      if (cfg) {
+        document.getElementById('video-stream-title').innerText = cfg.title;
+        document.getElementById('video-feed-mode-badge').innerText = cfg.badge;
+        document.getElementById('hud-lat').innerText = cfg.lat;
+        document.getElementById('hud-lng').innerText = cfg.lng;
+        document.getElementById('hud-deltah').innerText = cfg.deltah;
+      }
+
+      if (studioVideoEl) {
+        studioVideoEl.pause();
+        studioVideoEl.classList.add('hidden');
+      }
+      if (simCanvasEl) {
+        simCanvasEl.classList.remove('hidden');
+      }
+
+      videoPlaybackTime = 0;
+      triggerGeminiFrameAnalysis();
+    }
+
+    function handleUserVideoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      if (!studioVideoEl) studioVideoEl = document.getElementById('studio-video');
+      if (!simCanvasEl) simCanvasEl = document.getElementById('studio-simulation-canvas');
+
+      studioVideoEl.src = url;
+      studioVideoEl.classList.remove('hidden');
+      if (simCanvasEl) simCanvasEl.classList.add('hidden');
+
+      studioVideoEl.play().catch(() => {});
+      videoCurrentScenario = 'custom';
+      videoIsPlaying = true;
+      const playIcon = document.getElementById('icon-video-play');
+      if (playIcon) playIcon.className = "fa-solid fa-pause";
+
+      document.getElementById('video-stream-title').innerText = "CUSTOM SURVEILLANCE FEED • " + file.name.toUpperCase();
+      document.getElementById('video-feed-mode-badge').innerText = "MODE: CUSTOM VIDEO UPLOAD";
+
+      ['waterlogging', 'accident', 'silt'].forEach(b => {
+        const btn = document.getElementById('btn-scen-' + b);
+        if (btn) btn.className = "px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 border border-slate-700 hover:text-white cursor-pointer";
+      });
+
+      setTimeout(triggerGeminiFrameAnalysis, 600);
+    }
+
+    function toggleVideoPlayback() {
+      videoIsPlaying = !videoIsPlaying;
+      const icon = document.getElementById('icon-video-play');
+      if (videoIsPlaying) {
+        if (icon) icon.className = "fa-solid fa-pause";
+        if (videoCurrentScenario === 'custom' && studioVideoEl) studioVideoEl.play();
+      } else {
+        if (icon) icon.className = "fa-solid fa-play";
+        if (videoCurrentScenario === 'custom' && studioVideoEl) studioVideoEl.pause();
+      }
+    }
+
+    function restartVideoPlayback() {
+      videoPlaybackTime = 0.0;
+      if (videoCurrentScenario === 'custom' && studioVideoEl) {
+        studioVideoEl.currentTime = 0;
+        studioVideoEl.play();
+      }
+      const scrub = document.getElementById('video-scrubber');
+      if (scrub) scrub.value = 0;
+    }
+
+    function handleVideoSeek(val) {
+      videoPlaybackTime = parseFloat(val);
+      if (videoCurrentScenario === 'custom' && studioVideoEl) {
+        studioVideoEl.currentTime = (parseFloat(val) / 30) * (studioVideoEl.duration || 30);
+      }
+    }
+
+    function toggleContinuousAi(val) {
+      videoContinuousAi = val;
+    }
+
+    function animateVideoStudio() {
+      videoSimAnimId = requestAnimationFrame(animateVideoStudio);
+
+      if (videoIsPlaying) {
+        videoPlaybackTime += 0.033;
+        if (videoPlaybackTime > 30) videoPlaybackTime = 0;
+        
+        const min = Math.floor(videoPlaybackTime / 60);
+        const sec = Math.floor(videoPlaybackTime % 60);
+        const frac = Math.floor((videoPlaybackTime % 1) * 100);
+        const timeStr = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(frac).padStart(2,'0')}`;
+        const hudT = document.getElementById('video-hud-timestamp');
+        const currT = document.getElementById('video-time-curr');
+        const scrub = document.getElementById('video-scrubber');
+        if (hudT) hudT.innerText = timeStr;
+        if (currT) currT.innerText = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+        if (scrub && Math.abs(parseFloat(scrub.value) - videoPlaybackTime) > 0.5) {
+          scrub.value = videoPlaybackTime.toFixed(1);
+        }
+
+        const now = Date.now();
+        if (videoContinuousAi && (now - videoLastAiScanTime > 3500) && !videoAiScanInProgress) {
+          triggerGeminiFrameAnalysis(true);
+        }
+      }
+
+      if (videoCurrentScenario !== 'custom' && simCtx && simCanvasEl) {
+        renderSyntheticCarriageway(simCtx, simCanvasEl.width, simCanvasEl.height, videoCurrentScenario, videoPlaybackTime);
+      }
+
+      if (hudCtx && hudCanvasEl) {
+        renderOverlayAiHud(hudCtx, hudCanvasEl.width, hudCanvasEl.height, videoCurrentAnalysis, videoPlaybackTime);
+      }
+    }
+
+    function renderSyntheticCarriageway(ctx, w, h, scen, t) {
+      ctx.fillStyle = "#070c14";
+      ctx.fillRect(0, 0, w, h);
+
+      const horizonY = h * 0.38;
+      const gradRoad = ctx.createLinearGradient(0, horizonY, 0, h);
+      gradRoad.addColorStop(0, "#0f172a");
+      gradRoad.addColorStop(1, "#090d16");
+      ctx.fillStyle = gradRoad;
+      
+      ctx.beginPath();
+      ctx.moveTo(w * 0.32, horizonY);
+      ctx.lineTo(w * 0.68, horizonY);
+      ctx.lineTo(w * 0.98, h);
+      ctx.lineTo(w * 0.02, h);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(226, 232, 240, 0.3)";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([16, 20]);
+      ctx.lineDashOffset = -t * 40;
+
+      ctx.beginPath();
+      ctx.moveTo(w * 0.44, horizonY);
+      ctx.lineTo(w * 0.34, h);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(w * 0.56, horizonY);
+      ctx.lineTo(w * 0.66, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = "rgba(30, 41, 59, 0.8)";
+      ctx.fillRect(0, 0, w * 0.05, h);
+      ctx.fillRect(w * 0.95, 0, w * 0.05, h);
+
+      ctx.fillStyle = "rgba(56, 189, 248, 0.04)";
+      ctx.beginPath();
+      ctx.arc(w * 0.25, horizonY * 0.5, 90, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (scen === 'waterlogging') {
+        const waterTopY = h * 0.52;
+        const waterGrad = ctx.createLinearGradient(0, waterTopY, 0, h);
+        waterGrad.addColorStop(0, "rgba(6, 182, 212, 0.15)");
+        waterGrad.addColorStop(0.5, "rgba(14, 116, 144, 0.45)");
+        waterGrad.addColorStop(1, "rgba(8, 47, 73, 0.75)");
+        ctx.fillStyle = waterGrad;
+        ctx.fillRect(w * 0.05, waterTopY, w * 0.9, h - waterTopY);
+
+        ctx.strokeStyle = "rgba(103, 232, 249, 0.35)";
+        ctx.lineWidth = 1.5;
+        for (let r = 0; r < 5; r++) {
+          let ry = waterTopY + 25 + r * 30 + Math.sin(t * 3 + r) * 3;
+          ctx.beginPath();
+          ctx.moveTo(w * 0.15, ry);
+          ctx.bezierCurveTo(w * 0.35, ry - 4, w * 0.65, ry + 4, w * 0.85, ry);
+          ctx.stroke();
+        }
+
+        const carX = w * 0.42;
+        const carY = h * 0.58;
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(carX, carY, 110, 50);
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(carX + 15, carY - 20, 80, 25);
+        const blink = Math.sin(t * 8) > 0;
+        ctx.fillStyle = blink ? "rgba(245, 158, 11, 0.9)" : "rgba(180, 83, 9, 0.3)";
+        ctx.fillRect(carX + 5, carY + 30, 10, 8);
+        ctx.fillRect(carX + 95, carY + 30, 10, 8);
+
+        const busX = w * 0.12;
+        const busY = h * 0.46;
+        ctx.fillStyle = "#1e3a8a";
+        ctx.fillRect(busX, busY, 130, 70);
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(busX + 10, busY + 10, 110, 15);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(busX + 130, busY + 65, 20 + Math.sin(t * 5) * 5, 0, Math.PI * 0.5);
+        ctx.stroke();
+      } else if (scen === 'accident') {
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.75)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.48, horizonY + 20);
+        ctx.lineTo(w * 0.38, h * 0.65);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(w * 0.52, horizonY + 20);
+        ctx.lineTo(w * 0.43, h * 0.65);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(w * 0.40, h * 0.62);
+        ctx.rotate(0.35);
+        ctx.fillStyle = "#dc2626";
+        ctx.fillRect(-50, -25, 100, 50);
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(-25, -18, 50, 36);
+        ctx.restore();
+
+        ctx.fillStyle = "rgba(148, 163, 184, 0.15)";
+        for (let s = 0; s < 4; s++) {
+          ctx.beginPath();
+          ctx.arc(w * 0.38 + Math.cos(t * 2 + s) * 15, h * 0.58 - s * 14, 15 + s * 8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = "#cbd5e1";
+        ctx.fillRect(w * 0.32, h * 0.68, 6, 6);
+        ctx.fillRect(w * 0.48, h * 0.70, 8, 5);
+        ctx.fillRect(w * 0.44, h * 0.74, 5, 5);
+      } else if (scen === 'silt') {
+        const drainX = w * 0.25;
+        const drainY = h * 0.55;
+        ctx.fillStyle = "#18181b";
+        ctx.fillRect(drainX, drainY, 180, 90);
+        
+        ctx.strokeStyle = "#52525b";
+        ctx.lineWidth = 4;
+        for (let g = 0; g < 8; g++) {
+          ctx.beginPath();
+          ctx.moveTo(drainX + 20 + g * 18, drainY);
+          ctx.lineTo(drainX + 20 + g * 18, drainY + 90);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = "rgba(120, 53, 15, 0.85)";
+        ctx.beginPath();
+        ctx.ellipse(drainX + 80, drainY + 45, 65, 35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(59, 130, 246, 0.35)";
+        ctx.fillRect(drainX - 40, drainY + 30, 260, 60);
+      }
+
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.25)";
+      ctx.lineWidth = 1;
+      rainParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - 3, p.y + p.len);
+        ctx.stroke();
+        p.y += p.speed;
+        p.x -= 1.5;
+        if (p.y > h) { p.y = -10; p.x = Math.random() * w; }
+      });
+    }
+
+    function renderOverlayAiHud(ctx, w, h, analysis, t) {
+      ctx.clearRect(0, 0, w, h);
+      if (!analysis) return;
+
+      const objects = analysis.objects_detected || [];
+      objects.forEach((obj, idx) => {
+        const box = obj.box_norm || [30, 20, 65, 50];
+        const top = (box[0] / 100) * h;
+        const left = (box[1] / 100) * w;
+        const bottom = (box[2] / 100) * h;
+        const right = (box[3] / 100) * w;
+        const bw = right - left;
+        const bh = bottom - top;
+
+        const isHazard = (analysis.severity_score || 0) > 0.75;
+        const strokeColor = isHazard ? "rgba(244, 63, 94, 0.9)" : "rgba(6, 182, 212, 0.9)";
+        const fillColor = isHazard ? "rgba(244, 63, 94, 0.08)" : "rgba(6, 182, 212, 0.08)";
+
+        ctx.fillStyle = fillColor;
+        ctx.fillRect(left, top, bw, bh);
+
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2.5;
+        const cLen = 14;
+
+        ctx.beginPath();
+        ctx.moveTo(left, top + cLen);
+        ctx.lineTo(left, top);
+        ctx.lineTo(left + cLen, top);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(right - cLen, top);
+        ctx.lineTo(right, top);
+        ctx.lineTo(right, top + cLen);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(left, bottom - cLen);
+        ctx.lineTo(left, bottom);
+        ctx.lineTo(left + cLen, bottom);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(right - cLen, bottom);
+        ctx.lineTo(right, bottom);
+        ctx.lineTo(right, bottom - cLen);
+        ctx.stroke();
+
+        const labelText = `[ ${obj.label.toUpperCase()} • ${obj.confidence_pct}% ]`;
+        ctx.font = "bold 11px monospace";
+        const txtWidth = ctx.measureText(labelText).width;
+        ctx.fillStyle = isHazard ? "rgba(159, 18, 57, 0.9)" : "rgba(8, 47, 73, 0.9)";
+        ctx.fillRect(left, top - 18, txtWidth + 12, 18);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(labelText, left + 6, top - 5);
+      });
+
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.35)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx - 20, cy);
+      ctx.lineTo(cx + 20, cy);
+      ctx.moveTo(cx, cy - 20);
+      ctx.lineTo(cx, cy + 20);
+      ctx.stroke();
+    }
+
+    async function triggerGeminiFrameAnalysis(isBackground = false) {
+      if (videoAiScanInProgress) return;
+      videoAiScanInProgress = true;
+      videoLastAiScanTime = Date.now();
+
+      const spinner = document.getElementById('video-ai-spinner');
+      const btn = document.getElementById('btn-analyze-frame');
+      if (!isBackground && spinner) spinner.classList.remove('hidden');
+      if (btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Scanning with Gemini...</span>`;
+
+      try {
+        let frameB64 = null;
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = 640;
+        offCanvas.height = 360;
+        const octx = offCanvas.getContext('2d');
+
+        if (videoCurrentScenario === 'custom' && studioVideoEl && !studioVideoEl.paused) {
+          octx.drawImage(studioVideoEl, 0, 0, 640, 360);
+          frameB64 = offCanvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+        } else if (simCanvasEl) {
+          octx.drawImage(simCanvasEl, 0, 0, 640, 360);
+          frameB64 = offCanvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+        }
+
+        const cfg = SCENARIO_CONFIGS[videoCurrentScenario] || SCENARIO_CONFIGS.waterlogging;
+
+        const res = await fetch('/api/ai/video-analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            frame_base64: frameB64,
+            corridor_name: cfg.corridor,
+            feed_mode: videoCurrentScenario,
+            timestamp_sec: videoPlaybackTime
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          videoCurrentAnalysis = data;
+          renderVideoAiOutput(data);
+        }
+      } catch (err) {
+        console.error("Gemini video frame analysis failed:", err);
+      } finally {
+        videoAiScanInProgress = false;
+        if (spinner) spinner.classList.add('hidden');
+        if (btn) btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-cyan-200"></i><span>Scan Frame with Gemini AI</span>`;
+      }
+    }
+
+    function renderVideoAiOutput(data) {
+      if (!data) return;
+
+      const sev = data.severity_score || 0.88;
+      const scoreEl = document.getElementById('video-severity-score');
+      if (scoreEl) scoreEl.innerHTML = `<span>${sev.toFixed(2)}</span><span class="text-xs text-slate-400 font-normal">/ 1.00</span>`;
+      
+      const barEl = document.getElementById('video-severity-bar');
+      if (barEl) barEl.style.width = Math.round(sev * 100) + '%';
+
+      const badgeEl = document.getElementById('video-severity-badge');
+      const descEl = document.getElementById('video-severity-desc');
+      if (sev > 0.8) {
+        if (badgeEl) { badgeEl.innerText = "CRITICAL HAZARD"; badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40"; }
+        if (descEl) descEl.innerText = "Immediate municipal emergency intervention required";
+      } else if (sev > 0.5) {
+        if (badgeEl) { badgeEl.innerText = "ELEVATED RISK"; badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40"; }
+        if (descEl) descEl.innerText = "Active telemetry degradation • Deploy rapid maintenance crew";
+      } else {
+        if (badgeEl) { badgeEl.innerText = "NORMAL FLOW"; badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"; }
+        if (descEl) descEl.innerText = "Carriageway conditions within safe hydraulic limits";
+      }
+
+      const diagEl = document.getElementById('video-structural-diagnostics');
+      if (diagEl) diagEl.innerText = data.structural_diagnostics || "Surface runoff normal.";
+      const diagTime = document.getElementById('video-diag-timestamp');
+      if (diagTime) diagTime.innerText = new Date().toLocaleTimeString();
+
+      const kinEl = document.getElementById('stat-kinematic-state');
+      if (kinEl) kinEl.innerHTML = `<span class="w-2 h-2 rounded-full ${sev > 0.75 ? 'bg-rose-400' : 'bg-emerald-400'} animate-pulse"></span><span>${data.kinematic_status || 'NORMAL_FLOW'}</span>`;
+      const waterEl = document.getElementById('stat-water-depth');
+      if (waterEl) waterEl.innerText = (data.estimated_water_depth_cm || 0).toFixed(1) + ' cm';
+      const modelEl = document.getElementById('stat-model-name');
+      if (modelEl) modelEl.innerText = data.model_used || "gemini-flash-lite-latest";
+
+      const objCount = document.getElementById('video-object-count');
+      const objList = document.getElementById('video-detected-objects-list');
+      const objects = data.objects_detected || [];
+      if (objCount) objCount.innerText = `${objects.length} Targets Tracked`;
+      if (objList) {
+        objList.innerHTML = objects.map(o => `
+          <div class="p-2 rounded-lg bg-slate-950/70 border border-slate-800 flex items-center justify-between text-xs font-mono">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full ${o.confidence_pct > 90 ? 'bg-cyan-400' : 'bg-amber-400'}"></span>
+              <strong class="text-white">${o.label}</strong>
+              <span class="text-slate-400">(${o.confidence_pct}%)</span>
+            </div>
+            <div class="text-[11px] text-amber-300 font-medium">
+              ${o.hazard_status || 'Active'}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const dispEl = document.getElementById('video-dispatch-recommendation');
+      if (dispEl) dispEl.innerText = data.municipal_dispatch || "Maintain standard automated catchment monitoring.";
+
+      const vmsEn = document.getElementById('video-vms-en');
+      const vmsKn = document.getElementById('video-vms-kn');
+      const vmsSpeed = document.getElementById('video-vms-speed');
+      if (vmsEn) vmsEn.innerText = data.vms_highway_advisory_en || "NORMAL SPEED • SAFE COMMUTE";
+      if (vmsKn) vmsKn.innerText = data.vms_highway_advisory_kn || "ಸುರಕ್ಷಿತ ಸಂಚಾರ • ಜಾಗರೂಕರಾಗಿರಿ";
+      if (vmsSpeed) vmsSpeed.innerText = `Speed Limit: ${data.recommended_speed_limit || 40} KM/H`;
+    }
+
+    async function executeVideoAiDispatch() {
+      const btn = document.getElementById('btn-video-dispatch');
+      if (!btn) return;
+      
+      const cfg = SCENARIO_CONFIGS[videoCurrentScenario] || SCENARIO_CONFIGS.waterlogging;
+      const analysis = videoCurrentAnalysis || {};
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Mobilizing BBMP & BTP Units...</span>`;
+
+      try {
+        const res = await fetch('/api/ai/video-dispatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            corridor_name: cfg.corridor,
+            severity_score: analysis.severity_score || 0.88,
+            order_type: videoCurrentScenario === 'accident' ? 'Emergency Incident Response & Cordon' : 'Rapid Hydro-Jetting & Silt Clearance',
+            action_notes: analysis.municipal_dispatch || 'Automated Video AI Triggered Municipal Dispatch',
+            zone_id: cfg.zone_id,
+            vms_highway_advisory_en: analysis.vms_highway_advisory_en,
+            recommended_speed_limit: analysis.recommended_speed_limit || 20
+          })
+        });
+
+        const data = await res.json();
+        if (data.status === 'SUCCESS') {
+          btn.className = "w-full py-2.5 rounded-xl bg-emerald-600 text-white font-mono font-black text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer";
+          btn.innerHTML = `<i class="fa-solid fa-check"></i><span>Dispatched! Ticket #${data.work_order.id} En Route</span>`;
+
+          const toast = document.getElementById('crosshost-sync-toast');
+          const toastDesc = document.getElementById('toast-desc');
+          if (toast && toastDesc) {
+            toast.classList.remove('hidden');
+            toastDesc.innerText = `Gemini Video AI auto-mobilized ${data.work_order.action_required} for ${data.work_order.zone_name}. Ticket #${data.work_order.id} queued in BBMP / Police console!`;
+          }
+
+          await updateSystemState();
+          reloadSplitFrames();
+
+          setTimeout(() => {
+            btn.className = "w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-mono font-black text-xs uppercase tracking-wider transition-all duration-200 shadow-lg shadow-amber-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-98";
+            btn.innerHTML = `<i class="fa-solid fa-bolt"></i><span>Execute Municipal Dispatch (BBMP & BTP)</span>`;
+            btn.disabled = false;
+          }, 3500);
+        }
+      } catch (err) {
+        alert("Dispatch mobilization error: " + err);
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-bolt"></i><span>Execute Municipal Dispatch (BBMP & BTP)</span>`;
       }
     }
 
