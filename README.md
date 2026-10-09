@@ -140,64 +140,50 @@ The HK-RHS platform showcases true closed-loop smart city automation:
 
 ### 2. Install Dependencies
 ```bash
-pip install fastapi uvicorn pydantic
+pip install fastapi uvicorn pydantic requests
 ```
 
-### 3. Launch All 3 Prototypes Concurrently
+### 3. Launch Unified Platform
 Double-click `run_demo.bat` or run in terminal:
 ```bash
-python run_triple_hosts.py
-```
-This automatically starts:
-- **Prototype 1 (ICCC Dashboard):** `http://127.0.0.1:8000`
-- **Prototype 2 (Citizen Safety PWA):** `http://127.0.0.1:8001`
-- **Prototype 3 (Field Responder Portal):** `http://127.0.0.1:8002`
-- And automatically opens all three browser tabs for live demonstration!
-
-*Alternatively, launch servers individually:*
-```bash
-# Terminal 1: Prototype 1 (ICCC Dashboard)
 python main.py
-
-# Terminal 2: Prototype 2 (Citizen Portal)
-python citizen_server.py
-
-# Terminal 3: Prototype 3 (Field Responder Portal)
-python responder_server.py
 ```
+This automatically starts the master single-host application at `http://127.0.0.1:8000`, unifying:
+- **Unified Command Center & Video AI Studio:** `http://127.0.0.1:8000/`
+- **Citizen Safety & Reporting Portal:** `http://127.0.0.1:8000/citizen`
+- **Field Responder / BBMP / Police Portal:** `http://127.0.0.1:8000/responder`
 
 ---
 
 ## 🎯 Step-by-Step Demonstration Script for Judges (HACKathon 3.0 Pitch)
 
-### Step 1: Arrange the 3 Screens
-- Open **Prototype 1 (ICCC Dashboard)** on `http://127.0.0.1:8000` on the main screen.
-- Open **Prototype 2 (Citizen Portal)** on `http://127.0.0.1:8001` on a mobile window.
-- Open **Prototype 3 (Field Responder Portal)** on `http://127.0.0.1:8002` on a third window.
+### Step 1: Access the Unified Portal
+- Open `http://127.0.0.1:8000` in your browser.
+- Use the quick navigation tabs at the top to seamlessly toggle between **ICCC Video Wall**, **Citizen Portal**, **Field Responder**, and **Tri-Portal Split Mode**, or inspect the **Gemini Video AI Studio**.
 
 ### Step 2: Citizen Hazard Submission $\rightarrow$ ICCC $\rightarrow$ BBMP Field Crew
-1. On **Prototype 2 (`:8001`)**: Select **Waterlogging**, choose **📍 Silk Board**, click **Load Flood Scene** (watch AI scan ~34.8 cm depth), and tap **1-TAP SUBMIT TO BBMP ICCC**.
-2. On **Prototype 1 (`:8000`)**: Observe the **⚡ CROSS-HOST TELEMETRY SYNC** toast pop up and the new work order `#BBMP-WO-xxxx` enter the dispatch queue.
-3. On **Prototype 3 (`:8002`)**: Under **BBMP Desilting Crew**, observe the new ticket appear in real time with high priority, route map, and SLA countdown!
-4. Tap **Set En Route**, then tap **1-Tap Sump Cleared & Verified** (enter 1850L slurry extracted).
-5. Watch **Prototype 1 (`:8000`)** and **Prototype 2 (`:8001`)** immediately show the ticket marked **RESOLVED** with zero manual reloading!
+1. Switch to **Citizen Portal (`/citizen`)**: Select **Waterlogging**, choose **📍 Silk Board**, click **Load Flood Scene** (watch Gemini AI scan depth & run anti-spoofing authenticity checks), and tap **1-TAP SUBMIT TO BBMP ICCC**.
+2. Switch to **ICCC Video Wall (`/`)**: Observe the real-time telemetry sync and the new work order `#BBMP-WO-xxxx` enter the dispatch queue.
+3. Switch to **Field Responder (`/responder`)**: Under **BBMP Desilting Crew**, observe the new ticket appear in real time with high priority, route map, and SLA countdown!
+4. Tap **Set En Route**, then tap **1-Tap Sump Cleared & Verified** (enter slurry extracted).
+5. Watch the ticket immediately update to **RESOLVED** across all views with zero manual reloading!
 
 ### Step 3: Edge-AI Collision Detection $\rightarrow$ Police 112 Tactical Response
-1. On **Prototype 1 (`:8000`)**: Click **💥 Collision** under Incident Simulation Controls.
+1. On **ICCC Dashboard**: Click **💥 Collision** under Incident Simulation Controls.
 2. The corridor turns red, displaying a $-6.8\text{ m/s}^2$ deceleration impact.
-3. Switch to **Prototype 3 (`:8002`)** and click **Police / 112 Dispatch**:
+3. Switch to **Field Responder** and click **Police / 112 Dispatch**:
    - Hear the synthesized tactical audio alert.
    - Inspect the ITMS Optical HUD showing bounding boxes (`OBJ #1: STALLED`, `OBJ #2: IMPACT`).
    - View nearest emergency units (BTP Patrol #09: 0.8 km • 2m ETA, 108 EMS: 1.7 km • 4m ETA).
    - Click **Cordon Lanes 1 & 2** $\rightarrow$ Overhead VMS switches to RED merge advisory.
-   - Click **Restore Traffic & Clear** $\rightarrow$ Accident clears, traffic speed restores to 45 km/h on Prototype 1!
+   - Click **Restore Traffic & Clear** $\rightarrow$ Accident clears, traffic speed restores to 45 km/h on ICCC Dashboard!
 
 ### Step 4: BTP Traffic Inspector Dynamic VMS Override
-1. On **Prototype 3 (`:8002`)**: Switch to **BTP Traffic Inspector**.
+1. On **Field Responder**: Switch to **BTP Traffic Inspector**.
 2. Select **Hebbal Flyover** or **Bellandur EcoSpace**.
 3. Click preset **🟡 Silt Choke Warning (30 km/h)** and tap **1-TAP BROADCAST TO HIGHWAY GANTRY**.
 4. Observe the authentic LED Gantry Simulator render the glowing amber text.
-5. Switch to **Prototype 1 (`:8000`)**: Notice the VMS card on Hebbal immediately update to show the Inspector's advisory and speed limit!
+5. Switch to **ICCC Dashboard**: Notice the VMS card on Hebbal immediately update to show the Inspector's advisory and speed limit!
 
 ---
 
@@ -205,18 +191,17 @@ python responder_server.py
 
 ```
 hackathon 3.0/
-├── main.py              # Prototype 1 FastAPI Backend, FMCW Radar Physics, ΔH Calculation, ITMS Edge-AI Engine, ICCC Dashboard
-├── index.html           # Prototype 1 ICCC Dashboard (Leaflet Dark Map, Chart.js Waveforms, 4 Modal Inspectors, VMS Display)
-├── citizen_server.py    # Prototype 2 Dedicated Server on Port 8001
-├── citizen.html         # Prototype 2 Citizen Safety PWA (Mobile-First UI, 1-Tap Form, On-Device AI Scanner, Live Tracker)
-├── responder_server.py  # Prototype 3 Dedicated Server on Port 8002
-├── responder.html       # Prototype 3 Field Responder Portal (BBMP Crew, Police 112, BTP Inspector Console, LED Simulator)
+├── main.py              # Unified FastAPI Master Server, Physics Engine, Endpoints & Portals
+├── ai_engine.py         # Multimodal Gemini Vision, Deepfake Forensics & Video Diagnostics
+├── config.py            # Hardcoded Gemini API Configuration & Model Fallback Router
+├── index.html           # Unified ICCC Command Center + Video AI Studio + Split Cockpit
+├── citizen.html         # Citizen Safety PWA (Mobile-First UI, 1-Tap Form, Depth Estimator)
+├── responder.html       # Field Responder Portal (BBMP Crew, Police 112, BTP Inspector Console)
 ├── manifest.json        # PWA Web App Manifest
 ├── sw.js                # PWA Service Worker for offline resilience
-├── run_triple_hosts.py  # Multi-host concurrent runner for all 3 prototypes
-├── run_dual_hosts.py    # Multi-host runner (aliased for backwards compatibility)
 ├── run_demo.bat         # 1-Click launcher script for Windows
 ├── README.md            # Comprehensive documentation & pitch evaluation walkthrough
+└── media_*.png          # Demo hazard benchmarks & verification assets
 ```
 
 ---
