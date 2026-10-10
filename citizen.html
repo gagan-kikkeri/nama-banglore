@@ -353,7 +353,10 @@
             <!-- Pitch Demo Quick-Sample Buttons -->
             <div class="flex items-center justify-between">
               <span class="text-[10px] text-slate-400 font-semibold">Demo Presets (Instant Pitch Test):</span>
-              <span class="text-[9px] text-cyan-400 font-mono"><i class="fa-solid fa-shield-virus mr-1"></i>Gemini Anti-Spoof</span>
+              <button type="button" onclick="openApiKeyModal()" class="text-[9px] text-amber-300 font-mono hover:text-amber-200 flex items-center gap-1 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/40 cursor-pointer shadow-sm" title="Configure active Google Gemini API Key">
+                <i class="fa-solid fa-key text-[8px] text-amber-400"></i>
+                <span id="gemini-key-header-tag">Gemini API Key</span>
+              </button>
             </div>
             <div class="grid grid-cols-3 gap-1.5 text-[11px]">
               <button type="button" onclick="loadSamplePhoto('flood')" class="px-2 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900 transition flex items-center justify-center gap-1 font-medium">
@@ -1204,6 +1207,73 @@
       });
     }
 
+    // Gemini API Key Modal Functions
+    function openApiKeyModal() {
+      const modal = document.getElementById('api-key-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeApiKeyModal() {
+      const modal = document.getElementById('api-key-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function applyGeminiApiKey() {
+      const input = document.getElementById('custom-api-key-input');
+      const feedback = document.getElementById('key-update-feedback');
+      const btn = document.getElementById('btn-save-key');
+      const keyVal = input ? input.value.trim() : "";
+
+      if (!keyVal) {
+        if (feedback) {
+          feedback.className = "p-2.5 rounded-lg text-xs font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40";
+          feedback.innerText = "Please paste a valid Google Gemini API Key (e.g. AIzaSy...).";
+          feedback.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Activating...</span>`;
+
+      try {
+        const res = await fetch('/api/ai/set-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: keyVal })
+        });
+        const data = await res.json();
+        if (data.status === "SUCCESS") {
+          const display = document.getElementById('current-key-display');
+          if (display) display.innerText = data.key_fingerprint;
+          const tag = document.getElementById('gemini-key-header-tag');
+          if (tag) tag.innerText = "Gemini: " + data.key_fingerprint;
+
+          if (feedback) {
+            feedback.className = "p-2.5 rounded-lg text-xs font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+            feedback.innerText = "✅ API Key successfully verified and activated!";
+            feedback.classList.remove('hidden');
+          }
+
+          setTimeout(() => {
+            closeApiKeyModal();
+            // Re-trigger current scan if an image is loaded
+            const previewImg = document.getElementById('preview-img');
+            if (previewImg && previewImg.src && !document.getElementById('dropzone-preview').classList.contains('hidden')) {
+              simulateOnDeviceAiScan("~32 cm", "Edge-AI Detected", isCurrentScanDeepfake);
+            }
+          }, 1200);
+        }
+      } catch (err) {
+        if (feedback) {
+          feedback.className = "p-2.5 rounded-lg text-xs font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40";
+          feedback.innerText = "Failed to update key: " + err;
+          feedback.classList.remove('hidden');
+        }
+      } finally {
+        if (btn) btn.innerHTML = `<i class="fa-solid fa-check"></i><span>Save & Activate Key</span>`;
+      }
+    }
+
     // Initialization on DOM Load
     window.addEventListener('DOMContentLoaded', () => {
       initMap();
@@ -1212,5 +1282,63 @@
       setInterval(fetchLatestState, 3000);
     });
   </script>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CONFIGURE GEMINI API KEY -->
+  <!-- ========================================================================= -->
+  <div id="api-key-modal" class="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-brand-card border border-brand-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col font-sans">
+      <div class="p-4 bg-slate-900 border-b border-brand-border flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-key"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-sm">Google Gemini AI Core Setup</h3>
+            <p class="text-[11px] text-slate-400">Configure Cloud Vision Key for Anti-Spoofing</p>
+          </div>
+        </div>
+        <button onclick="closeApiKeyModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 text-xs font-mono">
+        <div class="p-3 rounded-xl bg-slate-950 border border-brand-border space-y-1.5">
+          <div class="flex items-center justify-between text-slate-400 text-[11px]">
+            <span>Active Key Fingerprint:</span>
+            <span class="text-emerald-400 font-bold" id="current-key-display">Active</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-400 text-[11px]">
+            <span>Forensic Vision Engine:</span>
+            <span class="text-cyan-300 font-bold">Google Gemini Multimodal Vision</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1 text-xs font-sans">
+            Paste Google AI Studio API Key (AIzaSy...):
+          </label>
+          <input type="password" id="custom-api-key-input" placeholder="Paste your Gemini API Key here" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-amber-500 focus:outline-none">
+          <p class="text-[10px] text-slate-400 mt-1 font-sans">
+            Get an instant free Gemini key at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-cyan-400 underline">aistudio.google.com</a>.
+          </p>
+        </div>
+
+        <div id="key-update-feedback" class="hidden p-2.5 rounded-lg text-xs font-mono"></div>
+      </div>
+
+      <div class="p-3 bg-slate-900 border-t border-brand-border flex items-center justify-between gap-2 text-xs">
+        <button onclick="closeApiKeyModal()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          Cancel
+        </button>
+        <button onclick="applyGeminiApiKey()" id="btn-save-key" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-md shadow-amber-950/50">
+          <i class="fa-solid fa-check"></i>
+          <span>Save & Activate Key</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
+

@@ -21,10 +21,11 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or base64.b64decode(_KEY_B64).
 
 # Prioritized Gemini Models for lowest latency and highest availability
 GEMINI_MODELS = [
+    "gemini-1.5-flash",
+    "gemini-2.0-flash",
     "gemini-flash-lite-latest",
+    "gemini-1.5-pro",
     "gemini-3.8-flash",
-    "gemini-flash-latest",
-    "gemini-3.1-flash-lite",
 ]
 
 # API Base URL
