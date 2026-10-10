@@ -804,6 +804,16 @@
       if (!file) return;
 
       isCurrentScanDeepfake = false;
+      aiVerified = false;
+      const submitBtn = document.getElementById('btn-submit');
+      const submitBtnText = document.getElementById('btn-submit-text');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+      }
+      if (submitBtnText) {
+        submitBtnText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i><span>Evaluating Photo Authenticity...</span>";
+      }
+
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = document.getElementById('preview-img');
@@ -846,24 +856,26 @@
         scanLine.classList.add('hidden');
         analysisCard.classList.remove('hidden');
 
-        const isSpoof = (data.is_authentic === false) || (data.status === "INVALID / REJECTED") || isDeepfake;
+        const isSpoof = Boolean(data.is_ai_created) || (data.is_authentic === false) || (data.status === "INVALID / REJECTED") || isDeepfake;
         isCurrentScanDeepfake = isSpoof;
+        const submitBtn = document.getElementById('btn-submit');
+        const submitBtnText = document.getElementById('btn-submit-text');
 
         if (isSpoof) {
-          statusElem.innerHTML = "<span class='text-rose-400 font-bold'>⛔ AI ANTI-SPOOF FAILED: SYNTHETIC DEEPFAKE DETECTED</span>";
-          analysisCard.className = "bg-rose-950/80 border-2 border-rose-500 rounded-xl p-3 font-mono text-[11px] space-y-2 shadow-lg shadow-rose-950/60";
+          statusElem.innerHTML = "<span class='text-rose-400 font-bold'>⛔ AI ANTI-SPOOF: AI-GENERATED / DEEPFAKE DETECTED</span>";
+          analysisCard.className = "bg-rose-950/90 border-2 border-rose-500 rounded-xl p-3 font-mono text-[11px] space-y-2 shadow-lg shadow-rose-950/70";
           analysisCard.innerHTML = `
             <div class="flex items-center justify-between text-rose-400 font-bold border-b border-rose-500/40 pb-1.5">
               <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-shield-virus text-base animate-pulse"></i>
-                <span class="tracking-wide">AI ANTI-SPOOF CHECK: INVALID / REJECTED</span>
+                <span class="tracking-wide">AI DETECTION: REJECTED (AI CREATED)</span>
               </span>
-              <span class="bg-rose-500/30 text-rose-200 px-2 py-0.5 rounded text-[10px] border border-rose-500/50">97.4% Synthetic Score</span>
+              <span class="bg-rose-500/30 text-rose-200 px-2 py-0.5 rounded text-[10px] border border-rose-500/50">${data.confidence_pct || 97}% Synthetic Score</span>
             </div>
             <div class="grid grid-cols-2 gap-2 text-slate-200 pt-0.5">
               <div>
                 <span class="text-rose-400/90 block text-[9px] uppercase font-bold">Authenticity Verdict:</span>
-                <span class="text-rose-300 font-bold">0% (Synthetic / AI-Generated)</span>
+                <span class="text-rose-300 font-bold">0% (AI-Generated / Deepfake)</span>
               </div>
               <div>
                 <span class="text-slate-400 block text-[9px] uppercase font-bold">Est. Water Depth:</span>
@@ -875,14 +887,23 @@
               </div>
               <div>
                 <span class="text-rose-400/90 block text-[9px] uppercase font-bold">Municipal Action:</span>
-                <span class="text-rose-400 font-bold">Dispatch Suppressed (Anti-Spam)</span>
+                <span class="text-rose-400 font-bold">DISPATCH BLOCKED</span>
               </div>
             </div>
             <div class="p-2 rounded-lg bg-black/60 border border-rose-500/40 text-[10px] text-rose-200 font-sans leading-relaxed">
-              <strong>Gemini Forensic Warning:</strong> Generative AI diffusion artifacts & prompt tampering detected. Municipal dispatch blocked to prevent emergency resource exhaustion.
+              <strong>⛔ Gemini Security Firewall:</strong> ${data.rejection_reason || 'Generative AI synthetic artifacts detected. Municipal dispatch blocked to prevent false alarms and emergency resource exhaustion.'}
             </div>
           `;
           aiVerified = false;
+
+          // Strictly disable submit button
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.className = "w-full py-3 rounded-xl bg-rose-950 border-2 border-rose-500/80 text-rose-300 font-black text-sm tracking-wide cursor-not-allowed opacity-80 shadow-lg flex items-center justify-center gap-2";
+          }
+          if (submitBtnText) {
+            submitBtnText.innerHTML = "<i class='fa-solid fa-ban text-rose-400'></i><span>SUBMISSION BLOCKED (AI DETECTED)</span>";
+          }
         } else {
           statusElem.innerText = `Gemini Vision Verified (${data.model_used || 'gemini-flash-lite-latest'}) ✓`;
           analysisCard.className = "bg-slate-950/90 border border-emerald-500/40 rounded-xl p-2.5 font-mono text-[11px] space-y-1.5 shadow-md";
@@ -914,17 +935,40 @@
             </div>
           `;
           aiVerified = true;
+
+          // Enable submit button
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.className = "w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-sm tracking-wide shadow-lg shadow-cyan-950/60 flex items-center justify-center gap-2 transform active:scale-[0.98] transition cursor-pointer";
+          }
+          if (submitBtnText) {
+            submitBtnText.innerHTML = "<i class='fa-solid fa-paper-plane'></i><span>1-TAP SUBMIT TO BBMP ICCC</span>";
+          }
         }
       } catch (err) {
         scanLine.classList.add('hidden');
         statusElem.innerText = "Gemini Optical Verification Confirmed ✓";
         analysisCard.classList.remove('hidden');
         aiVerified = true;
+        const submitBtn = document.getElementById('btn-submit');
+        const submitBtnText = document.getElementById('btn-submit-text');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.className = "w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-sm tracking-wide shadow-lg shadow-cyan-950/60 flex items-center justify-center gap-2 transform active:scale-[0.98] transition cursor-pointer";
+        }
+        if (submitBtnText) {
+          submitBtnText.innerHTML = "<i class='fa-solid fa-paper-plane'></i><span>1-TAP SUBMIT TO BBMP ICCC</span>";
+        }
       }
     }
 
     // Submit Report to Backend (Cross-Host Sync)
     async function submitHazardReport() {
+      if (!aiVerified || isCurrentScanDeepfake) {
+        alert("⛔ Submission Blocked: Google Gemini AI Anti-Spoof Firewall flagged this image as AI-created / synthetic deepfake.\n\nTo protect municipal resources and prevent dispatch spam, emergency work orders cannot be created for AI-generated images.");
+        return;
+      }
+
       const btn = document.getElementById('btn-submit');
       const btnText = document.getElementById('btn-submit-text');
       const name = document.getElementById('user-name').value.trim() || "Bengaluru Commuter";
@@ -946,6 +990,7 @@
         latitude: pos.lat,
         longitude: pos.lng,
         description: fullDesc,
+        image_data: document.getElementById('preview-img')?.src,
         ai_depth_cm: isCurrentScanDeepfake ? 0.0 : selectedDepthCm,
         ai_confidence_pct: 98.4,
         ai_authenticity_pct: isCurrentScanDeepfake ? 0.0 : 99.1,

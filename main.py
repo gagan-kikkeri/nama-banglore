@@ -662,7 +662,7 @@ def submit_citizen_report(report: CitizenReport):
     
     is_authentic = gemini_res.get("is_authentic", True)
     status_verdict = gemini_res.get("status", "VERIFIED_AUTHENTIC")
-    is_spoof = (not is_authentic) or (status_verdict == "INVALID / REJECTED") or (gemini_res.get("synthetic_deepfake_score", 0) > 0.6)
+    is_spoof = (not is_authentic) or (status_verdict == "INVALID / REJECTED") or bool(gemini_res.get("is_ai_created")) or (gemini_res.get("synthetic_deepfake_score", 0) > 0.5)
     
     water_estimate = gemini_res.get("estimated_depth_cm", 34.0)
     confidence = gemini_res.get("confidence_pct", 96)
