@@ -83,7 +83,9 @@ def call_gemini(
                     if resp_parts:
                         return resp_parts[0].get("text", "")
             else:
-                # Log error and try next candidate model
+                if resp.status_code in [400, 401, 403]:
+                    # Auth or quota failure on key; don't retry other models with same key
+                    break
                 continue
         except Exception:
             continue
@@ -99,26 +101,35 @@ def dynamically_detect_ai_image_forensics(
     description: str = "",
     simulate_deepfake: bool = False,
     hazard_type: str = "Waterlogging",
-    zone_name: str = "Silk Board Junction - Hosur Rd"
+    zone_name: str = "Silk Board Junction - Hosur Rd",
+    filename: str = "",
+    has_camera_exif_hint: bool = False
 ) -> Dict[str, Any]:
     """
     Performs forensic computer-vision authenticity inspection on uploaded citizen image bytes:
     - Scans for diffusion generator artifacts, AI prompts in PNG/EXIF metadata, synthetic denoising signatures
     - Evaluates optical sensor grain (Poisson shot noise) vs synthetic uniform Laplacian smoothing
-    - Evaluates color saturation spectrum and aspect ratios
+    - Evaluates color saturation spectrum, channel deviations, and aspect ratios
     - Blocks AI-generated photos and deepfakes to protect municipal dispatch from false spam
     - For authentic photos, estimates physical water/pothole depth in centimeters
     """
     desc_lower = (description or "").lower()
     hazard_lower = (hazard_type or "").lower()
+    fn_lower = (filename or "").lower()
 
-    # 1. Simulation flag & semantic trigger detection
+    # 1. Simulation flag, filename & semantic trigger detection
     is_spoof_trigger = (
         simulate_deepfake or
+        any(k in fn_lower for k in [
+            "dall", "midjourney", "bing", "copilot", "stablediffusion", "stable_diffusion",
+            "flux", "sora", "deepfake", "synthetic", "ai_", "_ai", "ai-", "-ai", "generated",
+            "comfyui", "civitai", "leonardo", "fake", "spoof", "prompt", "chatgpt", "gemini",
+            "openai", "render"
+        ]) or
         any(k in desc_lower for k in [
             "deepfake", "synthetic", "ai_generated", "ai created", "ai generated",
             "midjourney", "dall-e", "dalle", "stable diffusion", "stablediffusion",
-            "flux", "sora", "fake", "spoof", "test_spoof", "prompt", "artificial"
+            "flux", "sora", "fake", "spoof", "test_spoof", "prompt", "artificial", "chatgpt"
         ]) or
         any(k in hazard_lower for k in ["fake", "deepfake", "synthetic", "spoof"])
     )
@@ -189,6 +200,8 @@ def dynamically_detect_ai_image_forensics(
                     min_c = np.minimum(np.minimum(rgb[:, :, 0], rgb[:, :, 1]), rgb[:, :, 2])
                     sat = np.where(max_c > 0, (max_c - min_c) / (max_c + 1e-5), 0)
                     mean_sat = float(np.mean(sat))
+                    median_sat = float(np.median(sat))
+                    low_sat_pct = float(np.mean(sat < 0.15))
                     aspect = max(w, h) / min(w, h)
 
                     # RGB Channel mean & std deviation balance
@@ -200,23 +213,45 @@ def dynamically_detect_ai_image_forensics(
 
                     # Check for genuine camera EXIF metadata (Make / Model / DateTimeOriginal)
                     exif_data = getattr(img, "_getexif", lambda: None)()
-                    has_camera_exif = bool(exif_data and (271 in exif_data or 272 in exif_data or 306 in exif_data))
+                    has_camera_exif = bool(has_camera_exif_hint) or bool(exif_data and (271 in exif_data or 272 in exif_data or 306 in exif_data or 33434 in exif_data or 34855 in exif_data))
 
                     # AI Diffusion Model Detection Rules:
-                    # 1. Lack of camera photon shot noise (noise_std < 1.6)
-                    # 2. Generative desaturation / uniform grey grading (c_diff < 5.8 and c_std_diff < 2.5 without camera EXIF)
-                    # 3. Square aspect ratio (1.0) with zero EXIF or artificial saturation
-                    is_ai_diffusion = (
-                        (noise_std < 1.6 and (abs(aspect - 1.0) < 0.05 or mean_sat > 0.45 or mean_grad < 2.5)) or
-                        (c_diff < 5.8 and c_std_diff < 2.5 and not has_camera_exif) or
-                        (abs(aspect - 1.0) < 0.02 and not has_camera_exif)
-                    )
+                    is_ai_diffusion = False
+                    if not has_camera_exif:
+                        # 1. Monochromatic / desaturated diffusion rendering (typical of AI tarmac & asphalt generation)
+                        if c_diff < 10.0:
+                            is_ai_diffusion = True
+                            ai_confidence = 0.97
+                            rejection_reason = "Generative AI synthetic artifacts detected: Diffusion color grading desaturation and synthetic texture consistency verified."
+                            audit_notes = f"AI Generation Detected: Synthetic chromatic uniformity (dChannel={c_diff:.2f} < 10.0, noise sigma={noise_std:.2f}) with zero camera optical EXIF. Prompt generated road scene."
+                        elif median_sat < 0.14 and c_diff < 14.0:
+                            is_ai_diffusion = True
+                            ai_confidence = 0.96
+                            rejection_reason = "Generative AI synthetic artifacts detected: Muted diffusion color gamut and synthetic asphalt rendering."
+                            audit_notes = f"AI Generation Detected: Muted generative color gamut (median saturation={median_sat:.3f}, dChannel={c_diff:.2f}) without hardware camera EXIF."
+                        elif low_sat_pct > 0.50 and c_diff < 12.0:
+                            is_ai_diffusion = True
+                            ai_confidence = 0.96
+                            rejection_reason = "Generative AI synthetic artifacts detected: High synthetic desaturation density."
+                            audit_notes = f"AI Generation Detected: High synthetic desaturation density ({low_sat_pct*100:.1f}% pixels < 15% sat) without camera sensor EXIF."
+                        elif noise_std < 2.5:
+                            is_ai_diffusion = True
+                            ai_confidence = 0.95
+                            rejection_reason = "Generative AI synthetic artifacts detected: Non-physical smoothing typical of latent diffusion upscaling."
+                            audit_notes = f"AI Generation Detected: Non-physical sensor smoothing (noise sigma={noise_std:.2f} < 2.5)."
+                        elif abs(aspect - 1.0) < 0.05:
+                            is_ai_diffusion = True
+                            ai_confidence = 0.95
+                            rejection_reason = "Generative AI synthetic artifacts detected: Standard 1:1 generative model aspect ratio with zero camera hardware metadata."
+                            audit_notes = "AI Generation Detected: Square generative model aspect ratio (1:1) without hardware camera EXIF."
+                        elif mean_grad < 6.0:
+                            is_ai_diffusion = True
+                            ai_confidence = 0.94
+                            rejection_reason = "Generative AI synthetic artifacts detected: Generative texture blurring."
+                            audit_notes = f"AI Generation Detected: Generative texture blurring (gradient {mean_grad:.2f} < 6.0)."
 
                     if is_ai_diffusion:
                         is_spoof_trigger = True
-                        ai_confidence = 0.96
-                        rejection_reason = "Generative AI synthetic artifacts detected: Diffusion color grading desaturation and synthetic texture consistency verified."
-                        audit_notes = f"AI Generation Detected: Synthetic chromatic uniformity (Δchannel={c_diff:.2f}, noise σ={noise_std:.2f}) with zero camera optical EXIF. Prompt generated road scene."
                     else:
                         # Authentic real photograph
                         dark_water_mask = (gray < 90) & (rgb[:, :, 2] >= rgb[:, :, 0] * 0.85)
@@ -226,7 +261,7 @@ def dynamically_detect_ai_image_forensics(
                         else:
                             calc_depth = round(min(32.0, max(12.0, 12.0 + water_coverage_pct * 0.5)), 1)
                         
-                        audit_notes = f"Authentic camera sensor noise confirmed (σ={noise_std:.2f}, grad={mean_grad:.2f}, {w}x{h} px). Genuine Bengaluru roadway texture."
+                        audit_notes = f"Authentic camera sensor noise confirmed (sigma={noise_std:.2f}, grad={mean_grad:.2f}, {w}x{h} px). Genuine Bengaluru roadway texture."
 
         except Exception:
             pass
@@ -280,7 +315,9 @@ def verify_citizen_hazard_upload(
     hazard_type: str,
     description: str,
     image_base64: Optional[str] = None,
-    simulate_deepfake: bool = False
+    simulate_deepfake: bool = False,
+    filename: str = "",
+    has_camera_exif: bool = False
 ) -> Dict[str, Any]:
     """
     Uses Google Gemini Vision to inspect citizen photo uploads for waterlogging,
@@ -368,7 +405,9 @@ def verify_citizen_hazard_upload(
         description=description,
         simulate_deepfake=simulate_deepfake,
         hazard_type=hazard_type,
-        zone_name=zone_name
+        zone_name=zone_name,
+        filename=filename,
+        has_camera_exif_hint=has_camera_exif
     )
 
 

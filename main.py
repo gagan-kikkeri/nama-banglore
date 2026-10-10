@@ -71,6 +71,8 @@ class CitizenReport(BaseModel):
     ai_authenticity_pct: Optional[float] = None
     severity_level: Optional[str] = "CRITICAL"
     simulate_deepfake: Optional[bool] = False
+    filename: Optional[str] = ""
+    has_camera_exif: Optional[bool] = False
 
 class CitizenStatusUpdate(BaseModel):
     report_id: str
@@ -657,7 +659,9 @@ def submit_citizen_report(report: CitizenReport):
         hazard_type=report.hazard_type,
         description=report.description,
         image_base64=report.image_data,
-        simulate_deepfake=bool(report.simulate_deepfake)
+        simulate_deepfake=bool(report.simulate_deepfake),
+        filename=report.filename or "",
+        has_camera_exif=bool(report.has_camera_exif)
     )
     
     is_authentic = gemini_res.get("is_authentic", True)
@@ -1095,6 +1099,8 @@ def ai_verify_photo_endpoint(payload: Dict[str, Any]):
     htype = payload.get("hazard_type", "Waterlogging")
     desc = payload.get("description", "Carriageway inundation")
     img = payload.get("image_base64")
+    fn = payload.get("filename", "")
+    has_exif = payload.get("has_camera_exif", False)
     
     result = ai_engine.verify_citizen_hazard_upload(
         reporter_name=reporter,
@@ -1103,7 +1109,9 @@ def ai_verify_photo_endpoint(payload: Dict[str, Any]):
         hazard_type=htype,
         description=desc,
         image_base64=img,
-        simulate_deepfake=payload.get("simulate_deepfake", False)
+        simulate_deepfake=payload.get("simulate_deepfake", False),
+        filename=fn,
+        has_camera_exif=bool(has_exif)
     )
     return result
 

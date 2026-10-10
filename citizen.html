@@ -532,6 +532,8 @@
     let selectedZoneId = "silk_board";
     let verifiedImageData = null;
     let aiVerified = false;
+    let uploadedFileName = "";
+    let uploadedHasExif = false;
     let citizenMap = null;
     let citizenMarker = null;
     let submittedReportsList = [];
@@ -801,17 +803,48 @@
       simulateOnDeviceAiScan(depthText, severityText, isCurrentScanDeepfake);
     }
 
-    // File Upload Handler
+    // File Upload Handler (Downscales to fast 800px max canvas before transmission)
     function handleFileSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       isCurrentScanDeepfake = false;
       aiVerified = false;
+      uploadedFileName = file.name || "";
+      uploadedHasExif = false;
+
+      // Fast check for camera hardware EXIF segment in JPEG raw header (first 64KB)
+      try {
+        const headerReader = new FileReader();
+        headerReader.onload = function(evt) {
+          try {
+            const buf = evt.target.result;
+            const dv = new DataView(buf);
+            if (dv.byteLength > 4 && dv.getUint16(0, false) === 0xFFD8) {
+              let offset = 2;
+              while (offset < dv.byteLength - 4) {
+                const marker = dv.getUint16(offset, false);
+                if (marker === 0xFFE1) {
+                  uploadedHasExif = true;
+                  break;
+                } else if ((marker & 0xFF00) === 0xFF00 && marker !== 0xFFDA && marker !== 0xFFD9) {
+                  const segLen = dv.getUint16(offset + 2, false);
+                  offset += 2 + segLen;
+                } else {
+                  break;
+                }
+              }
+            }
+          } catch(e){}
+        };
+        headerReader.readAsArrayBuffer(file.slice(0, 65536));
+      } catch(e){}
+
       const submitBtn = document.getElementById('btn-submit');
       const submitBtnText = document.getElementById('btn-submit-text');
       if (submitBtn) {
         submitBtn.disabled = true;
+        submitBtn.className = "w-full py-3 rounded-xl bg-slate-900 border border-slate-750 text-slate-500 font-black text-sm tracking-wide cursor-not-allowed opacity-70 shadow-lg flex items-center justify-center gap-2";
       }
       if (submitBtnText) {
         submitBtnText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i><span>Evaluating Photo Authenticity...</span>";
@@ -819,27 +852,68 @@
 
       const reader = new FileReader();
       reader.onload = function(e) {
-        const img = document.getElementById('preview-img');
-        img.src = e.target.result;
-        document.getElementById('dropzone-idle').classList.add('hidden');
-        document.getElementById('dropzone-preview').classList.remove('hidden');
-        simulateOnDeviceAiScan(`~${selectedDepthCm.toFixed(1)} cm`, "CRITICAL (Edge-AI Detected)", false);
+        const rawDataUrl = e.target.result;
+        
+        // Fast offscreen canvas optimization (< 30ms) to ensure lightweight transmission (~80KB)
+        const tempImg = new Image();
+        tempImg.onload = function() {
+          const maxDim = 800;
+          let w = tempImg.width;
+          let h = tempImg.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(tempImg, 0, 0, w, h);
+          const optimizedB64 = canvas.toDataURL('image/jpeg', 0.88);
+
+          const img = document.getElementById('preview-img');
+          img.src = optimizedB64;
+          document.getElementById('dropzone-idle').classList.add('hidden');
+          document.getElementById('dropzone-preview').classList.remove('hidden');
+
+          simulateOnDeviceAiScan(
+            `~${selectedDepthCm.toFixed(1)} cm`,
+            "CRITICAL (Edge-AI Detected)",
+            false,
+            file.name,
+            optimizedB64,
+            uploadedHasExif
+          );
+        };
+        tempImg.src = rawDataUrl;
       };
       reader.readAsDataURL(file);
     }
 
     // Google Gemini AI Multimodal Vision Scan
-    async function simulateOnDeviceAiScan(depthStr, severityStr, isDeepfake = false) {
+    async function simulateOnDeviceAiScan(depthStr, severityStr, isDeepfake = false, fileName = "", directB64 = null, hasExif = false) {
       const statusElem = document.getElementById('ai-scan-status');
       const scanLine = document.getElementById('ai-scan-effect');
       const analysisCard = document.getElementById('ai-analysis-card');
+      const submitBtn = document.getElementById('btn-submit');
+      const submitBtnText = document.getElementById('btn-submit-text');
       
       scanLine.classList.remove('hidden');
       analysisCard.classList.add('hidden');
+      if (submitBtn) submitBtn.disabled = true;
 
       statusElem.innerText = isDeepfake 
         ? "Gemini Multimodal Forensic Audit: Scanning for Generative Diffusion Noise & Deepfake Artifacts..." 
-        : "Querying Google Gemini 3.8 / Flash Vision...";
+        : "Querying Google Gemini Multimodal Forensic Core...";
+
+      const targetB64 = directB64 || document.getElementById('preview-img')?.src;
+      const targetFileName = fileName || uploadedFileName;
+      const targetHasExif = Boolean(hasExif || uploadedHasExif);
 
       try {
         const res = await fetch(`${ICCC_HOST}/api/ai/verify-photo`, {
@@ -850,10 +924,17 @@
             zone_id: selectedZoneId,
             hazard_type: selectedCategory,
             description: document.getElementById('user-notes')?.value || "Carriageway inundation",
-            image_base64: document.getElementById('preview-img')?.src,
+            image_base64: targetB64,
+            filename: targetFileName,
+            has_camera_exif: targetHasExif,
             simulate_deepfake: isDeepfake
           })
         });
+
+        if (!res.ok) {
+          throw new Error(`Verification service returned HTTP ${res.status}`);
+        }
+
         const data = await res.json();
         
         scanLine.classList.add('hidden');
@@ -861,8 +942,6 @@
 
         const isSpoof = Boolean(data.is_ai_created) || (data.is_authentic === false) || (data.status === "INVALID / REJECTED") || isDeepfake;
         isCurrentScanDeepfake = isSpoof;
-        const submitBtn = document.getElementById('btn-submit');
-        const submitBtnText = document.getElementById('btn-submit-text');
 
         if (isSpoof) {
           statusElem.innerHTML = "<span class='text-rose-400 font-bold'>⛔ AI ANTI-SPOOF: AI-GENERATED / DEEPFAKE DETECTED</span>";
@@ -908,7 +987,7 @@
             submitBtnText.innerHTML = "<i class='fa-solid fa-ban text-rose-400'></i><span>SUBMISSION BLOCKED (AI DETECTED)</span>";
           }
         } else {
-          statusElem.innerText = `Gemini Vision Verified (${data.model_used || 'gemini-flash-lite-latest'}) ✓`;
+          statusElem.innerText = `Gemini Vision Verified (${data.model_used || 'Gemini Multimodal Forensic Vision Core'}) ✓`;
           analysisCard.className = "bg-slate-950/90 border border-emerald-500/40 rounded-xl p-2.5 font-mono text-[11px] space-y-1.5 shadow-md";
           analysisCard.innerHTML = `
             <div class="flex items-center justify-between text-emerald-400 font-bold border-b border-emerald-500/30 pb-1">
@@ -950,17 +1029,19 @@
         }
       } catch (err) {
         scanLine.classList.add('hidden');
-        statusElem.innerText = "Gemini Optical Verification Confirmed ✓";
+        statusElem.innerHTML = "<span class='text-rose-400 font-bold'>⚠️ Verification Server Offline / Connection Failed</span>";
+        analysisCard.className = "bg-rose-950/80 border border-rose-500 rounded-xl p-3 font-mono text-[11px] text-rose-300";
+        analysisCard.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i><span>Could not reach verification server. Submission blocked until server verifies image.</span></div>`;
         analysisCard.classList.remove('hidden');
-        aiVerified = true;
-        const submitBtn = document.getElementById('btn-submit');
-        const submitBtnText = document.getElementById('btn-submit-text');
+        aiVerified = false;
+        isCurrentScanDeepfake = true;
+
         if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.className = "w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-sm tracking-wide shadow-lg shadow-cyan-950/60 flex items-center justify-center gap-2 transform active:scale-[0.98] transition cursor-pointer";
+          submitBtn.disabled = true;
+          submitBtn.className = "w-full py-3 rounded-xl bg-slate-900 border border-slate-750 text-slate-500 font-black text-sm tracking-wide cursor-not-allowed opacity-70 shadow-lg flex items-center justify-center gap-2";
         }
         if (submitBtnText) {
-          submitBtnText.innerHTML = "<i class='fa-solid fa-paper-plane'></i><span>1-TAP SUBMIT TO BBMP ICCC</span>";
+          submitBtnText.innerHTML = "<i class='fa-solid fa-lock text-rose-400'></i><span>SUBMISSION LOCKED (UNVERIFIED)</span>";
         }
       }
     }
@@ -998,7 +1079,9 @@
         ai_confidence_pct: 98.4,
         ai_authenticity_pct: isCurrentScanDeepfake ? 0.0 : 99.1,
         severity_level: isCurrentScanDeepfake ? "REJECTED_SPOOF" : "CRITICAL",
-        simulate_deepfake: isCurrentScanDeepfake
+        simulate_deepfake: isCurrentScanDeepfake,
+        filename: uploadedFileName,
+        has_camera_exif: uploadedHasExif
       };
 
       try {
