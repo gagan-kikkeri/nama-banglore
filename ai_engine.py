@@ -182,8 +182,21 @@ def dynamically_detect_ai_image_forensics(
                 gray = np.array(inspect_img.convert('L'), dtype=np.float32)
                 cur_h, cur_w = gray.shape
 
-                # High-frequency noise residual (sensor shot noise check)
+                # 4-Factor Digital Forensics & Optical Texture Inspection
                 if cur_h > 4 and cur_w > 4:
+                    # 1. Laplacian texture variance (measures fine-grain physical surface roughness)
+                    lap = (
+                        gray[:-2, 1:-1] + gray[2:, 1:-1] +
+                        gray[1:-1, :-2] + gray[1:-1, 2:] - 4 * gray[1:-1, 1:-1]
+                    )
+                    lap_var = float(np.var(lap))
+
+                    # 2. Gradient density (physical fracture & aggregate edge sharpness)
+                    gx = np.abs(gray[:, 1:] - gray[:, :-1])
+                    gy = np.abs(gray[1:, :] - gray[:-1, :])
+                    mean_grad = float(np.mean(gx) + np.mean(gy))
+
+                    # 3. High-frequency sensor noise residual (Poisson camera shot noise)
                     blurred = (
                         gray[:-2, :-2] + gray[:-2, 1:-1] + gray[:-2, 2:] +
                         gray[1:-1, :-2] + gray[1:-1, 1:-1] + gray[1:-1, 2:] +
@@ -192,66 +205,54 @@ def dynamically_detect_ai_image_forensics(
                     noise_res = gray[1:-1, 1:-1] - blurred
                     noise_std = float(np.std(noise_res))
 
-                    grad_x = np.abs(gray[:, 1:] - gray[:, :-1])
-                    grad_y = np.abs(gray[1:, :] - gray[:-1, :])
-                    mean_grad = float(np.mean(grad_x) + np.mean(grad_y))
+                    # 4. 2D Fourier spectral roll-off (unnatural latent upsampler attenuation)
+                    f = np.fft.fft2(gray)
+                    fshift = np.fft.fftshift(f)
+                    mag = np.abs(fshift)
+                    cy, cx = cur_h // 2, cur_w // 2
+                    y, x = np.ogrid[:cur_h, :cur_w]
+                    dist = np.sqrt((y - cy)**2 + (x - cx)**2)
+                    max_d = np.sqrt(cy**2 + cx**2)
+                    hf = mag[dist > (0.35 * max_d)]
+                    lf = mag[dist < (0.10 * max_d)]
+                    fft_ratio = float(np.mean(hf) / (np.mean(lf) + 1e-5))
 
-                    max_c = np.maximum(np.maximum(rgb[:, :, 0], rgb[:, :, 1]), rgb[:, :, 2])
-                    min_c = np.minimum(np.minimum(rgb[:, :, 0], rgb[:, :, 1]), rgb[:, :, 2])
-                    sat = np.where(max_c > 0, (max_c - min_c) / (max_c + 1e-5), 0)
-                    mean_sat = float(np.mean(sat))
-                    median_sat = float(np.median(sat))
-                    low_sat_pct = float(np.mean(sat < 0.15))
                     aspect = max(w, h) / min(w, h)
-
-                    # RGB Channel mean & std deviation balance
-                    r_c, g_c, b_c = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
-                    c_means = [float(r_c.mean()), float(g_c.mean()), float(b_c.mean())]
-                    c_diff = max(c_means) - min(c_means)
-                    c_stds = [float(r_c.std()), float(g_c.std()), float(b_c.std())]
-                    c_std_diff = max(c_stds) - min(c_stds)
 
                     # Check for genuine camera EXIF metadata (Make / Model / DateTimeOriginal)
                     exif_data = getattr(img, "_getexif", lambda: None)()
                     has_camera_exif = bool(has_camera_exif_hint) or bool(exif_data and (271 in exif_data or 272 in exif_data or 306 in exif_data or 33434 in exif_data or 34855 in exif_data))
 
-                    # AI Diffusion Model Detection Rules:
-                    is_ai_diffusion = False
-                    if not has_camera_exif:
-                        # 1. Monochromatic / desaturated diffusion rendering (typical of AI tarmac & asphalt generation)
-                        if c_diff < 10.0:
-                            is_ai_diffusion = True
-                            ai_confidence = 0.97
-                            rejection_reason = "Generative AI synthetic artifacts detected: Diffusion color grading desaturation and synthetic texture consistency verified."
-                            audit_notes = f"AI Generation Detected: Synthetic chromatic uniformity (dChannel={c_diff:.2f} < 10.0, noise sigma={noise_std:.2f}) with zero camera optical EXIF. Prompt generated road scene."
-                        elif median_sat < 0.14 and c_diff < 14.0:
-                            is_ai_diffusion = True
-                            ai_confidence = 0.96
-                            rejection_reason = "Generative AI synthetic artifacts detected: Muted diffusion color gamut and synthetic asphalt rendering."
-                            audit_notes = f"AI Generation Detected: Muted generative color gamut (median saturation={median_sat:.3f}, dChannel={c_diff:.2f}) without hardware camera EXIF."
-                        elif low_sat_pct > 0.50 and c_diff < 12.0:
-                            is_ai_diffusion = True
-                            ai_confidence = 0.96
-                            rejection_reason = "Generative AI synthetic artifacts detected: High synthetic desaturation density."
-                            audit_notes = f"AI Generation Detected: High synthetic desaturation density ({low_sat_pct*100:.1f}% pixels < 15% sat) without camera sensor EXIF."
-                        elif noise_std < 2.5:
-                            is_ai_diffusion = True
-                            ai_confidence = 0.95
-                            rejection_reason = "Generative AI synthetic artifacts detected: Non-physical smoothing typical of latent diffusion upscaling."
-                            audit_notes = f"AI Generation Detected: Non-physical sensor smoothing (noise sigma={noise_std:.2f} < 2.5)."
-                        elif abs(aspect - 1.0) < 0.05:
-                            is_ai_diffusion = True
-                            ai_confidence = 0.95
-                            rejection_reason = "Generative AI synthetic artifacts detected: Standard 1:1 generative model aspect ratio with zero camera hardware metadata."
-                            audit_notes = "AI Generation Detected: Square generative model aspect ratio (1:1) without hardware camera EXIF."
-                        elif mean_grad < 6.0:
-                            is_ai_diffusion = True
-                            ai_confidence = 0.94
-                            rejection_reason = "Generative AI synthetic artifacts detected: Generative texture blurring."
-                            audit_notes = f"AI Generation Detected: Generative texture blurring (gradient {mean_grad:.2f} < 6.0)."
+                    # 4-Factor Digital Forensics Classifier:
+                    # Real camera road photographs have rough crushed aggregate texture:
+                    # lap_var > 1000, mean_grad > 20.0, noise_std > 9.0, fft_ratio > 0.06.
+                    # AI generative models produce synthetic latent smoothing:
+                    # lap_var < 1000, mean_grad < 20.0, noise_std < 9.0, fft_ratio < 0.06.
+                    score_ai = 0
+                    reasons = []
+                    if lap_var < 1000:
+                        score_ai += 1
+                        reasons.append(f"Synthetic texture smoothing (Laplacian variance {lap_var:.1f} < 1000)")
+                    if mean_grad < 20.0:
+                        score_ai += 1
+                        reasons.append(f"Low edge gradient density ({mean_grad:.1f} < 20.0)")
+                    if noise_std < 9.0:
+                        score_ai += 1
+                        reasons.append(f"Absence of physical camera sensor grain (noise sigma {noise_std:.2f} < 9.0)")
+                    if fft_ratio < 0.06:
+                        score_ai += 1
+                        reasons.append(f"Attenuated high-frequency Fourier energy (FFT ratio {fft_ratio:.4f} < 0.06)")
+                    if abs(aspect - 1.0) < 0.02 and not has_camera_exif:
+                        score_ai += 1
+                        reasons.append("Square generative model aspect ratio (1:1) without hardware camera EXIF")
+
+                    is_ai_diffusion = (score_ai >= 2) and (not has_camera_exif)
 
                     if is_ai_diffusion:
                         is_spoof_trigger = True
+                        ai_confidence = 0.96
+                        rejection_reason = "Generative AI synthetic artifacts detected: Diffusion smoothing and unnatural Fourier texture signature verified."
+                        audit_notes = f"AI Generation Detected: {'; '.join(reasons[:2])}."
                     else:
                         # Authentic real photograph
                         dark_water_mask = (gray < 90) & (rgb[:, :, 2] >= rgb[:, :, 0] * 0.85)
