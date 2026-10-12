@@ -208,7 +208,7 @@ hackathon 3.0/
 ## 🏆 Hackathon Submission Details
 - **Event:** REVA University HACKathon 3.0 (AI for Smart Cities & Sustainability)
 - **Institution:** BMS Institute of Technology and Management (BMSIT), Bengaluru
-- **Team Name:** Team CyberSentinel / Apex Achievers
+- **Team Name:** Apex Achievers
 - **Team Members:**
   1. Gagan N Prasad (Lead Architect)
   2. Machal Ritesh Govardhan (Product Strategist)
