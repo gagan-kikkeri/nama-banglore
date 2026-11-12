@@ -1,14 +1,13 @@
 """
 Namma Bengaluru - HK-RHS (Hydro-Kinetic Road Hazard System)
-REVA University HACKathon 3.0 (AI for Smart Cities & Sustainability)
-Team: Team CyberSentinel / Apex Achievers (BMSIT)
-Team Members:
-  - Gagan N Prasad (Lead Architect)
-  - Machal Ritesh Govardhan (Product Strategist)
-  - Manav Redhu (Technical Operator)
-  - Chimbili Manju Ganesh (UI/UX Designer)
+Autonomous Multi-Sensor Urban Inundation Telemetry and Cross-Agency Emergency Response Framework
+Principal Investigators:
+  - Gagan N Prasad (Lead Systems Architect)
+  - Machal Ritesh Govardhan (Systems & Policy Strategist)
+  - Manav Redhu (Telemetry & Edge-Compute Operator)
+  - Chimbili Manju Ganesh (Human-Machine Interface Architect)
 
-Backend AI Configuration: Hardcoded Gemini API Key
+Backend AI Configuration: Multimodal Gemini Vision Verification Key
 """
 
 import os

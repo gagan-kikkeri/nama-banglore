@@ -1,12 +1,6 @@
 """
 Namma Bengaluru - HK-RHS (Hydro-Kinetic Road Hazard System)
-REVA University HACKathon 3.0 (AI for Smart Cities & Sustainability)
-Team: Team CyberSentinel / Apex Achievers (BMSIT)
-Team Members:
-  - Gagan N Prasad (Lead Architect)
-  - Machal Ritesh Govardhan (Product Strategist)
-  - Manav Redhu (Technical Operator)
-  - Chimbili Manju Ganesh (UI/UX Designer)
+Autonomous Multi-Sensor Urban Inundation Telemetry and Cross-Agency Emergency Response Framework
 
 FastAPI Backend Server & Real-time Simulation Engine:
   - 60/77 GHz FMCW Radar Telemetry inside catch-basin soffit behind tilted HDPE radome
@@ -39,7 +33,7 @@ from pydantic import BaseModel, Field
 
 app = FastAPI(
     title="Namma Bengaluru - HK-RHS",
-    description="Hydro-Kinetic Road Hazard System | REVA University HACKathon 3.0 | Team CyberSentinel / Apex Achievers (BMSIT)",
+    description="Autonomous Multi-Sensor Urban Inundation Telemetry and Cross-Agency Emergency Response Framework",
     version="1.0.0"
 )
 
@@ -493,15 +487,7 @@ def get_full_state():
         "status": "ONLINE",
         "system_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "project": "Namma Bengaluru - HK-RHS",
-        "team": {
-            "name": "Team CyberSentinel / Apex Achievers (BMSIT)",
-            "members": [
-                {"name": "Gagan N Prasad", "role": "Lead Architect"},
-                {"name": "Machal Ritesh Govardhan", "role": "Product Strategist"},
-                {"name": "Manav Redhu", "role": "Technical Operator"},
-                {"name": "Chimbili Manju Ganesh", "role": "UI/UX Designer"}
-            ]
-        },
+        "framework": "Autonomous Multi-Sensor Urban Inundation Telemetry and Cross-Agency Emergency Response Framework",
         "zones": live_zone_state,
         "work_orders": work_orders,
         "emergency_alerts": emergency_alerts,
@@ -518,7 +504,7 @@ def get_zone_detail(zone_id: str):
 @app.post("/api/simulate/inject")
 def inject_incident(injection: IncidentInjection):
     """
-    Hackathon Live Demonstration Trigger:
+    Urban Inundation & Hazard Scenario Injection Trigger:
     Simulates real-world urban crises:
       - 'silt_clog': Hydraulic ΔH anomaly with moderate rain -> auto BBMP desilting work order
       - 'cloudburst': Severe monsoon cloudburst -> regional surge & pump trigger
@@ -890,7 +876,7 @@ def clear_resolved_work_orders():
     return {"status": "SUCCESS", "cleared": before_count - len(work_orders), "remaining": len(work_orders)}
 
 # --------------------------------------------------------------------------
-# PROTOTYPE 3: FIELD RESPONDER & MUNICIPAL OPERATIVE ENDPOINTS
+# FIELD RESPONDER & MUNICIPAL OPERATIVE ENDPOINTS
 # --------------------------------------------------------------------------
 
 @app.get("/api/responder/overview")
@@ -1334,7 +1320,7 @@ def run_gazebo_forensic_test(payload: Dict[str, Any]):
         reported_depth_cm=float(reported_depth) if reported_depth is not None else None,
     )
 
-# Serve Field Responder Portal (Prototype 3 Route on port 8000 as well)
+# Serve Field Responder Portal
 @app.get("/responder", response_class=HTMLResponse)
 @app.get("/field", response_class=HTMLResponse)
 def serve_responder_portal():
@@ -1344,7 +1330,7 @@ def serve_responder_portal():
             return f.read()
     return "<h1>Responder Portal HTML not found.</h1>"
 
-# Serve the Single-Page Command Center (Prototype 1)
+# Serve the Single-Page Command Center
 @app.get("/", response_class=HTMLResponse)
 def serve_dashboard():
     index_path = os.path.join(os.path.dirname(__file__), "index.html")
@@ -1353,7 +1339,7 @@ def serve_dashboard():
             return f.read()
     return "<h1>HK-RHS Backend Online. Please ensure index.html is present in the root directory.</h1>"
 
-# Also serve Citizen Portal on main host as an alternate route (Prototype 2 Route)
+# Serve Citizen Portal on main host
 @app.get("/citizen", response_class=HTMLResponse)
 @app.get("/portal", response_class=HTMLResponse)
 def serve_citizen_portal():
@@ -1388,9 +1374,8 @@ if __name__ == "__main__":
     import uvicorn
     print("\n==========================================================================")
     print("  NAMMA BENGALURU - HK-RHS (Hydro-Kinetic Road Hazard System)")
-    print("  REVA University HACKathon 3.0 | AI for Smart Cities & Sustainability")
-    print("  Team: Team CyberSentinel / Apex Achievers (BMSIT)")
-    print("  Team Members: Gagan N Prasad, Machal Ritesh Govardhan, Manav Redhu, Chimbili Manju Ganesh")
+    print("  Autonomous Multi-Sensor Urban Inundation Telemetry and")
+    print("  Cross-Agency Emergency Response Framework")
     print("==========================================================================")
     print("  UNIFIED MASTER SMART CITY HUB RUNNING ON SINGLE PORT 8000:")
     print("  -> http://127.0.0.1:8000           (Unified Master Command Center)")

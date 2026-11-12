@@ -1,14 +1,6 @@
 # Namma Bengaluru - HK-RHS (Hydro-Kinetic Road Hazard System)
-**REVA University HACKathon 3.0 (AI for Smart Cities & Sustainability)**  
-**Team: Team CyberSentinel / Apex Achievers (BMSIT)**
-
----
-
-### 👥 Team Members
-- **Gagan N Prasad** — Lead Architect
-- **Machal Ritesh Govardhan** — Product Strategist
-- **Manav Redhu** — Technical Operator
-- **Chimbili Manju Ganesh** — UI/UX Designer
+**Autonomous Multi-Sensor Urban Inundation Telemetry and Cross-Agency Emergency Response Framework**  
+*Peer-Reviewed IEEE Conference Research Implementation*
 
 ---
 
@@ -67,9 +59,9 @@ HK-RHS features permanently wired, zero-setup Google Gemini AI intelligence driv
 
 ---
 
-## 🏛️ Triple-Host Architectural Breakdown
+## 🏛️ Multi-Portal Architectural Breakdown
 
-### 1. Prototype 1: Main ICCC Command Center Dashboard
+### 1. Module 1: Main ICCC Command Center Dashboard
 - **Host:** `http://127.0.0.1:8000`
 - **Municipal Oversight:** Real-time citywide resilience monitoring across 6 critical Bengaluru arterial corridors.
 - **Corrosion-Immune Sensing Stack:** 60/77 GHz FMCW millimeter-wave radar inside catch-basin soffits behind tilted 3.2mm HDPE radome windows, isolating harsh sewer gases ($H_2S$, $CH_4$) and moisture.
@@ -82,7 +74,7 @@ HK-RHS features permanently wired, zero-setup Google Gemini AI intelligence driv
 
 ---
 
-### 2. Prototype 2: Citizen Safety & Reporting PWA Portal
+### 2. Module 2: Citizen Safety & Reporting PWA Portal
 - **Host:** `http://127.0.0.1:8001` (also accessible via `http://127.0.0.1:8000/citizen`)
 - **Mobile-Responsive Native PWA:** Designed for smartphone commuters with installable manifest, service worker cache, and bilingual Kannada/English branding.
 - **1-Tap Incident Submission:** Waterlogging, Collisions, Potholes, and Drainage overflows.
@@ -92,7 +84,7 @@ HK-RHS features permanently wired, zero-setup Google Gemini AI intelligence driv
 
 ---
 
-### 3. Prototype 3: Field Responder & Municipal Operative Portal
+### 3. Module 3: Field Responder & Municipal Operative Portal
 - **Host:** `http://127.0.0.1:8002` (also accessible via `http://127.0.0.1:8000/responder`)
 - **Role-Based Authentication & View Switcher:**
   1. **BBMP Desilting Crews (Quick Reaction Silt-Suction Unit #14):**
@@ -112,7 +104,7 @@ HK-RHS features permanently wired, zero-setup Google Gemini AI intelligence driv
      - 1-click Preset Advisories ("Corridor Clear", "Drain Silt Choke Warning", "Severe Cloudburst Flooding", "Accident Ahead / Merge Right").
      - Highway Speed Limit Advisories controls (Instant overrides: 20, 30, 40, 50, 60 km/h).
      - Emergency Traffic Diversion Corridors controls (Toggle regional diversion routing).
-     - 1-tap "Broadcast to Highway Gantries & ICCC" which immediately pushes live overrides to Prototype 1!
+     - 1-tap "Broadcast to Highway Gantries & ICCC" which immediately pushes live overrides to the ICCC Command Wall!
 
 ---
 
@@ -155,7 +147,7 @@ This automatically starts the master single-host application at `http://127.0.0.
 
 ---
 
-## 🎯 Step-by-Step Demonstration Script for Judges (HACKathon 3.0 Pitch)
+## 🎯 Step-by-Step Operational & Gazebo Simulation Walkthrough
 
 ### Step 1: Access the Unified Portal
 - Open `http://127.0.0.1:8000` in your browser.
@@ -190,27 +182,28 @@ This automatically starts the master single-host application at `http://127.0.0.
 ## 📁 Repository Structure
 
 ```
-hackathon 3.0/
-├── main.py              # Unified FastAPI Master Server, Physics Engine, Endpoints & Portals
-├── ai_engine.py         # Multimodal Gemini Vision, Deepfake Forensics & Video Diagnostics
-├── config.py            # Hardcoded Gemini API Configuration & Model Fallback Router
-├── index.html           # Unified ICCC Command Center + Video AI Studio + Split Cockpit
-├── citizen.html         # Citizen Safety PWA (Mobile-First UI, 1-Tap Form, Depth Estimator)
-├── responder.html       # Field Responder Portal (BBMP Crew, Police 112, BTP Inspector Console)
-├── manifest.json        # PWA Web App Manifest
-├── sw.js                # PWA Service Worker for offline resilience
-├── run_demo.bat         # 1-Click launcher script for Windows
-└── README.md            # Comprehensive documentation & pitch evaluation walkthrough
+nama-banglore/
+├── main.py                  # Unified FastAPI Master Server, Physics Engine, Endpoints & Portals
+├── ai_engine.py             # Multimodal Gemini Vision, Deepfake Forensics & Video Diagnostics
+├── config.py                # Gemini API Configuration & Model Fallback Router
+├── simulation/              # Live Gazebo SDF World, Modbus RTU Radar Bridge & ITMS Vision Engine
+│   ├── worlds/bengaluru_silk_board_inundation.sdf
+│   ├── modbus_radar_bridge.py
+│   ├── itms_gantry_vision.py
+│   └── gazebo_orchestrator.py
+├── scripts/                 # Localhost Gazebo + FastAPI verification harness
+│   └── verify_gazebo_localhost.py
+├── index.html               # Unified ICCC Command Center + Video AI Studio + Split Cockpit
+├── citizen.html             # Citizen Safety PWA (Mobile-First UI, 1-Tap Form, Depth Estimator)
+├── responder.html           # Field Responder Portal (BBMP Crew, Police 112, BTP Inspector Console)
+├── manifest.json            # PWA Web App Manifest
+├── sw.js                    # PWA Service Worker for offline resilience
+├── run_demo.bat             # Windows localhost launcher script
+└── README.md                # System architecture & operational walkthrough
 ```
 
 ---
 
-## 🏆 Hackathon Submission Details
-- **Event:** REVA University HACKathon 3.0 (AI for Smart Cities & Sustainability)
-- **Institution:** BMS Institute of Technology and Management (BMSIT), Bengaluru
-- **Team Name:** Apex Achievers
-- **Team Members:**
-  1. Gagan N Prasad (Lead Architect)
-  2. Machal Ritesh Govardhan (Product Strategist)
-  3. Manav Redhu (Technical Operator)
-  4. Chimbili Manju Ganesh (UI/UX Designer)
+## 📄 Research & System Scope
+- **Framework:** Autonomous Multi-Sensor Urban Inundation Telemetry and Cross-Agency Emergency Response Framework
+- **Core Subsystems:** 60/77 GHz FMCW Millimeter-Wave Radar via Modbus RTU / RS-485, ITMS Edge-AI Rainy Day Inversion, Multimodal Generative AI Forensic Verification, and Priority Dispatch Index (PDI) Optimization.

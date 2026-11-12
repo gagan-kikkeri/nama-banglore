@@ -3,13 +3,8 @@ title Namma Bengaluru - HK-RHS Unified Master Platform
 color 0B
 echo =========================================================================
 echo    NAMMA BENGALURU - HK-RHS (Hydro-Kinetic Road Hazard System)
-echo    REVA University HACKathon 3.0 ^| AI for Smart Cities ^& Sustainability
-echo    Team: Team CyberSentinel / Apex Achievers (BMSIT)
-echo    Team Members:
-echo      - Gagan N Prasad (Lead Architect)
-echo      - Machal Ritesh Govardhan (Product Strategist)
-echo      - Manav Redhu (Technical Operator)
-echo      - Chimbili Manju Ganesh (UI/UX Designer)
+echo    Autonomous Multi-Sensor Urban Inundation Telemetry and
+echo    Cross-Agency Emergency Response Framework
 echo =========================================================================
 echo.
 echo [1/3] Checking Python environment...

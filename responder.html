@@ -139,26 +139,26 @@
           </h1>
         </div>
         <div class="text-[11px] text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 font-mono">
-          <span class="text-amber-400 font-semibold">REVA University HACKathon 3.0</span>
+          <span class="text-amber-400 font-semibold">Autonomous Multi-Sensor Urban Inundation Telemetry</span>
           <span>•</span>
-          <span class="text-slate-300">Team CyberSentinel / Apex Achievers (BMSIT)</span>
+          <span class="text-slate-300">Cross-Agency Emergency Response Framework</span>
           <span>•</span>
           <span id="header-time" class="text-cyan-400 font-bold">12:00:00</span>
         </div>
       </div>
     </div>
 
-    <!-- Center/Right: Triple-Host Prototype Navigation Pills -->
+    <!-- Center/Right: Multi-Portal Navigation Pills -->
     <div class="flex flex-wrap items-center gap-2">
-      <!-- P1: ICCC Command Center -->
-      <button onclick="if(window.parent && window.parent.switchMasterView){window.parent.switchMasterView('iccc');}else{window.location.href='/';}" class="px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:text-white hover:border-cyan-400 transition text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm cursor-pointer group" title="Prototype 1: Integrated Command & Control Center">
+      <!-- M1: ICCC Command Center -->
+      <button onclick="if(window.parent && window.parent.switchMasterView){window.parent.switchMasterView('iccc');}else{window.location.href='/';}" class="px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:text-white hover:border-cyan-400 transition text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm cursor-pointer group" title="Module 1: Integrated Command & Control Center">
         <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
         <i class="fa-solid fa-server text-[10px]"></i>
-        <span>P1: ICCC</span>
+        <span>ICCC</span>
       </button>
 
-      <!-- P2: Citizen Safety Portal -->
-      <button onclick="if(window.parent && window.parent.switchMasterView){window.parent.switchMasterView('citizen');}else{window.location.href='/citizen';}" class="px-2.5 py-1 rounded-lg bg-blue-950/60 border border-blue-500/40 text-blue-300 hover:text-white hover:border-blue-400 transition text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm cursor-pointer group" title="Prototype 2: Citizen Safety & Reporting PWA">
+      <!-- M2: Citizen Safety Portal -->
+      <button onclick="if(window.parent && window.parent.switchMasterView){window.parent.switchMasterView('citizen');}else{window.location.href='/citizen';}" class="px-2.5 py-1 rounded-lg bg-blue-950/60 border border-blue-500/40 text-blue-300 hover:text-white hover:border-blue-400 transition text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm cursor-pointer group" title="Module 2: Citizen Safety & Reporting PWA">
         <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
         <i class="fa-solid fa-mobile-screen text-[10px]"></i>
         <span>P2: Citizen</span>
@@ -239,7 +239,7 @@
     <div class="flex items-center space-x-2">
       <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
       <span class="text-emerald-300 font-bold">⚡ CLOSED-LOOP SYNC CONFIRMED:</span>
-      <span id="toast-action-message" class="text-slate-200">Work order status updated across all prototype hosts.</span>
+      <span id="toast-action-message" class="text-slate-200">Work order status updated across all synchronized portals.</span>
     </div>
     <button onclick="dismissActionToast()" class="text-slate-400 hover:text-white p-1">
       <i class="fa-solid fa-xmark"></i>
@@ -1352,7 +1352,7 @@
 
         if (res.ok) {
           closeClearanceModal();
-          showActionToast(`Work Order ${currentModalOrderId} marked CLEARED! Sump restored to baseline ΔH = 0.12 across all prototype screens.`);
+          showActionToast(`Work Order ${currentModalOrderId} marked CLEARED! Sump restored to baseline ΔH = 0.12 across all synchronized screens.`);
           playTacticalBeep(980, 0.2);
           await fetchResponderOverview();
         } else {
@@ -1792,7 +1792,7 @@
         });
 
         if (res.ok) {
-          showActionToast(`Advisory pushed to ${selectedCorridorId} Gantry! Real-time reflection rendered on Prototype 1 Command Wall.`);
+          showActionToast(`Advisory pushed to ${selectedCorridorId} Gantry! Real-time reflection rendered on ICCC Command Wall.`);
           playTacticalBeep(880, 0.15);
           await fetchResponderOverview();
         }
