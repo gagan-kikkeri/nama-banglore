@@ -1,0 +1,220 @@
+<?xml version="1.0" ?>
+<!--
+  Namma Bengaluru - HK-RHS (Hydro-Kinetic Road Hazard System)
+  Gazebo SDF 1.9 World: Silk Board Junction Urban Inundation & Drainage Digital Twin
+  Sensors:
+    - 60/77 GHz FMCW Millimeter-Wave Radar (Modbus RTU / RS-485 Slave 0x01)
+    - ITMS Gantry Optical Camera (BTP-ITMS-SB-01, 640x360 @ 30Hz)
+-->
+<sdf version="1.9">
+  <world name="bengaluru_silkboard_inundation">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.01</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+
+    <light type="directional" name="monsoon_overcast_sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 30 0 0 0</pose>
+      <diffuse>0.65 0.70 0.78 1</diffuse>
+      <specular>0.2 0.2 0.25 1</specular>
+      <direction>-0.3 0.2 -0.9</direction>
+    </light>
+
+    <!-- Bengaluru Silk Board Arterial Intersection Ground & Carriageway -->
+    <model name="silk_board_intersection">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="asphalt_carriageway">
+        <collision name="road_collision">
+          <geometry>
+            <box><size>60 60 0.2</size></box>
+          </geometry>
+        </collision>
+        <visual name="road_visual">
+          <geometry>
+            <box><size>60 60 0.2</size></box>
+          </geometry>
+          <material>
+            <ambient>0.15 0.16 0.18 1</ambient>
+            <diffuse>0.20 0.21 0.24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Stormwater Manhole & Drainage Culvert (Catch-Basin CB-FMCW-SB-102) -->
+    <model name="drainage_culvert_cb102">
+      <static>true</static>
+      <pose>4.5 -3.2 0.05 0 0 0</pose>
+      <link name="culvert_chamber">
+        <visual name="manhole_rim">
+          <geometry>
+            <cylinder><radius>0.85</radius><length>0.12</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.32 0.34 0.38 1</ambient>
+            <diffuse>0.38 0.40 0.44 1</diffuse>
+          </material>
+        </visual>
+        <visual name="storm_grate">
+          <pose>0 0 0.065 0 0 0</pose>
+          <geometry>
+            <box><size>1.1 0.8 0.03</size></box>
+          </geometry>
+          <material>
+            <ambient>0.10 0.10 0.12 1</ambient>
+            <diffuse>0.14 0.14 0.16 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!-- 60/77 GHz FMCW Millimeter-Wave Radar Mounted Inside Catch-Basin Soffit -->
+      <link name="fmcw_radar_soffit_mount">
+        <pose>0 0 1.45 0 1.5708 0</pose>
+        <visual name="hdpe_radome_housing">
+          <geometry>
+            <box><size>0.18 0.14 0.08</size></box>
+          </geometry>
+          <material>
+            <ambient>0.0 0.55 0.75 1</ambient>
+            <diffuse>0.0 0.75 0.95 1</diffuse>
+          </material>
+        </visual>
+        <sensor name="fmcw_radar_77ghz" type="gpu_lidar">
+          <pose>0 0 0 0 0 0</pose>
+          <topic>/hk_rhs/silk_board/fmcw_radar</topic>
+          <update_rate>10</update_rate>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>16</samples>
+                <resolution>1</resolution>
+                <min_angle>-0.15</min_angle>
+                <max_angle>0.15</max_angle>
+              </horizontal>
+            </scan>
+            <range>
+              <min>0.05</min>
+              <max>3.00</max>
+              <resolution>0.001</resolution>
+            </range>
+          </ray>
+          <always_on>1</always_on>
+          <visualize>true</visualize>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- Dynamic Inundation Water Surface Plane H_w(t) -->
+    <model name="inundation_water_plane">
+      <static>true</static>
+      <pose>0 0 0.12 0 0 0</pose>
+      <link name="water_surface">
+        <visual name="water_visual">
+          <geometry>
+            <box><size>42 42 0.02</size></box>
+          </geometry>
+          <material>
+            <ambient>0.08 0.28 0.42 0.75</ambient>
+            <diffuse>0.10 0.38 0.56 0.75</diffuse>
+            <specular>0.6 0.7 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ITMS Gantry Pole & Edge-AI Optical Camera (BTP-ITMS-SB-01) -->
+    <model name="itms_gantry_sb01">
+      <static>true</static>
+      <pose>-8.0 -10.0 0 0 0 0</pose>
+      <link name="gantry_mast">
+        <visual name="pole_visual">
+          <pose>0 0 3.5 0 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.15</radius><length>7.0</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.4 0.42 0.45 1</ambient>
+            <diffuse>0.5 0.52 0.55 1</diffuse>
+          </material>
+        </visual>
+        <visual name="cantilever_arm">
+          <pose>3.5 0 6.8 0 1.5708 0</pose>
+          <geometry>
+            <cylinder><radius>0.10</radius><length>7.0</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.4 0.42 0.45 1</ambient>
+            <diffuse>0.5 0.52 0.55 1</diffuse>
+          </material>
+        </visual>
+        <sensor name="itms_gantry_camera" type="camera">
+          <pose>6.5 0 6.6 0 0.48 0.72</pose>
+          <topic>/hk_rhs/silk_board/itms_camera</topic>
+          <update_rate>30</update_rate>
+          <camera>
+            <horizontal_fov>1.15</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>360</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.5</near>
+              <far>120.0</far>
+            </clip>
+          </camera>
+          <always_on>1</always_on>
+          <visualize>true</visualize>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- Simulated Traffic Vehicles in Intersection -->
+    <model name="traffic_sedan_01">
+      <static>false</static>
+      <pose>-6.0 2.0 0.45 0 0 0</pose>
+      <link name="chassis">
+        <visual name="body">
+          <geometry><box><size>4.2 1.8 1.2</size></box></geometry>
+          <material>
+            <ambient>0.75 0.78 0.82 1</ambient>
+            <diffuse>0.82 0.85 0.88 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="bmtc_bus_01">
+      <static>false</static>
+      <pose>8.0 -2.5 1.1 0 0 3.1416</pose>
+      <link name="chassis">
+        <visual name="body">
+          <geometry><box><size>9.5 2.4 2.8</size></box></geometry>
+          <material>
+            <ambient>0.05 0.35 0.70 1</ambient>
+            <diffuse>0.08 0.45 0.85 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Custom HK-RHS Simulation Metadata -->
+    <plugin filename="libhk_rhs_hydro_plugin.so" name="hk_rhs::HydroKineticWorldPlugin">
+      <zone_id>silk_board</zone_id>
+      <catch_basin_id>CB-FMCW-SB-102</catch_basin_id>
+      <max_capacity_cm>120.0</max_capacity_cm>
+      <drainage_coeff_alpha>0.38</drainage_coeff_alpha>
+      <modbus_slave_id>1</modbus_slave_id>
+      <modbus_baudrate>9600</modbus_baudrate>
+      <rainy_day_speed_threshold_kmh>18.0</rainy_day_speed_threshold_kmh>
+    </plugin>
+  </world>
+</sdf>
