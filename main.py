@@ -27,9 +27,9 @@ from datetime import datetime, timezone, timedelta
 # Hardcoded Gemini AI Core Engine & Configuration
 import config
 import ai_engine
-from simulation.gazebo_bridge import GazeboHydroKineticBridge
+from simulation import GazeboInundationOrchestrator
 
-gazebo_sim = GazeboHydroKineticBridge()
+gazebo_sim = GazeboInundationOrchestrator(zone_id="silk_board", max_capacity_cm=120.0)
 
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -457,8 +457,23 @@ def update_zone_physics(zid: str):
 async def simulation_loop():
     while True:
         try:
+            sim_state = gazebo_sim.step(dt_sec=3.0)
             for zid in ZONES_CONFIG.keys():
                 update_zone_physics(zid)
+            # Overlay live Gazebo 3D urban inundation telemetry onto Silk Board primary testbed
+            sb = live_zone_state.get("silk_board")
+            if sb and not sb.get("pinned_incident"):
+                decoded = sim_state.get("radar_modbus_rtu", {}).get("decoded", {})
+                vision = sim_state.get("itms_gantry_vision", {})
+                pdi = sim_state.get("priority_dispatch_index", {})
+                if decoded:
+                    sb["water_level_cm"] = decoded["water_level_hw_cm"]
+                    sb["rate_of_rise_cm_min"] = decoded["inflow_rate_dh_dt_cm_min"]
+                    sb["delta_h"] = decoded["delta_h_index"]
+                    sb["rainfall_rate_mmhr"] = decoded["rainfall_rate_mmhr"]
+                    sb["water_level_pct"] = decoded["culvert_capacity_pct"]
+                sb["rainy_day_inversion_active"] = vision.get("rainy_day_inversion_active", False)
+                sb["pdi_score"] = pdi.get("pdi_score", 0.0)
         except Exception as e:
             print(f"Error in simulation loop: {e}")
         await asyncio.sleep(3.0)
@@ -1262,114 +1277,62 @@ def ai_set_key_endpoint(payload: Dict[str, Any]):
     }
 
 # --------------------------------------------------------------------------
-# GAZEBO 3D SIMULATION & MODBUS RTU / ITMS BRIDGE ENDPOINTS
+# GAZEBO 3D URBAN INUNDATION SIMULATION & EDGE-AI ENDPOINTS
 # --------------------------------------------------------------------------
 
-def _sync_gazebo_to_iccc(snapshot: Dict[str, Any]) -> Dict[str, Any]:
-    """Synchronize Gazebo SDF telemetry & PDI dispatch events into live ICCC state."""
-    zid = snapshot["sdf_world"]["zone_id"]
-    decoded = snapshot["fmcw_radar_modbus"]["decoded"]
-    vision = snapshot["itms_gantry_vision"]
-    pdi = snapshot["priority_dispatch_index"]
-    ts = datetime.now().strftime("%H:%M:%S")
-
-    if zid in live_zone_state:
-        z = live_zone_state[zid]
-        z["water_level_cm"] = decoded["hw_cm"]
-        z["water_level_pct"] = round((decoded["hw_cm"] / z["max_capacity_cm"]) * 100.0, 1)
-        z["rate_of_rise_cm_min"] = decoded["dh_dt_cm_min"]
-        z["rainfall_rate_mmhr"] = decoded["rainfall_mmhr"]
-        z["delta_h"] = decoded["delta_h"]
-        z["traffic_speed_kmh"] = vision["observed_traffic_speed_kmh"]
-        z["risk_score"] = round(min(0.99, pdi["pdi_score"] / 100.0), 2)
-        if decoded["grate_obstruction_pct"] >= 50.0:
-            z["hazard_classification"] = "SILT_DEBRIS_CLOG"
-        elif decoded["rainfall_mmhr"] >= 60.0:
-            z["hazard_classification"] = "CLOUDBURST_OVERLOAD"
-        else:
-            z["hazard_classification"] = "NORMAL_DRAINAGE"
-
-        # Apply VMS diversion automatically on Rainy Day Inversion + High PDI
-        for evt in pdi.get("automated_dispatch_events", []):
-            if evt["target_agency"] == "BTP_TRAFFIC_ICCC":
-                z["vms_message"] = evt.get("vms_message", z.get("vms_message"))
-                z["vms_color"] = "RED"
-                z["diversion_active"] = True
-                if not any(a.get("type") == "GAZEBO_ITMS_INVERSION_ALERT" and a.get("status") != "RESOLVED" for a in emergency_alerts):
-                    emergency_alerts.insert(0, {
-                        "id": f"BTP-GAZ-{random.randint(100, 999)}",
-                        "zone_id": zid,
-                        "zone_name": z["name"],
-                        "type": "GAZEBO_ITMS_INVERSION_ALERT",
-                        "message": evt["rationale"],
-                        "severity": "CRITICAL",
-                        "status": "DISPATCHED",
-                        "assigned_unit": "BTP Traffic Warden & VMS Gantry Unit",
-                        "lat": z["lat"],
-                        "lng": z["lng"],
-                        "timestamp": ts,
-                    })
-            elif evt["target_agency"] in ("BBMP_STORMWATER", "BBMP_DEWATERING"):
-                if not any(w.get("type") == evt["action"] and w.get("status") != "RESOLVED" for w in work_orders):
-                    work_orders.insert(0, {
-                        "id": f"BBMP-GAZ-{random.randint(1000, 9999)}",
-                        "zone_id": zid,
-                        "zone_name": z["name"],
-                        "ward": z["ward"],
-                        "type": evt["action"],
-                        "cause": evt["rationale"],
-                        "priority": "CRITICAL",
-                        "status": "DISPATCHED",
-                        "unit": f"BBMP Rapid Hydro-Unit #{random.randint(10, 25)}",
-                        "sla_minutes": 20,
-                        "catch_basin_id": evt.get("catch_basin_id"),
-                        "delta_h": decoded["delta_h"],
-                        "water_level_cm": decoded["hw_cm"],
-                        "lat": z["lat"],
-                        "lng": z["lng"],
-                        "created_at": ts,
-                    })
-
-    return snapshot
-
 @app.get("/api/simulation/status")
-def get_simulation_status():
-    """Return current Gazebo SDF world state, Modbus RTU radar frame, ITMS compute allocation, and PDI."""
-    return gazebo_sim.get_telemetry_snapshot(include_frame=False)
+def get_gazebo_simulation_status():
+    """
+    Returns live Gazebo SDF world metadata, Modbus RTU / RS-485 FMCW radar frames,
+    ITMS Rainy Day Inversion compute reallocation, Priority Dispatch Index (PDI),
+    and automated BBMP/BTP dispatch queue events.
+    """
+    return gazebo_sim.get_status()
 
-@app.post("/api/simulation/step")
-def step_simulation(payload: Optional[Dict[str, Any]] = None):
-    """Advance Gazebo 3D physics loop and sync PDI dispatch events into ICCC."""
-    body = payload or {}
-    steps = int(body.get("steps", 1))
-    dt_seconds = float(body.get("dt_seconds", 1.0))
-    include_frame = bool(body.get("include_frame", False))
-    gazebo_sim.step(dt_seconds=dt_seconds, steps=steps)
-    snapshot = gazebo_sim.get_telemetry_snapshot(include_frame=include_frame)
-    return _sync_gazebo_to_iccc(snapshot)
+@app.post("/api/simulation/control")
+def control_gazebo_simulation(payload: Dict[str, Any]):
+    """
+    Control Gazebo simulation scenario ('monsoon_surge', 'silt_clog', 'cloudburst', 'clear_weather')
+    or pause/resume ('active': bool) and step manually.
+    """
+    if "active" in payload:
+        gazebo_sim.active = bool(payload["active"])
+    scenario = payload.get("scenario")
+    if scenario:
+        state = gazebo_sim.set_scenario(str(scenario))
+        # Sync automated BBMP/BTP dispatch events if critical PDI reached
+        pdi = state.get("priority_dispatch_index", {})
+        if pdi.get("pdi_score", 0) >= 70.0:
+            ts = datetime.now().strftime("%H:%M:%S")
+            system_log.append(
+                f"[{ts}] [GAZEBO-PDI] Critical PDI {pdi['pdi_score']} triggered in {scenario}. "
+                f"BBMP & BTP automated dispatch queued."
+            )
+        return state
+    return gazebo_sim.step(dt_sec=float(payload.get("dt_sec", 3.0)))
 
-@app.post("/api/simulation/scenario")
-def set_simulation_scenario(payload: Dict[str, Any]):
-    """Inject a live Gazebo scenario: heavy_rain_inversion, silt_clog, cloudburst, or reset."""
-    scenario = str(payload.get("scenario", "heavy_rain_inversion")).strip()
-    snapshot = gazebo_sim.set_scenario(scenario)
-    return _sync_gazebo_to_iccc(snapshot)
-
-@app.get("/api/simulation/camera-frame")
-def get_simulation_camera_frame():
-    """Return latest simulated ITMS gantry camera frame (JPEG base64) and Rainy Day Inversion metrics."""
-    snapshot = gazebo_sim.get_telemetry_snapshot(include_frame=True)
+@app.get("/api/simulation/gantry-frame")
+def get_gazebo_gantry_frame():
+    """Returns latest ITMS Gantry camera frame (JPEG base64) with Rainy Day Inversion HUD."""
     return {
-        "camera_id": snapshot["itms_gantry_vision"]["camera_id"],
-        "sim_time_s": snapshot["sim_time_s"],
-        "itms_gantry_vision": snapshot["itms_gantry_vision"],
-        "priority_dispatch_index": snapshot["priority_dispatch_index"],
+        "camera_id": gazebo_sim.gantry_vision.camera_id,
+        "frame_seq": gazebo_sim.gantry_vision.frame_seq,
+        "vision_state": gazebo_sim.last_vision_state,
+        "image_base64": gazebo_sim.get_gantry_frame_b64(),
     }
 
-@app.post("/api/simulation/verify-forensics")
-def run_simulation_forensics():
-    """Run automated authentic vs synthetic deepfake verification through Gemini/Forensic API hook."""
-    return gazebo_sim.run_forensic_verification_suite()
+@app.post("/api/simulation/forensic-test")
+def run_gazebo_forensic_test(payload: Dict[str, Any]):
+    """
+    Routes a simulated citizen-uploaded hazard image ('authentic' or 'synthetic_deepfake')
+    through the Gemini API verification hook + spatial-temporal consistency check.
+    """
+    mode = str(payload.get("mode", "synthetic_deepfake"))
+    reported_depth = payload.get("reported_depth_cm")
+    return gazebo_sim.run_forensic_verification_test(
+        mode=mode,
+        reported_depth_cm=float(reported_depth) if reported_depth is not None else None,
+    )
 
 # Serve Field Responder Portal (Prototype 3 Route on port 8000 as well)
 @app.get("/responder", response_class=HTMLResponse)

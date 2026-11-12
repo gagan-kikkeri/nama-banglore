@@ -1,208 +1,171 @@
 """
-ITMS Gantry & Edge-AI Vision Simulator (Rainy Day Inversion Engine).
-Simulates the overhead gantry camera (BTP-ITMS-SB-01) overlooking the flooded
-intersection, renders live camera frames under heavy rain, and executes the
-Rainy Day Inversion compute reallocation when traffic speed drops below threshold.
+Namma Bengaluru - HK-RHS (Hydro-Kinetic Road Hazard System)
+ITMS Gantry Camera & Edge-AI Vision Simulator with "Rainy Day Inversion" Trigger.
+
+Implements dynamic compute reallocation on the Edge-AI NPU/GPU:
+  - Normal Flow (traffic_speed >= 18 km/h):
+      80% compute -> High-speed Vehicle / ANPR / Deceleration Tracking (30 FPS)
+      20% compute -> Background Water-Pooling & Grate-Obstruction Monitoring (4 FPS)
+  - Rainy Day Inversion (traffic_speed < 18 km/h):
+      20% compute -> Throttled Vehicle Detection (5 FPS)
+      45% compute -> Real-Time Water-Pooling Semantic Segmentation (24 FPS)
+      35% compute -> Storm-Drain Grate-Obstruction Segmentation (20 FPS)
 """
 
 import io
 import base64
 import random
-import numpy as np
+from typing import Dict, Any
 from PIL import Image, ImageDraw
-from typing import Dict, Any, List
 
 
-class ITMSGantryVisionSimulator:
+class ITMSGantryVisionEngine:
     """
-    Simulates Edge-AI optical inference on ITMS Gantry camera frames (640x360)
-    with dynamic 'Rainy Day Inversion' compute reallocation.
+    Simulates /hk_rhs/itms/gantry_cam/image_raw frame processing and executes
+    the Rainy Day Inversion compute-reallocation state machine.
     """
 
-    def __init__(self, camera_id: str = "BTP-ITMS-SB-01", speed_threshold_kmh: float = 18.0):
+    SPEED_THRESHOLD_KMH = 18.0
+    RAIN_THRESHOLD_MMHR = 15.0
+
+    def __init__(self, camera_id: str = "BTP-ITMS-SB-01", width: int = 640, height: int = 360):
         self.camera_id = camera_id
-        self.speed_threshold_kmh = speed_threshold_kmh
-        self.frame_counter = 0
+        self.width = width
+        self.height = height
+        self.frame_seq = 0
 
     def evaluate_rainy_day_inversion(
         self,
         traffic_speed_kmh: float,
+        rainfall_mmhr: float,
         water_level_cm: float,
         grate_obstruction_pct: float,
-        rainfall_mmhr: float,
+        stalled_vehicles: int = 1,
     ) -> Dict[str, Any]:
         """
-        Implements the 'Rainy Day Inversion' trigger logic:
-        When traffic speed drops below threshold, throttle high-speed vehicle
-        detection and reallocate Edge-AI GPU/NPU compute to water-pooling and
-        grate-obstruction segmentation models.
+        Evaluate the Rainy Day Inversion trigger and return Edge-AI compute allocation
+        alongside water-pooling and grate-obstruction segmentation metrics.
         """
-        inversion_active = traffic_speed_kmh < self.speed_threshold_kmh
+        self.frame_seq += 1
+        speed_triggered = traffic_speed_kmh < self.SPEED_THRESHOLD_KMH
+        rain_heavy = rainfall_mmhr >= self.RAIN_THRESHOLD_MMHR
+        inversion_active = speed_triggered and (rain_heavy or water_level_cm >= 30.0)
 
         if inversion_active:
-            compute_allocation = {
-                "high_speed_vehicle_detection_pct": 15,
-                "water_pooling_segmentation_pct": 50,
+            mode = "RAINY_DAY_INVERSION"
+            vehicle_det_fps = 5.0
+            compute_split = {
+                "vehicle_detection_pct": 20,
+                "water_pooling_segmentation_pct": 45,
                 "grate_obstruction_segmentation_pct": 35,
             }
-            active_models = [
-                "WaterPool-SegNet-v3 (50% NPU)",
-                "GrateClog-MaskRCNN (35% NPU)",
-                "VehicleTrack-Lite (15% NPU - Throttled)",
-            ]
-            mode_label = "RAINY_DAY_INVERSION_ACTIVE"
+            seg_fps = 24.0
+            trigger_reason = (
+                f"Traffic speed ({traffic_speed_kmh:.1f} km/h < {self.SPEED_THRESHOLD_KMH} km/h) "
+                f"under monsoon conditions ({rainfall_mmhr:.1f} mm/hr). "
+                "Throttling high-speed vehicle tracker to 5 FPS; reallocating 80% NPU compute to flood & grate segmentation."
+            )
         else:
-            compute_allocation = {
-                "high_speed_vehicle_detection_pct": 70,
-                "water_pooling_segmentation_pct": 15,
-                "grate_obstruction_segmentation_pct": 15,
+            mode = "HIGH_SPEED_ITMS_FLOW"
+            vehicle_det_fps = 30.0
+            compute_split = {
+                "vehicle_detection_pct": 80,
+                "water_pooling_segmentation_pct": 12,
+                "grate_obstruction_segmentation_pct": 8,
             }
-            active_models = [
-                "YOLOv8-TrafficFlow-HighFPS (70% NPU)",
-                "WaterPool-SegNet-Standby (15% NPU)",
-                "GrateClog-Monitor (15% NPU)",
-            ]
-            mode_label = "NORMAL_TRAFFIC_DETECTION"
+            seg_fps = 4.0
+            trigger_reason = (
+                f"Corridor speed ({traffic_speed_kmh:.1f} km/h >= {self.SPEED_THRESHOLD_KMH} km/h). "
+                "Primary compute allocated to high-speed ANPR & collision kinematics."
+            )
 
-        water_pool_area_pct = round(min(94.0, max(2.0, (water_level_cm / 120.0) * 95.0)), 1)
-
-        detections: List[Dict[str, Any]] = [
-            {
-                "label": "Water-Pooling Segmentation Mask",
-                "confidence": 0.96 if inversion_active else 0.84,
-                "area_coverage_pct": water_pool_area_pct,
-                "bbox": [90, 175, 550, 345],
-            },
-            {
-                "label": "Stormwater Grate Obstruction",
-                "confidence": 0.94 if inversion_active else 0.78,
-                "obstruction_pct": round(grate_obstruction_pct, 1),
-                "bbox": [430, 235, 515, 295],
-            },
-            {
-                "label": "BMTC Bus / Heavy Vehicle",
-                "confidence": 0.88 if inversion_active else 0.97,
-                "speed_kmh": round(traffic_speed_kmh, 1),
-                "bbox": [165, 130, 315, 225],
-            },
-        ]
+        # Derive water-pooling road surface coverage % from Gazebo water level H_w(t)
+        water_pooling_pct = round(min(94.0, max(4.0, (water_level_cm / 110.0) * 88.0)), 1)
+        grate_obs = round(min(98.0, max(5.0, grate_obstruction_pct)), 1)
 
         return {
             "camera_id": self.camera_id,
-            "mode": mode_label,
+            "gazebo_topic": "/hk_rhs/itms/gantry_cam/image_raw",
+            "frame_seq": self.frame_seq,
+            "mode": mode,
             "rainy_day_inversion_active": inversion_active,
-            "speed_threshold_kmh": self.speed_threshold_kmh,
-            "observed_traffic_speed_kmh": round(traffic_speed_kmh, 1),
-            "compute_allocation": compute_allocation,
-            "active_models": active_models,
-            "water_pooling_coverage_pct": water_pool_area_pct,
-            "grate_obstruction_pct": round(grate_obstruction_pct, 1),
-            "rainfall_mmhr": round(rainfall_mmhr, 1),
-            "detections": detections,
+            "trigger_threshold_kmh": self.SPEED_THRESHOLD_KMH,
+            "vehicle_detection_fps": vehicle_det_fps,
+            "segmentation_fps": seg_fps,
+            "compute_allocation": compute_split,
+            "segmentation_output": {
+                "water_pooling_coverage_pct": water_pooling_pct,
+                "grate_obstruction_pct": grate_obs,
+                "stalled_vehicles_tracked": stalled_vehicles,
+                "manhole_overflow_detected": water_level_cm > 65.0,
+            },
+            "trigger_reason": trigger_reason,
         }
 
-    def render_gantry_frame_base64(
+    def render_gantry_frame_b64(
         self,
+        telemetry: Dict[str, Any],
         water_level_cm: float,
-        grate_obstruction_pct: float,
         rainfall_mmhr: float,
         traffic_speed_kmh: float,
     ) -> str:
         """
-        Render a 640x360 simulated ITMS gantry camera frame of the flooded intersection
-        under heavy rain conditions and return it as a JPEG data URL.
+        Render a 640x360 synthetic Gazebo gantry camera frame with rain streaks,
+        water-pooling segmentation mask, drainage grate ROI, and Rainy Day Inversion HUD.
         """
-        self.frame_counter += 1
-        w, h = 640, 360
-
-        # Base asphalt road with realistic aggregate noise
-        rng = np.random.default_rng(self.frame_counter)
-        base = np.zeros((h, w, 3), dtype=np.uint8)
-        base[:, :, 0] = np.clip(rng.normal(46, 14, (h, w)), 10, 255).astype(np.uint8)
-        base[:, :, 1] = np.clip(rng.normal(50, 14, (h, w)), 10, 255).astype(np.uint8)
-        base[:, :, 2] = np.clip(rng.normal(56, 15, (h, w)), 10, 255).astype(np.uint8)
-
-        img = Image.fromarray(base, mode="RGB")
+        img = Image.new("RGB", (self.width, self.height), (24, 30, 38))
         draw = ImageDraw.Draw(img, "RGBA")
 
-        # Lane markings
-        for x in range(40, w, 90):
-            draw.rectangle([x, 178, x + 45, 185], fill=(225, 225, 210, 210))
+        # Wet asphalt roadbed
+        draw.rectangle([0, 95, self.width, self.height], fill=(34, 39, 46, 255))
+        # Lane markings & crosswalk
+        for x in range(30, 610, 85):
+            draw.rectangle([x, 210, x + 42, 218], fill=(205, 208, 210, 210))
+        for y in range(255, 345, 22):
+            draw.rectangle([80, y, 165, y + 11], fill=(220, 222, 225, 190))
 
-        # Manhole & drainage grate at (430..515, 235..295)
-        draw.rectangle([430, 235, 515, 295], fill=(28, 30, 34, 255), outline=(110, 120, 130, 255), width=2)
-        for gx in range(438, 512, 12):
-            draw.line([gx, 238, gx, 292], fill=(70, 75, 80, 255), width=3)
-
-        # Silt/debris clogging overlay on grate
-        if grate_obstruction_pct > 15:
-            clog_h = int(60 * min(1.0, grate_obstruction_pct / 100.0))
-            draw.rectangle([432, 295 - clog_h, 513, 293], fill=(95, 72, 45, 220))
-
-        # Flooded water-pooling contour proportional to H_w(t)
-        pool_alpha = int(min(185, max(35, (water_level_cm / 120.0) * 195)))
-        pool_expand = int(min(115, (water_level_cm / 120.0) * 120))
-        draw.ellipse(
-            [140 - pool_expand, 200 - pool_expand // 3, 540 + pool_expand // 2, 330 + pool_expand // 4],
-            fill=(24, 95, 145, pool_alpha),
-            outline=(56, 189, 248, 200),
-            width=2,
+        # Water-pooling semantic segmentation overlay
+        seg = telemetry["segmentation_output"]
+        pool_pct = seg["water_pooling_coverage_pct"]
+        pool_alpha = int(min(185, 55 + pool_pct * 1.3))
+        draw.polygon(
+            [(180, 175), (590, 165), (625, 340), (140, 345)],
+            fill=(14, 165, 233, pool_alpha),
+            outline=(56, 189, 248, 230),
         )
 
-        # Simulated vehicles (moving based on frame counter & speed)
-        shift = int((self.frame_counter * max(1.0, traffic_speed_kmh) * 0.4) % 220)
-        bus_x = 120 + (shift if traffic_speed_kmh > 10 else 20)
-        draw.rectangle([bus_x, 125, bus_x + 130, 195], fill=(15, 95, 190, 255), outline=(220, 235, 255, 255), width=2)
-        draw.rectangle([bus_x + 10, 135, bus_x + 120, 158], fill=(180, 220, 250, 220))
+        # Drainage grate + manhole ROI box (right carriageway curb)
+        grate_obs = seg["grate_obstruction_pct"]
+        grate_color = (244, 63, 94, 230) if grate_obs > 55 else (245, 158, 11, 220)
+        draw.rectangle([455, 235, 565, 295], fill=(45, 38, 30, 220), outline=grate_color, width=3)
+        draw.text((458, 218), f"GRATE OBS: {grate_obs:.0f}%", fill=grate_color)
 
-        # Heavy rain streaks
-        rain_drops = int(min(260, max(20, rainfall_mmhr * 2.5)))
-        for _ in range(rain_drops):
-            rx = random.randint(0, w - 1)
-            ry = random.randint(0, h - 1)
-            draw.line([rx, ry, rx - 4, ry + 14], fill=(195, 225, 255, 120), width=1)
+        # Simulated vehicles (throttled bounding boxes in Rainy Day Inversion)
+        veh_color = (250, 204, 21, 180) if telemetry["rainy_day_inversion_active"] else (16, 185, 129, 230)
+        draw.rectangle([215, 130, 325, 195], fill=(175, 182, 192, 255), outline=veh_color, width=2)
+        draw.text((217, 115), f"VEH {traffic_speed_kmh:.0f}km/h", fill=veh_color)
 
-        # Telemetry HUD stamp
-        mode_txt = "RAINY DAY INVERSION" if traffic_speed_kmh < self.speed_threshold_kmh else "NORMAL FLOW"
-        draw.rectangle([8, 8, 430, 34], fill=(5, 10, 20, 200))
-        draw.text((14, 14), f"{self.camera_id} | {mode_txt} | Hw={water_level_cm:.1f}cm | v={traffic_speed_kmh:.1f}km/h", fill=(56, 189, 248, 255))
+        # Slanted monsoon rain streaks
+        rng = random.Random(self.frame_seq)
+        streak_count = int(min(180, max(10, rainfall_mmhr * 1.8)))
+        for _ in range(streak_count):
+            rx = rng.randint(0, self.width - 10)
+            ry = rng.randint(0, self.height - 20)
+            draw.line([(rx, ry), (rx - 6, ry + 16)], fill=(186, 230, 253, 125), width=1)
+
+        # Top Edge-AI Tactical HUD Banner
+        draw.rectangle([0, 0, self.width, 46], fill=(9, 13, 22, 230))
+        mode_tag = "RAINY DAY INVERSION [ACTIVE]" if telemetry["rainy_day_inversion_active"] else "HIGH-SPEED ITMS [NORMAL]"
+        mode_col = (56, 189, 248, 255) if telemetry["rainy_day_inversion_active"] else (52, 211, 153, 255)
+        draw.text((12, 8), f"CAM: {self.camera_id} | {mode_tag} | H_w={water_level_cm:.1f}cm", fill=mode_col)
+        comp = telemetry["compute_allocation"]
+        draw.text(
+            (12, 26),
+            f"NPU Compute -> Veh:{comp['vehicle_detection_pct']}% ({telemetry['vehicle_detection_fps']:.0f}fps) | "
+            f"WaterSeg:{comp['water_pooling_segmentation_pct']}% | GrateSeg:{comp['grate_obstruction_segmentation_pct']}%",
+            fill=(203, 213, 225, 255),
+        )
 
         buf = io.BytesIO()
-        img.convert("RGB").save(buf, format="JPEG", quality=85)
-        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-        return f"data:image/jpeg;base64,{b64}"
-
-
-def generate_authentic_flooded_frame() -> str:
-    """Generate a high-texture authentic road inundation frame (with physical camera grain)."""
-    w, h = 640, 360
-    rng = np.random.default_rng(42)
-    arr = np.zeros((h, w, 3), dtype=np.uint8)
-    arr[:, :, 0] = np.clip(rng.normal(75, 28, (h, w)), 0, 255).astype(np.uint8)
-    arr[:, :, 1] = np.clip(rng.normal(78, 28, (h, w)), 0, 255).astype(np.uint8)
-    arr[:, :, 2] = np.clip(rng.normal(82, 29, (h, w)), 0, 255).astype(np.uint8)
-    # Puddle region with sky reflection & ripples
-    arr[140:290, 120:520, 0] = np.clip(rng.normal(55, 22, (150, 400)), 0, 255).astype(np.uint8)
-    arr[140:290, 120:520, 1] = np.clip(rng.normal(95, 22, (150, 400)), 0, 255).astype(np.uint8)
-    arr[140:290, 120:520, 2] = np.clip(rng.normal(135, 24, (150, 400)), 0, 255).astype(np.uint8)
-
-    img = Image.fromarray(arr, mode="RGB")
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=90)
-    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
-
-
-def generate_synthetic_deepfake_frame() -> str:
-    """Generate a synthetic AI-style 512x512 smooth latent diffusion deepfake test frame."""
-    size = 512
-    y_grad = np.linspace(40, 160, size, dtype=np.float32)[:, None]
-    x_grad = np.linspace(30, 180, size, dtype=np.float32)[None, :]
-    r = np.clip(0.5 * y_grad + 0.3 * x_grad, 0, 255).astype(np.uint8)
-    g = np.clip(0.6 * y_grad + 0.4 * x_grad, 0, 255).astype(np.uint8)
-    b = np.clip(0.8 * y_grad + 0.5 * x_grad, 0, 255).astype(np.uint8)
-    arr = np.stack([r, g, b], axis=-1)
-
-    img = Image.fromarray(arr, mode="RGB")
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
+        img.save(buf, format="JPEG", quality=82)
+        return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")

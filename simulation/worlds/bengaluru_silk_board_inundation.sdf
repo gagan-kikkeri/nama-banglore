@@ -1,0 +1,279 @@
+<?xml version="1.0" ?>
+<!--
+  Namma Bengaluru - HK-RHS (Hydro-Kinetic Road Hazard System)
+  Custom Gazebo SDF 1.9 Urban Inundation World: Silk Board Junction Arterial Testbed
+  Components:
+    - 4-Way Urban Intersection & Asphalt Carriageway
+    - Subterranean Concrete Drainage Culvert & Catch-Basin Channel
+    - Cast-Iron Manhole & Storm-Drain Grate (Silt Obstruction Target)
+    - Dynamic Flood Water Surface Plane H_w(t)
+    - 60/77 GHz FMCW Millimeter-Wave Radar Sensor (Soffit-Mounted behind HDPE Radome)
+    - ITMS Overhead Gantry RGB Camera Sensor (Rainy Day Inversion Target)
+    - Monsoon Rain Particle System & Stalled Traffic Vehicles
+-->
+<sdf version="1.9">
+  <world name="bengaluru_silk_board_inundation">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Core Gazebo Sim Systems -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-particle-emitter-system" name="gz::sim::systems::ParticleEmitter"/>
+
+    <!-- Monsoon Overcast Scene & Lighting -->
+    <scene>
+      <ambient>0.35 0.38 0.42 1.0</ambient>
+      <background>0.18 0.22 0.27 1.0</background>
+      <shadows>true</shadows>
+      <fog>
+        <type>linear</type>
+        <color>0.25 0.30 0.36 1.0</color>
+        <start>15.0</start>
+        <end>85.0</end>
+        <density>0.04</density>
+      </fog>
+    </scene>
+
+    <light type="directional" name="monsoon_sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 25 0 0 0</pose>
+      <diffuse>0.65 0.68 0.72 1</diffuse>
+      <specular>0.2 0.2 0.25 1</specular>
+      <direction>-0.35 0.25 -0.9</direction>
+    </light>
+
+    <!-- Heavy Rain Particle Emitter -->
+    <model name="monsoon_rain_emitter">
+      <static>true</static>
+      <pose>0 0 12.0 0 0 0</pose>
+      <link name="emitter_link">
+        <particle_emitter name="heavy_rain_particles" type="box">
+          <emitting>true</emitting>
+          <size>30 30 0.5</size>
+          <particle_size>0.02 0.02 0.45</particle_size>
+          <lifetime>1.6</lifetime>
+          <min_velocity>7.5</min_velocity>
+          <max_velocity>9.5</max_velocity>
+          <rate>1800</rate>
+          <material>
+            <diffuse>0.7 0.85 1.0 0.45</diffuse>
+            <specular>0.9 0.95 1.0 0.6</specular>
+          </material>
+        </particle_emitter>
+      </link>
+    </model>
+
+    <!-- 1. Urban Intersection & Asphalt Carriageway -->
+    <model name="silk_board_intersection">
+      <static>true</static>
+      <link name="road_surface">
+        <collision name="road_collision">
+          <geometry>
+            <box><size>60 60 0.2</size></box>
+          </geometry>
+        </collision>
+        <visual name="asphalt_base">
+          <pose>0 0 -0.1 0 0 0</pose>
+          <geometry>
+            <box><size>60 60 0.2</size></box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.13 0.14 1</ambient>
+            <diffuse>0.16 0.17 0.19 1</diffuse>
+            <specular>0.35 0.35 0.38 1</specular>
+          </material>
+        </visual>
+        <!-- Crosswalk Stripe Markings -->
+        <visual name="crosswalk_1">
+          <pose>-4.5 -3.0 0.005 0 0 0</pose>
+          <geometry><box><size>0.5 2.4 0.01</size></box></geometry>
+          <material><diffuse>0.88 0.88 0.85 1</diffuse></material>
+        </visual>
+        <visual name="crosswalk_2">
+          <pose>-3.3 -3.0 0.005 0 0 0</pose>
+          <geometry><box><size>0.5 2.4 0.01</size></box></geometry>
+          <material><diffuse>0.88 0.88 0.85 1</diffuse></material>
+        </visual>
+        <visual name="crosswalk_3">
+          <pose>-2.1 -3.0 0.005 0 0 0</pose>
+          <geometry><box><size>0.5 2.4 0.01</size></box></geometry>
+          <material><diffuse>0.88 0.88 0.85 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 2. Subterranean Drainage Culvert Channel & Catch-Basin -->
+    <model name="drainage_culvert_01">
+      <static>true</static>
+      <pose>4.2 1.5 -0.65 0 0 0</pose>
+      <link name="culvert_walls">
+        <visual name="culvert_floor">
+          <pose>0 0 -0.55 0 0 0</pose>
+          <geometry><box><size>1.8 14.0 0.15</size></box></geometry>
+          <material><diffuse>0.28 0.29 0.30 1</diffuse></material>
+        </visual>
+        <visual name="culvert_wall_left">
+          <pose>-0.85 0 0 0 0 0</pose>
+          <geometry><box><size>0.15 14.0 1.25</size></box></geometry>
+          <material><diffuse>0.32 0.33 0.35 1</diffuse></material>
+        </visual>
+        <visual name="culvert_wall_right">
+          <pose>0.85 0 0 0 0 0</pose>
+          <geometry><box><size>0.15 14.0 1.25</size></box></geometry>
+          <material><diffuse>0.32 0.33 0.35 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 3. Simulated Manhole & Storm-Drain Grate (Silt/Debris Obstruction Site) -->
+    <model name="manhole_01">
+      <static>true</static>
+      <pose>4.2 -1.2 0.015 0 0 0</pose>
+      <link name="manhole_rim">
+        <visual name="rim_visual">
+          <geometry><cylinder><radius>0.48</radius><length>0.03</length></cylinder></geometry>
+          <material><diffuse>0.18 0.18 0.19 1</diffuse></material>
+        </visual>
+        <visual name="cover_visual">
+          <pose>0 0 0.01 0 0 0</pose>
+          <geometry><cylinder><radius>0.42</radius><length>0.02</length></cylinder></geometry>
+          <material><diffuse>0.24 0.22 0.20 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="drainage_grate_01">
+      <static>true</static>
+      <pose>4.2 1.5 0.008 0 0 0</pose>
+      <link name="grate_frame">
+        <visual name="grate_outer">
+          <geometry><box><size>1.1 0.85 0.02</size></box></geometry>
+          <material><diffuse>0.15 0.16 0.17 1</diffuse></material>
+        </visual>
+        <!-- Simulated Silt & Plastic Debris Obstruction Patch -->
+        <visual name="silt_debris_patch">
+          <pose>0.15 0.05 0.015 0 0 0.2</pose>
+          <geometry><box><size>0.55 0.45 0.025</size></box></geometry>
+          <material><diffuse>0.36 0.28 0.18 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 4. Dynamic Flood Water Surface Plane H_w(t) -->
+    <model name="flood_water_surface">
+      <static>true</static>
+      <pose>0 0 0.02 0 0 0</pose>
+      <link name="water_plane_link">
+        <visual name="water_visual">
+          <geometry><box><size>24.0 24.0 0.02</size></box></geometry>
+          <material>
+            <ambient>0.18 0.26 0.30 0.72</ambient>
+            <diffuse>0.22 0.34 0.38 0.72</diffuse>
+            <specular>0.75 0.85 0.90 0.85</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 5. 60/77 GHz FMCW Millimeter-Wave Radar Sensor (Mounted Above Culvert) -->
+    <model name="fmcw_radar_sensor_77ghz">
+      <static>true</static>
+      <pose>4.2 1.5 1.65 0 1.5708 0</pose>
+      <link name="radar_housing">
+        <visual name="hdpe_radome">
+          <geometry><box><size>0.18 0.18 0.08</size></box></geometry>
+          <material><diffuse>0.85 0.88 0.92 1</diffuse></material>
+        </visual>
+        <sensor name="fmcw_77ghz_rangefinder" type="gpu_lidar">
+          <pose>0 0 0 0 0 0</pose>
+          <topic>/hk_rhs/radar/fmcw_77ghz/scan</topic>
+          <update_rate>10</update_rate>
+          <lidar>
+            <scan>
+              <horizontal>
+                <samples>5</samples>
+                <resolution>1</resolution>
+                <min_angle>-0.08</min_angle>
+                <max_angle>0.08</max_angle>
+              </horizontal>
+            </scan>
+            <range>
+              <min>0.10</min>
+              <max>5.00</max>
+              <resolution>0.001</resolution>
+            </range>
+          </lidar>
+          <always_on>1</always_on>
+          <visualize>true</visualize>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- 6. ITMS Overhead Gantry Pole & Edge-AI RGB Camera -->
+    <model name="itms_gantry_01">
+      <static>true</static>
+      <pose>-6.5 0 0 0 0 0</pose>
+      <link name="gantry_structure">
+        <visual name="vertical_post">
+          <pose>0 -5.5 3.2 0 0 0</pose>
+          <geometry><cylinder><radius>0.14</radius><length>6.4</length></cylinder></geometry>
+          <material><diffuse>0.45 0.48 0.52 1</diffuse></material>
+        </visual>
+        <visual name="overhead_arm">
+          <pose>0 0 6.2 0 0 0</pose>
+          <geometry><box><size>0.25 12.0 0.25</size></box></geometry>
+          <material><diffuse>0.45 0.48 0.52 1</diffuse></material>
+        </visual>
+        <sensor name="itms_gantry_cam_01" type="camera">
+          <pose>0.2 0 6.1 0 0.48 0</pose>
+          <topic>/hk_rhs/itms/gantry_cam/image_raw</topic>
+          <update_rate>30</update_rate>
+          <camera>
+            <horizontal_fov>1.15</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>360</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.3</near>
+              <far>100</far>
+            </clip>
+          </camera>
+          <always_on>1</always_on>
+          <visualize>true</visualize>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- 7. Simulated Flooded Intersection Vehicles -->
+    <model name="vehicle_sedan_01">
+      <static>true</static>
+      <pose>1.5 -1.8 0.45 0 0 0.08</pose>
+      <link name="chassis">
+        <visual name="body">
+          <geometry><box><size>4.2 1.85 0.9</size></box></geometry>
+          <material><diffuse>0.75 0.78 0.82 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="vehicle_bmtc_bus_01">
+      <static>true</static>
+      <pose>-2.0 3.2 1.15 0 0 -0.05</pose>
+      <link name="bus_body">
+        <visual name="hull">
+          <geometry><box><size>8.5 2.45 2.3</size></box></geometry>
+          <material><diffuse>0.10 0.35 0.68 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
